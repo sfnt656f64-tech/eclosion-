@@ -315,6 +315,12 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 
 **Règle n° 1 (version 14) : l'app doit rester simple.** Son cœur, c'est les créatures et les actions validées en une touche. L'utilisateur a trouvé que les couches de planification (versions 9 à 13) rendaient l'app compliquée et moins motivante. Elles sont donc rangées derrière un réglage, **« Outils de planification », désactivé par défaut** (Réglages). Toute nouvelle fonction issue d'un rapport ou d'une idée doit être **facultative et désactivée par défaut**, ne jamais ajouter de bloc sur l'accueil sans l'accord explicite de l'utilisateur, et être validée par lui **avant** d'être codée.
 
+**Ce que l'utilisateur veut (ses mots)** : « une sorte de check-list simple pour atteindre mes objectifs ». Les objectifs lui plaisent ; les compétences et les étapes lui semblent « bof ». Il veut ce qui donne le plus envie de compléter ses tâches.
+
+**Check-list du jour (version 16, mode simple)** : chaque action d'un objectif est une ligne avec une case, bordée de la couleur de sa difficulté. La case se coche quand l'action est faite aujourd'hui ; on peut la refaire (badge ×2, ×3…). Chaque objectif affiche « Aujourd'hui : 2/4 » avec une barre. Quand toutes ses actions sont cochées (au moins 2 actions) : **journée complète**, +25 XP, 5 éclats et une célébration, une fois par jour et par objectif (`goal.perfectDay`, `stats.perfectDays`, succès « Journée complète » et « Sans faute »). Les cases repartent à zéro chaque jour (`action.today`).
+
+**Compétences et étapes : désactivées par défaut** (réglage « Compétences et étapes », `settings.skillsSteps`). Cachées : sections Compétences et Étapes, sélecteur de compétence dans l'éditeur d'action, verrouillage des sous-compétences, notifications de niveau de compétence, quête « Valider une étape » et 5 succès liés. L'XP des compétences continue de s'accumuler en silence (rien n'est effacé). Pour la forme légendaire, la fiche affiche un bouton **« J'ai atteint mon objectif ! »** qui valide l'étape finale (créée si besoin).
+
 **Mode simple (par défaut)** :
 - Accueil : en-tête (éclats et série), le jardin, une carte avec les quêtes du jour (et la braise à rallumer si besoin), puis les objectifs avec **toutes** leurs actions.
 - Fiche d'un objectif : la créature avec son chemin d'évolution, puis Actions, Étapes et Compétences, sans onglets.
@@ -358,7 +364,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v15` ; passer à `eclosion-v16`, etc.), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v16` ; passer à `eclosion-v17`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 

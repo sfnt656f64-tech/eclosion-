@@ -504,6 +504,27 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 .tabs button.on{background:var(--accent-soft);color:var(--accent)}
 .hero.compact .cr-wrap.lg{width:min(190px,50vw);height:min(190px,50vw)}
 .hero-actions{display:flex;gap:8px;justify-content:center}
+/* Check-list du jour */
+.cklist{display:flex;flex-direction:column;gap:6px}
+.ck{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border-radius:14px;padding:10px 12px;background:var(--surface2);border:2px solid var(--line);border-left:6px solid var(--dc);font-weight:800;font-size:14.5px;transition:transform .08s}
+.ck:active{transform:scale(.98)}
+.ck .ckbox{width:26px;height:26px;border-radius:9px;border:2.5px solid var(--dc);flex:none;display:grid;place-items:center;background:var(--surface)}
+.ck .ckbox svg{width:16px;height:16px}
+.ck .cktxt{flex:1;min-width:0;overflow-wrap:anywhere}
+.ck .cktxt small{display:block;font-weight:700;font-size:11.5px;color:var(--muted)}
+.ck b{font-size:12px;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.ck .rep{font-style:normal;font-size:11.5px;background:var(--dc);color:#fff;border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:1px}
+.ck.done{background:color-mix(in srgb,var(--dc) 12%,var(--surface))}
+.ck.done .ckbox{background:var(--dc);color:#fff}
+.ck.done .cktxt>span{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:color-mix(in srgb,var(--dc) 70%,transparent);opacity:.75}
+.ck.locked{opacity:.5}
+.ck-row{display:flex;gap:6px;align-items:center}
+.ck-row .ck{flex:1}
+.dayline{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--muted)}
+.dayline .bar{flex:1;--gc:var(--mint)}
+.dayline.full{color:var(--mint)}
+.goal-done{display:flex;justify-content:center}
+.goal-done .btn{border-color:var(--gold);background:var(--gold-soft)}
 /* Niveau de joueur */
 .player{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
 .player .plvl{background:var(--ink);color:var(--bg);border-radius:10px;padding:2px 9px;font-family:var(--font-display);flex:none}
@@ -631,6 +652,8 @@ const ACH = [
   ['night','Oiseau de nuit','Valider une action après 23 h', s=>!!s.stats.night],
   ['early','Lève-tôt','Valider une action avant 7 h', s=>!!s.stats.early],
   ['xp5k','Cinq mille','Cumuler 5 000 XP', s=>s.stats.xp>=5000],
+  ['perfect1','Journée complète','Cocher toutes les actions d’un objectif dans la journée', s=>(s.stats.perfectDays||0)>=1],
+  ['perfect10','Sans faute','10 journées complètes', s=>(s.stats.perfectDays||0)>=10],
   ['duo','Duo !','Une créature répond à ta mélodie', s=>(s.stats.duets||0)>=1],
   ['maestro','Maestro','Enchaîner une chorale de 12 notes', s=>(s.stats.chorusBest||0)>=12],
   ['comeback','Retrouvailles','Revenir après quelques jours d’absence', s=>(s.stats.comebacks||0)>=1],
@@ -655,7 +678,7 @@ const QUESTS = [
   {id:'hard', text:'Réussir une action difficile ou épique', target:1, key:'hard'},
   {id:'multi',text:'Progresser sur 2 objectifs', target:2, key:'goals', need:s=>s.goals.filter(g=>!g.paused).length>=2},
   {id:'promise', text:'Tenir 2 promesses du plan du jour', target:2, key:'promises', need:s=>!!(s.settings&&s.settings.planTools) && s.goals.some(g=>g.actions.length)},
-  {id:'ms',   text:'Valider une étape', target:1, key:'milestones', need:s=>s.goals.some(g=>g.milestones.some(m=>!m.done))},
+  {id:'ms',   text:'Valider une étape', target:1, key:'milestones', need:s=>!!(s.settings&&s.settings.skillsSteps) && s.goals.some(g=>g.milestones.some(m=>!m.done))},
   {id:'crit', text:'Obtenir un coup critique', target:1, key:'crits'},
 ];
 
@@ -853,7 +876,7 @@ const LS_KEY = 'eclosion.save.v1';
 function freshState(){
   return {v:1, started:false, goals:[], streak:{count:0,best:0,lastDay:null,jokers:1,jokerWeek:null,repair:null,lastRepair:null,carry:0},
     daily:null, achievements:{}, stats:{actions:0,crits:0,megas:0,milestones:0,evolutions:0,chests:0,pets:0,perks:0,xp:0,night:false,early:false},
-    log:[], days:{}, coins:40, owned:[], plan:null, week:null, weeks:[], adjustLog:[], reviewSnooze:null, settings:{sound:true, music:true, musicVol:50, planTools:false}, updatedAt:0};
+    log:[], days:{}, coins:40, owned:[], plan:null, week:null, weeks:[], adjustLog:[], reviewSnooze:null, settings:{sound:true, music:true, musicVol:50, planTools:false, skillsSteps:false}, updatedAt:0};
 }
 function migrate(s){
   const f = freshState();
@@ -950,7 +973,7 @@ function stageOf(g){ if (g.legendary) return 4; let s=0; for(let i=1;i<4;i++) if
 function skillLevel(xp){ let lvl=1, need=40; xp=xp||0; while(xp>=need){ xp-=need; lvl++; need=40+20*(lvl-1);} return {lvl, cur:xp, need}; }
 function getGoal(id){ return state.goals.find(g=>g.id===id); }
 function getSkill(g,id){ return id? g.skills.find(s=>s.id===id) : null; }
-function isLocked(g,sk){ if(!sk||!sk.parentId) return false; const p=getSkill(g,sk.parentId); if(!p) return false; return (sk.unlockLevel||1) > skillLevel(p.xp).lvl || isLocked(g,p); }
+function isLocked(g,sk){ if(!extrasOn() || !sk || !sk.parentId) return false; const p=getSkill(g,sk.parentId); if(!p) return false; return (sk.unlockLevel||1) > skillLevel(p.xp).lvl || isLocked(g,p); }
 function daysInactive(g){ const last = g.lastActive || dayKey(new Date(g.createdAt||Date.now())); return Math.max(0, daysBetween(last, dayKey())); }
 function moodOf(g){ if (g.paused && stageOf(g)>0) return 'sleep'; if (stageOf(g)===0) return 'happy'; const d=daysInactive(g); if (d>=7) return 'sleep'; if (d>=3) return 'sad'; if (d===2) return 'ok'; return 'happy'; }
 function moodText(g){
@@ -970,6 +993,8 @@ function stageProgress(g){
 }
 function creatureName(g){ return g.creature || SPECIES[g.species].name; }
 function planOn(){ return !!(state.settings && state.settings.planTools); }
+function extrasOn(){ return !!(state.settings && state.settings.skillsSteps); }
+const EXTRA_ACH = new Set(['ms1','ms10','lvl5','lvl10','perk']);
 // Niveau de joueur : toute l'XP gagnée, tous objectifs confondus
 const TITLES = [[1,'Novice'],[3,'Apprenti'],[5,'Aventurier'],[8,'Éleveur'],[12,'Expert'],[16,'Champion'],[20,'Maître'],[30,'Légende']];
 function playerLevel(){ let xp=state.stats.xp||0, lvl=1, need=150; while(xp>=need){ xp-=need; lvl++; need=150+75*(lvl-1); } let title='Novice'; TITLES.forEach(([l,t])=>{ if(lvl>=l) title=t; }); return {lvl, cur:xp, need, title}; }
@@ -1544,6 +1569,7 @@ function evolveScene(g, from, to){
 /* ===================== Actions de jeu ===================== */
 function handleEvents(res, g){
   res.ev.forEach(e=>{
+    if (!extrasOn() && (e.type==='level'||e.type==='perk'||e.type==='unlock')) return;
     if (e.type==='level'){ sfx.level(); stars(innerWidth/2, 50, 14, ['#7CF0C0','#FFFFFF','#FFF3B0'], 1.2); toast({icon:IC.up, title:`${e.sk.name} passe niveau ${e.lvl} !`, color:'var(--mint)'}); }
     if (e.type==='perk'){ toast({icon:IC.spark, title:`Capacité débloquée : ${e.perk.name}`, sub:`${e.sk.name} niv. ${e.perk.level}`, color:'var(--violet)', ms:4500}); }
     if (e.type==='unlock'){ toast({icon:IC.spark, title:`Nouvelle branche : ${e.sk.name}`, sub:`Débloquée grâce à ${e.parent.name}`, color:'var(--violet)', ms:4500}); }
@@ -1583,6 +1609,11 @@ function doAction(gid, aid, e, el){
   const tk=dayKey(), wk=weekKey();
   if (!a.today || a.today.d!==tk) a.today={d:tk,n:0}; a.today.n++;
   if (!a.week || a.week.k!==wk) a.week={k:wk,n:0,done:false}; a.week.n++;
+  let perfect = false;
+  if (todayCount(a)===1 && g.actions.length>=2 && g.actions.every(x=>todayCount(x)>0) && g.perfectDay!==dayKey()){
+    g.perfectDay = dayKey(); perfect = true; state.stats.perfectDays=(state.stats.perfectDays||0)+1;
+    const pb = grant(g, null, 25, {crit:false}); res.ev.push(...pb.ev); c.xp += pb.xp; addCoins(5); trackDay(pb.xp,0);
+  }
   let weekBonus = 0;
   if (a.target>0 && !a.week.done && a.week.n>=a.target){ a.week.done=true; addCoins(10); const b=grant(g, sk, 60, {crit:false}); weekBonus=b.xp; res.ev.push(...b.ev); c.xp+=b.xp; }
   trackDay(res.xp+weekBonus, 1);
@@ -1618,6 +1649,9 @@ function doAction(gid, aid, e, el){
       if (res.crit){ if (critDur) animCreature(cw,'talk',critDur*1000+120); const rr=cw.getBoundingClientRect(); speciesFx(g.species, rr.left+rr.width/2, rr.top+rr.height/2, 8, g.color, 'happy'); }
     });
   }
+  if (perfect) setTimeout(()=>{ sfx.evolve(); buzz([40,30,40,30,120]); confetti(innerWidth/2, innerHeight*.3, 140, null, 1.4); stars(innerWidth/2, innerHeight*.3, 24, null, 1.6);
+    document.querySelectorAll(`.cr-wrap[data-g="${g.id}"]`).forEach(w=>{ animCreature(w,'tap-'+g.species,900); animCreature(w,'joy',1200); });
+    toast({icon:IC.star, title:`Journée complète pour ${creatureName(g)} !`, sub:'Tout est coché. +25 XP et 5 éclats', color:'var(--mint)', ms:5000}); }, 700);
   offerUndo(snap, a.name);
   if (questsDone() && !state.daily.claimed && !wasDone){ setTimeout(()=>{ sfx.chest(); toast({icon:CHEST(), title:'Quête du jour terminée !', sub:'Ton coffre t’attend sur l’accueil.', color:'var(--gold)', ms:4500}); }, 700); }
   questsDone.__last = questsDone();
@@ -2219,6 +2253,13 @@ function openCampaignReview(g){
   });
 }
 
+/* ===================== Objectif atteint ===================== */
+function reachGoal(g){
+  let m = g.milestones.find(x=>x.size==='finale' && !x.done);
+  if (!m){ m = {id:uid(), name:'Objectif atteint : '+g.name, size:'finale', skillId:null, done:false}; g.milestones.push(m); }
+  doMilestone(g.id, m.id);
+}
+
 /* ===================== Pause (hibernation) ===================== */
 function pauseGoal(g){
   g.paused = {since: dayKey()};
@@ -2343,14 +2384,14 @@ function openActionEditor(g, a){
     <p class="tiny" style="margin:0">Une action est un geste que tu refais souvent. Tu la valides en une touche.</p>
     <div class="field"><label for="aName">Nom</label><input id="aName" maxlength="60" placeholder="Ex. Envoyer une candidature" value="${esc(d.name)}"></div>
     <div class="field"><span class="lbl">Difficulté</span><div class="seg" id="dBox">${segs()}</div></div>
-    <div class="field"><label for="aSk">Compétence entraînée</label><select id="aSk">${skillOptions(g,d.skillId)}</select></div>
+    ${extrasOn()?`<div class="field"><label for="aSk">Compétence entraînée</label><select id="aSk">${skillOptions(g,d.skillId)}</select></div>`:''}
     <div class="field"><label for="aTarget">Objectif par semaine (facultatif)</label><input id="aTarget" type="number" min="0" max="50" inputmode="numeric" placeholder="Ex. 3" value="${d.target>0?d.target:''}"><span class="tiny">Nombre de fois par semaine. Quand tu l'atteins, tu gagnes un bonus d'XP. Laisse vide pour ne pas en avoir.</span></div>
     <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="aSave">Enregistrer</button></div>
     ${isNew?'':'<div class="del-zone"><button class="btn block" type="button" data-del style="color:#E5484D">Supprimer cette action</button></div>'}`, sh=>{
     sh.querySelector('#dBox').onclick=e=>{ const b=e.target.closest('[data-d]'); if(b){ diff=b.dataset.d; sh.querySelector('#dBox').innerHTML=segs(); } };
     sh.querySelector('#aSave').onclick=()=>{
       const name=sh.querySelector('#aName').value.trim(); if(!name){ sh.querySelector('#aName').focus(); return; }
-      const skillId=sh.querySelector('#aSk').value||null;
+      const skEl=sh.querySelector('#aSk'); const skillId = skEl ? (skEl.value||null) : (a ? a.skillId : null);
       const target = Math.max(0, Math.min(50, parseInt(sh.querySelector('#aTarget').value)||0));
       if (isNew) g.actions.push({id:uid(),name,diff,skillId,target}); else Object.assign(a,{name,diff,skillId,target});
       commit(); closeSheet(); render();
@@ -2425,6 +2466,14 @@ function questBox(){
   const lbl = d.claimed? 'Ouvert' : done? 'Ouvrir !' : `${n}/3`;
   return `<div class="tsec" id="questBox"><div class="thead"><h3>Quêtes du jour</h3><button type="button" class="chest-mini ${cls}" data-act="chest" ${done&&!d.claimed?'':'disabled'} aria-label="Coffre du jour">${CHEST()}${lbl}</button></div><div class="qmini">${rows}</div></div>`;
 }
+// Une ligne de check-list : cochée si l'action est faite aujourd'hui, on peut la refaire (×2, ×3…)
+function ckFor(g, a){
+  const sk=getSkill(g,a.skillId), locked = sk && isLocked(g,sk), t=todayCount(a), done=t>0;
+  const week = a.target>0 ? `<small>${weekCount(a)}/${a.target} cette semaine${weekCount(a)>=a.target?' ✓':''}</small>` : '';
+  return `<button type="button" class="ck d-${a.diff} ${done?'done':''} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}" aria-pressed="${done}"><span class="ckbox">${done?IC.check:locked?IC.lock:''}</span><span class="cktxt"><span>${esc(a.name)}</span>${t>1?`<i class="rep">×${t}</i>`:''}${week}</span><b>+${DIFF[a.diff].xp}</b></button>`;
+}
+function dayProgress(g){ const n=g.actions.length, d=g.actions.filter(a=>todayCount(a)>0).length; return {n, d}; }
+function dayLine(g){ const {n,d}=dayProgress(g); if (!n) return ''; const full=d===n; return `<div class="dayline ${full?'full':''}"><span>${full?'Journée complète ✓':`Aujourd’hui : ${d}/${n}`}</span><div class="bar small"><i style="width:${d/n*100}%"></i></div></div>`; }
 function chipFor(g,a){
   const sk=getSkill(g,a.skillId), locked = sk && isLocked(g,sk);
   return `<button type="button" class="chip d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}">${locked?IC.lock:''}<span>${esc(a.name)}</span><b>+${DIFF[a.diff].xp}</b>${countBadge(a)}</button>`;
@@ -2479,7 +2528,7 @@ function goalCard(g){
       </div>
       <button type="button" class="icon-btn flat" data-act="open" data-g="${g.id}" aria-label="Ouvrir">${IC.chev}</button>
     </div>
-    ${g.actions.length?`<div class="chips">${(planOn()?topActions(g):g.actions).map(a=>chipFor(g,a)).join('')}${planOn()&&g.actions.length>3?`<button type="button" class="chip more" data-act="open" data-g="${g.id}"><span>+${g.actions.length-3} autre${g.actions.length-3>1?'s':''}</span></button>`:''}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
+    ${g.actions.length && !planOn() ? `${dayLine(g)}<div class="cklist">${g.actions.map(a=>ckFor(g,a)).join('')}</div>` : g.actions.length?`<div class="chips">${(planOn()?topActions(g):g.actions).map(a=>chipFor(g,a)).join('')}${planOn()&&g.actions.length>3?`<button type="button" class="chip more" data-act="open" data-g="${g.id}"><span>+${g.actions.length-3} autre${g.actions.length-3>1?'s':''}</span></button>`:''}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
   </article>`;
 }
 function topPills(){
@@ -2525,26 +2574,27 @@ function viewGoal(id){
       <div class="tiny">${pr.text}</div>
       ${mt?`<div class="mood">${mt}</div>`:''}
       <div class="hero-actions"><button type="button" class="btn dress-btn" data-act="shop" data-g="${g.id}">${IC.coin} Habiller</button></div>
+      ${!extrasOn() && !g.legendary ? `<div class="goal-done"><button type="button" class="btn dress-btn" data-act="goalReached" data-g="${g.id}">${IC.star} J’ai atteint mon objectif !</button></div>` : ''}
       ${simple?`<div class="evo-path">${path}</div>`:''}
     </section>
-    ${simple?'':`<nav class="tabs" aria-label="Sections de l’objectif">${[['actions','Actions'],['progress','Progrès'],['skills','Compétences']].map(([k,l])=>`<button type="button" data-act="gtab" data-t="${k}" class="${goalTab===k?'on':''}" aria-pressed="${goalTab===k}">${l}</button>`).join('')}</nav>`}
+    ${simple?'':`<nav class="tabs" aria-label="Sections de l’objectif">${[['actions','Actions'],['progress','Progrès'],['skills','Compétences']].filter(([k])=>k!=='skills'||extrasOn()).map(([k,l])=>`<button type="button" data-act="gtab" data-t="${k}" class="${goalTab===k?'on':''}" aria-pressed="${goalTab===k}">${l}</button>`).join('')}</nav>`}
     ${tab==='progress' ? campaignSection(g) : ''}
     ${(simple||tab==='actions') ? `<section class="card"><div class="section-h"><h2>Actions</h2></div><div class="rows">
-      ${g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
+      ${simple ? `${dayLine(g)}${g.actions.map(a=>`<div class="ck-row">${ckFor(g,a)}<button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}` : g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
       <button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action</button></div></section>
-    <section class="card"><div class="section-h"><h2>Étapes</h2><span class="tiny">${g.milestones.filter(m=>m.done).length}/${g.milestones.length} franchies</span></div><div class="rows">
+    ${extrasOn()?`<section class="card"><div class="section-h"><h2>Étapes</h2><span class="tiny">${g.milestones.filter(m=>m.done).length}/${g.milestones.length} franchies</span></div><div class="rows">
       ${msSorted.map(m=>`<div class="row"><button type="button" class="ms-btn ${m.done?'done':''} ${m.size==='finale'?'final':''}" data-act="ms" data-g="${g.id}" data-m="${m.id}"><span class="box">${m.done?IC.check:''}</span><span class="mtxt">${esc(m.name)}${m.done&&m.doneAt?`<br><span class="tiny">Fait le ${fmtDate(m.doneAt)}</span>`:''}</span><b>${m.size==='finale'?'FINALE':'+'+MSIZE[m.size].xp}</b></button><button type="button" class="icon-btn flat" data-act="editMs" data-g="${g.id}" data-m="${m.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}
-      <button type="button" class="add-row" data-act="addMs" data-g="${g.id}">${IC.plus} Ajouter une étape</button></div></section>` : ''}
+      <button type="button" class="add-row" data-act="addMs" data-g="${g.id}">${IC.plus} Ajouter une étape</button></div></section>`:''}` : ''}
     ${tab==='progress' ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Mesures</h2></div><div class="rows">
       ${g.metrics.map(m=>metricCard(g,m)).join('') || '<p class="tiny" style="margin:0">Note ce qui prouve que tu avances : candidatures envoyées, charge soulevée, aisance à l’oral sur 10… Chaque record battu rapporte 75 XP et 10 éclats.</p>'}
       <button type="button" class="add-row" data-act="addMetric" data-g="${g.id}">${IC.plus} Ajouter une mesure</button></div></section>
     <section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Évolution</h2></div><div class="evo-path">${path}</div></section>` : ''}
-    ${(simple||tab==='skills') ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Compétences</h2></div><p class="tiny" style="margin:0 0 8px">Une sous-compétence reçoit l’XP de ses actions, et sa compétence parente la moitié.</p><div class="rows">
+    ${extrasOn() && (simple||tab==='skills') ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Compétences</h2></div><p class="tiny" style="margin:0 0 8px">Une sous-compétence reçoit l’XP de ses actions, et sa compétence parente la moitié.</p><div class="rows">
       ${skillTree(g,null)}
       <button type="button" class="add-row" data-act="addSkill" data-g="${g.id}">${IC.plus} Ajouter une compétence</button></div></section>` : ''}`;
 }
 function viewTrophies(){
-  const achList = ACH.filter(a=>planOn() || !PLAN_ACH.has(a[0]));
+  const achList = ACH.filter(a=>(planOn() || !PLAN_ACH.has(a[0])) && (extrasOn() || !EXTRA_ACH.has(a[0])));
   const got = achList.filter(a=>state.achievements[a[0]]).length;
   const s = state.stats, hm = heatmap();
   return `<header class="top"><h1>Succès</h1>${topPills()}</header>
@@ -2573,7 +2623,8 @@ function viewSettings(){
       <div class="field"><label for="musVol">Volume de la musique</label><input type="range" id="musVol" min="0" max="100" value="${state.settings.musicVol==null?50:state.settings.musicVol}"></div>
       <button type="button" class="btn" data-act="soundTest">Tester le son</button>
       <div class="tiny" id="audioDiag"></div></section>
-    <section class="card rows">      <div class="switch"><span>Outils de planification<br><span class="tiny" style="font-weight:600">Campagne de 12 semaines, bilan du lundi, plan du jour et mesures. Désactivés, rien n'est effacé.</span></span> <button type="button" data-act="planTools" class="${planOn()?'on':''}" aria-label="Outils de planification" aria-pressed="${planOn()}"></button></div></section>
+    <section class="card rows">      <div class="switch"><span>Compétences et étapes<br><span class="tiny" style="font-weight:600">Les compétences avec leurs niveaux, et les étapes de chaque objectif. Désactivées, rien n'est effacé.</span></span> <button type="button" data-act="skillsSteps" class="${extrasOn()?'on':''}" aria-label="Compétences et étapes" aria-pressed="${extrasOn()}"></button></div>
+      <div class="switch"><span>Outils de planification<br><span class="tiny" style="font-weight:600">Campagne de 12 semaines, bilan du lundi, plan du jour et mesures. Désactivés, rien n'est effacé.</span></span> <button type="button" data-act="planTools" class="${planOn()?'on':''}" aria-label="Outils de planification" aria-pressed="${planOn()}"></button></div></section>
     <section class="card rows"><div class="section-h"><h2>Sauvegarde de secours</h2></div>
       <p class="tiny" style="margin:0">Télécharge un fichier avec toutes tes données. Tu pourras le réimporter si besoin.</p>
       <button type="button" class="btn" data-act="export">Exporter mes données</button>
@@ -2585,8 +2636,9 @@ function viewSettings(){
     </section>
     <section class="card help"><div class="section-h"><h2>Comment ça marche</h2></div>
       <p><b>Actions</b> : gestes répétés (Facile +10, Moyen +25, Difficile +50, Épique +100 XP). 12 % de chance de critique ×2, 3 % de méga critique ×5.</p>
-      <p><b>Étapes</b> : résultats concrets (+150 à +600 XP). L'étape finale rend la créature légendaire.</p>
-      <p><b>Évolutions</b> : Bébé à 100 XP, Jeune à 800, Adulte à 3 000, Légendaire avec l'étape finale.</p>
+      ${extrasOn()?`<p><b>Étapes</b> : résultats concrets (+150 à +600 XP). L'étape finale rend la créature légendaire.</p>`:''}
+      <p><b>Évolutions</b> : Bébé à 100 XP, Jeune à 800, Adulte à 3 000. Légendaire quand tu atteins ton objectif (bouton « J'ai atteint mon objectif ! » sur sa fiche).</p>
+      <p><b>Check-list</b> : chaque action se coche quand tu la fais aujourd'hui, et tu peux la refaire (×2, ×3…). Tout coché pour un objectif : journée complète, +25 XP et 5 éclats. Les cases se remettent à zéro chaque jour.</p>
       <p><b>Série</b> : +2 % d'XP par jour consécutif (max +30 %). Un joker gratuit par semaine (max 2) protège ta série si tu rates un jour. Plus de joker ? Ta flamme devient une braise : fais 2 actions (ou 1 difficile) dans les 48 h pour la rallumer (une fois par semaine). Si elle s'éteint quand même, tu gardes la moitié de ton bonus.</p>
       <p><b>Retrouvailles</b> : après 3 jours sans t'occuper d'un objectif, sa créature t'attend, un peu triste, et après 7 jours elle s'endort. Aucune punition : quand tu reviens, elle saute de joie et tes premières actions rapportent un bonus (+30 % sur 2 actions, ou +50 % sur 3 après 7 jours). Au plus une fois tous les 14 jours par objectif.</p>
       ${planOn()?`<p><b>Plan du jour</b> : chaque matin, choisis 1 à 3 actions et, si tu veux, le moment où tu les feras (« Après mon café… »). Chaque promesse tenue rapporte +25 % d'XP. Rien ne se passe si tu n'y arrives pas.</p>`:''}
@@ -2648,6 +2700,8 @@ document.addEventListener('click', e=>{
     case 'chest': openChest(); break;
     case 'planOpen': openPlanEditor(); break;
     case 'gtab': goalTab = el.dataset.t; render(); break;
+    case 'skillsSteps': state.settings.skillsSteps=!state.settings.skillsSteps; if (!state.settings.skillsSteps && goalTab==='skills') goalTab='actions'; fixDailyQuests(); commit(); render(); toast({title: state.settings.skillsSteps?'Compétences et étapes affichées':'Compétences et étapes cachées', sub: state.settings.skillsSteps?'Elles sont de retour sur la fiche de chaque objectif.':'Tes données sont gardées de côté.', color:'var(--sky)'}); break;
+    case 'goalReached': if (g) reachGoal(g); break;
     case 'planTools': state.settings.planTools=!state.settings.planTools; if (!state.settings.planTools) goalTab='actions'; fixDailyQuests(); commit(); render(); toast({title: state.settings.planTools?'Outils de planification activés':'Mode simple', sub: state.settings.planTools?'Campagne, bilan du lundi, plan du jour et mesures sont de retour.':'Juste tes créatures et tes actions. Tes plans sont gardés de côté.', color:'var(--sky)'}); break;
     case 'wkToggle': weekOpen=!weekOpen; try{ localStorage.setItem('eclosion.weekOpen', weekOpen?'1':'0'); }catch(e){} render(); break;
     case 'wake': if (g) wakeGoal(g); break;
