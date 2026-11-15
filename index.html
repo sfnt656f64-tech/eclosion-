@@ -2426,40 +2426,16 @@ function openMilestoneEditor(g, m){
 
 /* ===================== Modèle de départ ===================== */
 const STARTER_METRICS = {
-  'Signer un CDI en France d’ici fin avril 2027': [['Candidatures envoyées cette semaine','','up'],['Entretiens obtenus (total)','','up']],
-  'Faire 24 séances de musculation d’ici le 7 février 2027': [['Charge au développé couché','kg','up'],['Tour de bras','cm','up']],
-  'Répondre clairement en moins de 2 minutes à mes 8 questions d’entretien clés d’ici le 20 décembre': [['Aisance à l’oral','/10','up'],['Prises de parole cette semaine','','up']],
+  'Décrocher un nouvel emploi': [['Candidatures envoyées cette semaine','','up'],['Entretiens obtenus (total)','','up']],
+  'Retrouver une routine sportive': [['Charge au développé couché','kg','up'],['Tour de bras','cm','up']],
+  'Être à l’aise en entretien': [['Aisance à l’oral','/10','up'],['Prises de parole cette semaine','','up']],
 };
 // Actions proposées : concrètes, faisables en moins de 30 min, avec un verbe
 const ACTION_SETS = [
-  {title:'CDI', match:/cdi|emploi|job|poste|recrut/i, actions:[['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau'],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]]},
-  {title:'Muscu', match:/muscl|muscu|sport|force|corps/i, actions:[['Faire ma séance (20 min minimum)','difficile','Force',3],['Une source de protéines à chaque repas','facile','Nutrition'],['Être au lit avant minuit','facile','Récupération'],['10 min de marche ou de mobilité','facile','Récupération']]},
-  {title:'Réponses d’entretien claires', match:/parl|oral|convain|impos|communi|répond|question/i, actions:[['M’enregistrer : répondre à 1 question d’entretien en moins de 2 min, réponse d’abord','moyen','Éloquence'],['Réécouter et noter 1 chose à améliorer','facile','Éloquence'],['Réenregistrer la même réponse en plus court et plus clair','moyen','Éloquence'],['Faire écouter 1 réponse à quelqu’un et lui demander s’il a tout compris','difficile','Assurance',1],['Donner mon avis en réunion : 1 phrase + « parce que… »','difficile','Assurance',2]]},
+  {title:'Recherche d’emploi', match:/cdi|emploi|job|poste|recrut/i, actions:[['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau'],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]]},
+  {title:'Sport', match:/muscl|muscu|sport|force|corps/i, actions:[['Faire ma séance (20 min minimum)','difficile','Force',3],['Une source de protéines à chaque repas','facile','Nutrition'],['Être au lit avant minuit','facile','Récupération'],['10 min de marche ou de mobilité','facile','Récupération']]},
+  {title:'Réponses d’entretien claires', match:/parl|oral|convain|impos|communi|répond|question|entretien|aise/i, actions:[['M’enregistrer : répondre à 1 question d’entretien en moins de 2 min, réponse d’abord','moyen','Éloquence'],['Réécouter et noter 1 chose à améliorer','facile','Éloquence'],['Réenregistrer la même réponse en plus court et plus clair','moyen','Éloquence'],['Faire écouter 1 réponse à quelqu’un et lui demander s’il a tout compris','difficile','Assurance',1],['Donner mon avis en réunion : 1 phrase + « parce que… »','difficile','Assurance',2]]},
 ];
-// Titres concrets : quoi, et pour quand (on sait sans hésiter si c'est atteint)
-const TITLE_SETS = [
-  {match:/cdi|emploi|job|poste|recrut/i, title:'Signer un CDI en France d’ici fin avril 2027'},
-  {match:/muscl|muscu|sport|force|corps/i, title:'Faire 24 séances de musculation d’ici le 7 février 2027'},
-  {match:/parl|oral|convain|impos|communi|répond|question/i, title:'Répondre clairement en moins de 2 minutes à mes 8 questions d’entretien clés d’ici le 20 décembre'},
-];
-function titleTargets(){ const used=new Set(); return TITLE_SETS.map(t=>{ const g=state.goals.find(x=>!used.has(x.id) && t.match.test(x.name)); if (g) used.add(g.id); return {g, title:t.title}; }).filter(x=>x.g && x.g.name!==x.title); }
-function titlesCard(){
-  if (state.titlesUpgrade || !titleTargets().length) return '';
-  return `<section class="card" style="display:flex;gap:12px;align-items:center"><div style="flex:1;min-width:0"><b>Des objectifs plus concrets</b><div class="tiny">Des titres qui disent quoi et pour quand. Tu peux les modifier.</div></div><button type="button" class="tlink" data-act="titlesNo">Non merci</button><button type="button" class="btn primary sm" data-act="titlesOpen">Voir</button></section>`;
-}
-function openTitles(){
-  const list = titleTargets();
-  if (!list.length){ toast({title:'Tes titres sont déjà à jour', color:'var(--muted)'}); return; }
-  openSheet(`<h2>Des objectifs concrets</h2><p class="tiny" style="margin:0">Un bon objectif dit <b>quoi</b> et <b>pour quand</b> : tu sais sans hésiter s’il est atteint. Modifie les titres avec tes mots si tu veux, ou vide un champ pour ne rien changer.</p>
-    ${list.map((x,i)=>`<div class="field"><label for="tt${i}">Actuel : ${esc(x.g.name)}</label><textarea id="tt${i}" maxlength="120" style="min-height:58px;font-family:inherit;font-size:15px">${esc(x.title)}</textarea></div>`).join('')}
-    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Plus tard</button><button class="btn primary" type="button" id="ttApply">Renommer</button></div>`, sh=>{
-    sh.querySelector('#ttApply').onclick = ()=>{
-      let n=0; list.forEach((x,i)=>{ const v=sh.querySelector('#tt'+i).value.trim(); if (v && v!==x.g.name){ x.g.name=v; n++; } });
-      state.titlesUpgrade='done'; commit(); closeSheet(); render();
-      if (n){ sfx.level(); confetti(innerWidth/2, innerHeight*.35, 60, null, 1); toast({icon:IC.star, title:'Objectifs renommés', sub:`${n} objectif${n>1?'s':''} plus concret${n>1?'s':''}. Tu peux toujours les changer avec le crayon.`, color:'var(--accent)', ms:4500}); }
-    };
-  }, {sticky:true});
-}
 const UPGRADE_V = 'v2';
 function setIsApplied(set, g){ return !!g && g.actions.length===set.actions.length && set.actions.every((a,i)=>g.actions[i] && g.actions[i].name===a[0]); }
 function upgradeOffered(){ return (state.actionsUpgrade!==UPGRADE_V && state.actionsUpgrade!=='dismissed-'+UPGRADE_V) && ACTION_SETS.some(set=>{ const g=state.goals.find(x=>set.match.test(x.name)); return g && !setIsApplied(set,g); }) && state.goals.some(g=>!g.paused && g.actions.length) && ACTION_SETS.some(set=>state.goals.some(g=>set.match.test(g.name))); }
@@ -2505,15 +2481,15 @@ function starterGoals(){
       milestones:ms.map(([n,z,s])=>({id:uid(),name:n,size:z,skillId:ids[s]||null,done:false}))};
   };
   return [
-    mk('Signer un CDI en France d’ici fin avril 2027','Braisou','braise','#FF8A5B',
+    mk('Décrocher un nouvel emploi','Braisou','braise','#FF8A5B',
       [{n:'Candidatures',p:[[3,'Lettre de motivation modèle'],[6,'Candidature éclair']]},{n:'Réseau',p:[[4,'Carnet d’adresses']]},{n:'LinkedIn',par:'Réseau',u:3},{n:'Entretiens',p:[[5,'Pitch de 2 minutes']]},{n:'Négociation',par:'Entretiens',u:4}],
       [['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau'],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]],
       [['Premier entretien décroché','moyenne','Entretiens'],['3 entretiens passés','grande','Entretiens'],['Signer un CDI','finale',null]]),
-    mk('Faire 24 séances de musculation d’ici le 7 février 2027','Rocaillon','cristal','#3F8CFF',
+    mk('Retrouver une routine sportive','Rocaillon','cristal','#3F8CFF',
       [{n:'Force',p:[[5,'Programme avancé'],[10,'Charges lourdes']]},{n:'Nutrition',p:[[4,'Menus de la semaine']]},{n:'Récupération'}],
       [['Faire ma séance (20 min minimum)','difficile','Force',3],['Une source de protéines à chaque repas','facile','Nutrition'],['Être au lit avant minuit','facile','Récupération'],['10 min de marche ou de mobilité','facile','Récupération']],
       [['+2 kg de muscle','moyenne','Force'],['+5 kg de muscle','grande','Force'],['Atteindre mon physique idéal','finale',null]]),
-    mk('Répondre clairement en moins de 2 minutes à mes 8 questions d’entretien clés d’ici le 20 décembre','Nuvelin','nuage','#9B6BFF',
+    mk('Être à l’aise en entretien','Nuvelin','nuage','#9B6BFF',
       [{n:'Éloquence',p:[[4,'Voix posée']]},{n:'Assurance',p:[[5,'Regard franc']]},{n:'Persuasion',p:[[3,'Structure d’argument']]},{n:'Improvisation',par:'Éloquence',u:4}],
       [['M’enregistrer : répondre à 1 question d’entretien en moins de 2 min, réponse d’abord','moyen','Éloquence'],['Réécouter et noter 1 chose à améliorer','facile','Éloquence'],['Réenregistrer la même réponse en plus court et plus clair','moyen','Éloquence'],['Faire écouter 1 réponse à quelqu’un et lui demander s’il a tout compris','difficile','Assurance',1],['Donner mon avis en réunion : 1 phrase + « parce que… »','difficile','Assurance',2]],
       [['Prendre la parole devant un groupe','moyenne','Assurance'],['Convaincre quelqu’un d’une idée importante','grande','Persuasion'],['Parler avec aisance en toutes circonstances','finale',null]]),
@@ -2606,7 +2582,6 @@ function viewHome(){
   const active = state.goals.filter(g=>!g.paused), paused = state.goals.filter(g=>g.paused);
   return `<header class="top"><div class="brand">${IC.egg}Éclosion</div>${topPills()}</header>
     ${garden()}
-    ${titlesCard()}
     ${upgradeCard()}
     ${todayCard()}
     ${state.goals.length?'<div class="goals-h"><h2>Mes objectifs</h2></div>':''}
@@ -2694,7 +2669,7 @@ function viewSettings(){
       <div class="tiny" id="audioDiag"></div></section>
     <section class="card rows">      <div class="switch"><span>Compétences et étapes<br><span class="tiny" style="font-weight:600">Les compétences avec leurs niveaux, et les étapes de chaque objectif. Désactivées, rien n'est effacé.</span></span> <button type="button" data-act="skillsSteps" class="${extrasOn()?'on':''}" aria-label="Compétences et étapes" aria-pressed="${extrasOn()}"></button></div>
       <div class="switch"><span>Outils de planification<br><span class="tiny" style="font-weight:600">Campagne de 12 semaines, bilan du lundi, plan du jour et mesures. Désactivés, rien n'est effacé.</span></span> <button type="button" data-act="planTools" class="${planOn()?'on':''}" aria-label="Outils de planification" aria-pressed="${planOn()}"></button></div></section>
-    <section class="card rows"><div class="section-h"><h2>Propositions</h2></div><p class="tiny" style="margin:0">Des titres d’objectifs concrets, et des actions faciles à cocher pour le CDI, la muscu et la prise de parole.</p><button type="button" class="btn" data-act="upgradeOpen">Voir les actions proposées</button><button type="button" class="btn" data-act="titlesOpen">Voir les titres d’objectifs proposés</button></section>
+    <section class="card rows"><div class="section-h"><h2>Actions proposées</h2></div><p class="tiny" style="margin:0">Des actions concrètes et faciles à cocher pour la recherche d’emploi, le sport et les entretiens.</p><button type="button" class="btn" data-act="upgradeOpen">Voir les actions proposées</button></section>
     <section class="card rows"><div class="section-h"><h2>Sauvegarde de secours</h2></div>
       <p class="tiny" style="margin:0">Télécharge un fichier avec toutes tes données. Tu pourras le réimporter si besoin.</p>
       <button type="button" class="btn" data-act="export">Exporter mes données</button>
@@ -2735,8 +2710,8 @@ function viewWelcome(){
     <h1>Éclosion</h1>
     <p>Chaque objectif de ta vie devient un œuf. Chaque effort le fait éclore, grandir, puis évoluer jusqu'à sa forme légendaire.</p>
     <ul><li>Valide tes actions en une touche et gagne de l'XP</li><li>Franchis des étapes concrètes pour de gros bonus</li><li>Fais monter tes compétences et débloque de nouvelles branches</li></ul>
-    <button type="button" class="btn primary block" data-act="starter">Commencer avec mes 3 objectifs</button>
-    <span class="tiny">CDI en France · Musculation · Réponses d’entretien. Tout est modifiable.</span>
+    <button type="button" class="btn primary block" data-act="starter">Commencer avec 3 objectifs d’exemple</button>
+    <span class="tiny">Emploi · Sport · Entretiens. Tout est modifiable.</span>
     <button type="button" class="btn block" data-act="blank">Partir de zéro</button>
   </div>`;
 }
@@ -2771,8 +2746,6 @@ document.addEventListener('click', e=>{
     case 'planOpen': openPlanEditor(); break;
     case 'gtab': goalTab = el.dataset.t; render(); break;
     case 'upgradeOpen': openActionUpgrade(); break;
-    case 'titlesOpen': openTitles(); break;
-    case 'titlesNo': state.titlesUpgrade='dismissed'; commit(); render(); toast({title:'C’est noté', sub:'Tu pourras les retrouver dans Réglages.', color:'var(--muted)'}); break;
     case 'upgradeNo': state.actionsUpgrade='dismissed-'+UPGRADE_V; commit(); render(); toast({title:'C’est noté', sub:'Tu pourras les retrouver dans Réglages.', color:'var(--muted)'}); break;
     case 'skillsSteps': state.settings.skillsSteps=!state.settings.skillsSteps; if (!state.settings.skillsSteps && goalTab==='skills') goalTab='actions'; fixDailyQuests(); commit(); render(); toast({title: state.settings.skillsSteps?'Compétences et étapes affichées':'Compétences et étapes cachées', sub: state.settings.skillsSteps?'Elles sont de retour sur la fiche de chaque objectif.':'Tes données sont gardées de côté.', color:'var(--sky)'}); break;
     case 'goalReached': if (g) reachGoal(g); break;
