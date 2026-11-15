@@ -2227,7 +2227,7 @@ function pauseGoal(g){
   const pl=todayPlan(); if (pl) pl.items = pl.items.filter(it=>it.g!==g.id);
   commit(); render();
   voice(g.species, Math.max(1,stageOf(g)), 'sleep');
-  toast({icon:IC.egg, title:`${creatureName(g)} hiberne`, sub:`Rien n'est perdu : réveille-la quand tu veux.${removed?` ${removed} engagement${removed>1?'s':''} retiré${removed>1?'s':''} de ta semaine.`:''}`, color:'var(--sky)', ms:4500});
+  toast({icon:IC.egg, title:`${creatureName(g)} hiberne`, sub:`Rien n'est perdu : réveille-la quand tu veux.${removed&&planOn()?` ${removed} engagement${removed>1?'s':''} retiré${removed>1?'s':''} de ta semaine.`:''}`, color:'var(--sky)', ms:4500});
 }
 function wakeGoal(g, silent){
   g.paused = null; g.lastActive = dayKey(); g.comeback = null;
@@ -2237,7 +2237,7 @@ function wakeGoal(g, silent){
     const st=stageOf(g), d = st>0 ? voice(g.species, st, 'happy') : 0;
     document.querySelectorAll(`.cr-wrap[data-g="${g.id}"]`).forEach(w=>{ animCreature(w, st>0?'tap-'+g.species:'tap', 900); if (st>0){ animCreature(w,'joy',900); if (d) animCreature(w,'talk',d*1000+120); const r=w.getBoundingClientRect(); speciesFx(g.species, r.left+r.width/2, r.top+r.height/2, 8, g.color, 'happy'); } });
   }, 120);
-  toast({icon:IC.heart.replace('currentColor','#FF5D86'), title:`${creatureName(g)} se réveille !`, sub:'Pense à l’ajouter à ton prochain bilan du lundi.', color:'var(--accent)'});
+  toast({icon:IC.heart.replace('currentColor','#FF5D86'), title:`${creatureName(g)} se réveille !`, sub: planOn() ? 'Pense à l’ajouter à ton prochain bilan du lundi.' : 'Content de te revoir !', color:'var(--accent)'});
 }
 
 /* ===================== Feuilles modales ===================== */
@@ -2286,7 +2286,7 @@ function openGoalEditor(g){
     <div class="field"><span class="lbl">Couleur</span><div class="swatches" id="swBox">${COLORS.map(c=>`<button type="button" aria-label="Couleur ${c}" data-c="${c}" style="--sw:${c}" class="${c===col?'on':''}"></button>`).join('')}</div></div>
     <div class="field"><label for="gCre">Nom de la créature (facultatif)</label><input id="gCre" maxlength="24" placeholder="${SPECIES[sp].name}" value="${esc(d.creature)}"></div>
     <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="gSave">${isNew?'Faire naître l’œuf':'Enregistrer'}</button></div>
-    ${isNew?'':`<button class="btn block" type="button" id="gPause">${g.paused?'Réveiller cette créature':'Mettre en pause (hibernation)'}</button><span class="tiny">${g.paused?'':'La créature dort paisiblement le temps d’une campagne : pas de tristesse, rien de perdu. Elle sort de tes bilans et de tes plans.'}</span>`}
+    ${isNew?'':`<button class="btn block" type="button" id="gPause">${g.paused?'Réveiller cette créature':'Mettre en pause (hibernation)'}</button><span class="tiny">${g.paused?'':(planOn() ? 'La créature dort paisiblement le temps d’une campagne : pas de tristesse, rien de perdu. Elle sort de tes bilans et de tes plans.' : 'La créature dort paisiblement : pas de tristesse, rien de perdu. Réveille-la quand tu veux.')}</span>`}
     ${isNew?'':'<div class="del-zone"><button class="btn block" type="button" data-del style="color:#E5484D">Supprimer cet objectif</button></div>'}`, sh=>{
     const refresh=()=>{ sh.querySelector('#spBox').innerHTML=speciesHtml(); sh.querySelector('#spDesc').textContent=`${SPECIES[sp].name} : ${SPECIES[sp].desc}`; sh.querySelector('#gCre').placeholder=SPECIES[sp].name; sh.querySelectorAll('#swBox button').forEach(b=>b.classList.toggle('on', b.dataset.c===col)); };
     sh.querySelector('#spBox').onclick = e=>{ const b=e.target.closest('[data-sp]'); if(b){ sp=b.dataset.sp; refresh(); sfx.boop(); } };
@@ -2569,11 +2569,11 @@ function viewSettings(){
   return `<header class="top"><h1>Réglages</h1></header>
     <section class="card"><div class="sync"><span class="dot ${S[0]}"></span><div><b>${S[1]}</b><div class="tiny">${S[2]}</div></div></div></section>
     <section class="card rows"><div class="switch">Effets sonores <button type="button" data-act="sound" class="${state.settings.sound?'on':''}" aria-label="Effets sonores" aria-pressed="${state.settings.sound}"></button></div>
-      <div class="switch"><span>Outils de planification<br><span class="tiny" style="font-weight:600">Campagne de 12 semaines, bilan du lundi, plan du jour et mesures. Désactivés, rien n'est effacé.</span></span> <button type="button" data-act="planTools" class="${planOn()?'on':''}" aria-label="Outils de planification" aria-pressed="${planOn()}"></button></div>
       <div class="switch">Musique d'ambiance <button type="button" data-act="music" class="${state.settings.music?'on':''}" aria-label="Musique" aria-pressed="${state.settings.music}"></button></div>
       <div class="field"><label for="musVol">Volume de la musique</label><input type="range" id="musVol" min="0" max="100" value="${state.settings.musicVol==null?50:state.settings.musicVol}"></div>
       <button type="button" class="btn" data-act="soundTest">Tester le son</button>
       <div class="tiny" id="audioDiag"></div></section>
+    <section class="card rows">      <div class="switch"><span>Outils de planification<br><span class="tiny" style="font-weight:600">Campagne de 12 semaines, bilan du lundi, plan du jour et mesures. Désactivés, rien n'est effacé.</span></span> <button type="button" data-act="planTools" class="${planOn()?'on':''}" aria-label="Outils de planification" aria-pressed="${planOn()}"></button></div></section>
     <section class="card rows"><div class="section-h"><h2>Sauvegarde de secours</h2></div>
       <p class="tiny" style="margin:0">Télécharge un fichier avec toutes tes données. Tu pourras le réimporter si besoin.</p>
       <button type="button" class="btn" data-act="export">Exporter mes données</button>
@@ -2591,7 +2591,7 @@ function viewSettings(){
       <p><b>Retrouvailles</b> : après 3 jours sans t'occuper d'un objectif, sa créature t'attend, un peu triste, et après 7 jours elle s'endort. Aucune punition : quand tu reviens, elle saute de joie et tes premières actions rapportent un bonus (+30 % sur 2 actions, ou +50 % sur 3 après 7 jours). Au plus une fois tous les 14 jours par objectif.</p>
       ${planOn()?`<p><b>Plan du jour</b> : chaque matin, choisis 1 à 3 actions et, si tu veux, le moment où tu les feras (« Après mon café… »). Chaque promesse tenue rapporte +25 % d'XP. Rien ne se passe si tu n'y arrives pas.</p>`:''}
       ${planOn()?`<p><b>Campagne de 12 semaines</b> : dans chaque objectif, fixe ton objectif final (avec ta date et ton pourquoi), l'obstacle qui risque de t'arrêter et 2 à 3 résultats clés en plage (« 3 à 5 »). Au moins un doit dépendre de toi (processus). Le bouton « Ajuster » change une plage sans aucune perte.</p>`:''}
-      <p><b>Mettre en pause</b> : sur un objectif (bouton crayon), « Mettre en pause » fait hiberner sa créature le temps d'une campagne. Elle dort paisiblement, sans tristesse ni perte, et sort de tes bilans et de tes plans. « Réveiller » la ramène.</p>
+      <p><b>Mettre en pause</b> : sur un objectif (bouton crayon), « Mettre en pause » fait hiberner sa créature. Elle dort paisiblement, sans tristesse ni perte, et sa carte se range en bas de l'accueil. « Réveiller » la ramène.</p>
       ${planOn()?`<p><b>Bilan du lundi</b> : 2 minutes pour regarder ta semaine, choisir 1 à 3 engagements par objectif (avec une version minimale) et ta créature vedette (+15 % d'XP). Semaine tenue à 70 % : coffre de 20 éclats. Si la semaine s'annonce dure, active la « semaine minimale ».</p>`:''}
       ${planOn()?`<p><b>Mesures</b> : dans chaque objectif, note tes vrais chiffres (candidatures, charges, aisance…). Chaque record battu rapporte 75 XP et 10 éclats (une fois par semaine et par mesure).</p>`:''}
       <p><b>Niveau de joueur</b> : toute l'XP que tu gagnes, tous objectifs confondus, fait monter ton niveau et ton titre (Novice, Apprenti, Aventurier… jusqu'à Légende).</p>

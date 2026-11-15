@@ -358,7 +358,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v14` ; passer à `eclosion-v15`, etc.), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v15` ; passer à `eclosion-v16`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 
