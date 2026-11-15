@@ -92,6 +92,7 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
     comeback: { n, pct } | null, // bonus de retrouvailles restant
     lastComebackAt,              // jour du dernier bonus de retrouvailles
     metrics: [{ id, name, unit, dir, entries:[{t, v}], rewardWeek }],
+    campaign: { start, weeks, final, woop, own, krs:[...] } | null, pastCampaigns: [...],
     createdAt, lastActive,       // lastActive = jour de la dernière action (AAAA-MM-JJ)
     acc: { head, face, neck },   // accessoires portés
     skills: [{ id, name, xp, parentId, unlockLevel, perks:[{level, name}] }],
@@ -101,6 +102,7 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
   }],
   streak: { count, best, lastDay, jokers, jokerWeek, repair:{need, got, until}|null, lastRepair, carry },
   plan: { date, items:[{ g, a, cue, done }], skipped } | null,
+  week: { k, items:[...], vedette, ifthen, minimalMode } | null, weeks: [{ k, rate, n, note }], adjustLog: [...],
   daily: { day, quests:[{id, text, target, key}], c:{actions, xp, hard, goals:[], pets, milestones, crits}, claimed },
   achievements: { idDuSucces: dateDeDeblocage },
   stats: { actions, crits, megas, milestones, evolutions, chests, pets, perks, xp, night, early, chorusBest, duets, comebacks, repairs, promises, records },
@@ -182,6 +184,30 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
 - **Rupture douce** : si la série casse quand même, on garde la moitié du bonus : `carry = floor(min(série, 15) / 2)`. Une série de 20 jours (+30 %) repart donc à +14 %. `carry` disparaît dès que la nouvelle série le dépasse.
 - Jamais de message « Tu as perdu ta série » : le texte affiché est « Nouvelle série, nouveau départ ».
 
+### Couche Plan : campagne, semaine, jour
+
+La cascade relie le quotidien à un résultat daté : **objectif final → campagne de 12 semaines → plan de la semaine → plan du jour → actions**. Principe non négociable : **l'app propose, la personne choisit et écrit avec ses mots** (aucun plan livré tout fait).
+
+**Campagne de 12 semaines** (section « Campagne » de la fiche d'un objectif, assistant en 4 étapes) :
+1. Objectif final : un résultat constatable, une date (par défaut la fin de la campagne) et « pourquoi ça compte pour moi ».
+2. Contraste mental (WOOP) : meilleur résultat, obstacle intérieur (« Si… »), parade (« …alors je »).
+3. 2 à 3 **résultats clés en plage** (« 40 à 60 »), chacun de type **processus** (dépend de moi) ou **résultat** (dépend en partie des autres). Règle imposée : au moins 1 processus, au plus 1 résultat. Un résultat clé peut suivre automatiquement une **mesure** existante, sinon on le met à jour à la main (+1, +5 ou valeur).
+4. Question de propriété : « De 1 à 5, à quel point c'est le tien ? ». À 3 ou moins, l'app propose de reformuler (on peut valider quand même).
+- La campagne commence le lundi de la semaine en cours (si on la crée du lundi au mercredi) ou le lundi suivant, et dure 12 semaines. Lancer une campagne : 50 XP.
+- **Bilan de campagne** à la fin : statut de chaque résultat clé (atteint, dépassé, pas encore) et leçon retenue. Récompense : 100 XP, +600 XP par résultat clé atteint, +300 XP s'il est dépassé, +30 éclats. La campagne est archivée (`pastCampaigns`).
+- Données : `goal.campaign = {start, weeks, final:{text, date, why}, woop:{best, obstacle, plan}, own, krs:[{id, name, type, min, max, unit, metricId, value}]}`.
+
+**Bilan du lundi et plan de la semaine** (carte sur l'accueil) :
+1. Regarder la semaine passée : prévu et fait, sans rouge, et une question facultative « Qu'est-ce qui a aidé, ou gêné ? ».
+2. Calibrer : taux moyen des 4 dernières semaines, avec la cible de 70 à 80 % (au-dessus de 90 %, l'app suggère de monter d'un cran ; sous 60 %, d'alléger).
+3. Choisir **1 à 3 engagements par objectif** (10 au maximum) parmi ses actions ou avec ses mots, chacun avec une **plage** et une **version minimale**. Les choix de la semaine passée sont pré-cochés.
+4. Choisir sa **créature vedette** (+15 % d'XP toute la semaine) et un plan de secours « Si…, alors… ».
+- Un engagement lié à une action se compte tout seul quand on la valide ; un engagement libre se compte avec le bouton +.
+- Récompenses : 25 XP pour la créature vedette à chaque bilan ; semaine tenue à 70 % : 20 éclats (100 % : 30).
+- **Semaine minimale** : un bouton fait compter chaque engagement dès sa version minimale (objectif 1 fois).
+- **Ajuster** (jamais « abandonner ») : change la plage d'un engagement ou d'un résultat clé, avec une raison en un tap, sans aucune perte. Après 3 ajustements à la baisse en 30 jours, l'app suggère simplement de prendre moins d'engagements.
+- Données : `state.week = {k, items:[{id, g, actionId, text, min, max, minimal, count}], vedette, ifthen:{si, alors}, minimalMode}`, `state.weeks` (historique des taux, 52 semaines), `state.adjustLog`.
+
 ### Plan du jour (« Mes coups du jour »)
 
 - Carte sur l'accueil : chaque jour, on choisit **1 à 3 actions**, et si on veut le moment déclencheur, sous la forme « Après ___ » (suggestions : mon café, le déjeuner, la salle…). C'est une intention de mise en œuvre « si… alors… ».
@@ -228,9 +254,9 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
 
 - Un accessoire acheté peut être porté par toutes les créatures. Les œufs ne peuvent rien porter.
 
-### Succès (35)
+### Succès (40)
 
-Premier pas, Sur la lancée (10 actions), Habitude en marche (50), Centurion (100), Inarrêtable (500), Coup de chance (1er critique), Main chanceuse (25 critiques), MÉGA ! (méga critique), Cap franchi (1re étape), Bâtisseur (10 étapes), Éclosion, Ça pousse ! (Jeune), Tout grandit (Adulte), Légende vivante (Légendaire), Ça chauffe (série de 3), Semaine parfaite (7), Volonté de fer (30), Trésor ! (1er coffre), Chasseur de trésors (10 coffres), Spécialiste (compétence niv. 5), Maître (niv. 10), Nouvelle branche (capacité ou sous-compétence), Câlin, Meilleurs amis (50 câlins), Oiseau de nuit (action après 23 h), Lève-tôt (avant 7 h), Cinq mille (5 000 XP), Duo ! (une créature répond à ta mélodie), Maestro (chorale de 12 notes), Retrouvailles (revenir après une absence), Flamme rallumée (réparer sa série), Parole donnée (1re promesse tenue), Parole d'or (25 promesses), Preuve du réel (1er record), En progrès (10 records).
+Premier pas, Sur la lancée (10 actions), Habitude en marche (50), Centurion (100), Inarrêtable (500), Coup de chance (1er critique), Main chanceuse (25 critiques), MÉGA ! (méga critique), Cap franchi (1re étape), Bâtisseur (10 étapes), Éclosion, Ça pousse ! (Jeune), Tout grandit (Adulte), Légende vivante (Légendaire), Ça chauffe (série de 3), Semaine parfaite (7), Volonté de fer (30), Trésor ! (1er coffre), Chasseur de trésors (10 coffres), Spécialiste (compétence niv. 5), Maître (niv. 10), Nouvelle branche (capacité ou sous-compétence), Câlin, Meilleurs amis (50 câlins), Oiseau de nuit (action après 23 h), Lève-tôt (avant 7 h), Cinq mille (5 000 XP), Duo ! (une créature répond à ta mélodie), Maestro (chorale de 12 notes), Retrouvailles (revenir après une absence), Flamme rallumée (réparer sa série), Parole donnée (1re promesse tenue), Parole d'or (25 promesses), Preuve du réel (1er record), En progrès (10 records), Cap sur 12 semaines (lancer une campagne), Le point du lundi (1er bilan), Pilote (4 bilans), Semaine tenue (70 % des engagements), Résultat clé (en atteindre un).
 
 ---
 
@@ -311,7 +337,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v9` ; passer à `eclosion-v10`, etc.), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v10` ; passer à `eclosion-v11`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 
@@ -330,7 +356,11 @@ Les évolutions de la version 9 suivent un rapport d'analyse fondé sur la reche
 - **Plan du jour** : les intentions de mise en œuvre « si… alors… » ont un effet moyen à fort sur l'atteinte des objectifs (Gollwitzer & Sheeran, 2006).
 - **Mesures** : suivre ses progrès améliore l'atteinte des objectifs, surtout quand ils sont notés (Harkin et al., 2016).
 
-Autres idées du rapport, pas encore faites : critiques proportionnels à la difficulté, rendements décroissants après 3 fois la même action dans la journée, coffre attribué à la créature de son choix, carte de chasse hebdomadaire, bilan du lundi avec créature vedette, jours de repos déclarés (utile pour la musculation), mues intermédiaires entre Jeune et Adulte, boss mensuel, partage du bilan, chroniques narratives, rappels par fichier agenda (.ics).
+La version 10 ajoute la **couche Plan**, d'après un second rapport : objectifs précis et ambitieux (Locke & Latham), sous-objectifs proches (Bandura & Schunk, 1981), objectifs en plage (Scott & Nowlis, 2013), contraste mental WOOP (Oettingen ; méta-analyse Wang et al., 2021), engagement et propriété de l'objectif (Klein et al., 1999 ; Chi et al., 2026, préprint), calibrage contre l'erreur de planification (Buehler et al., 1994).
+
+À faire ensuite d'après ce rapport : chapitres mensuels avec « boss » relié au résultat du mois, revue mensuelle, mues de fin de campagne, carte de chasse branchée sur les engagements, plafond de l'XP de planification.
+
+Autres idées du premier rapport, pas encore faites : critiques proportionnels à la difficulté, rendements décroissants après 3 fois la même action dans la journée, coffre attribué à la créature de son choix, carte de chasse hebdomadaire, bilan du lundi avec créature vedette, jours de repos déclarés (utile pour la musculation), mues intermédiaires entre Jeune et Adulte, boss mensuel, partage du bilan, chroniques narratives, rappels par fichier agenda (.ics).
 
 ## 12. Idées d'améliorations déjà évoquées
 

@@ -411,6 +411,59 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 .hist{display:flex;flex-direction:column;gap:2px;max-height:30vh;overflow:auto;font-size:13px}
 .hist div{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}
 .hist div span{flex:1;font-variant-numeric:tabular-nums}
+/* Couche Plan : campagne, semaine, bilan */
+.camp{--gc:var(--accent)}
+.camp .final{font-family:var(--font-display);font-weight:800;font-size:17px;line-height:1.2;overflow-wrap:anywhere}
+.camp .why{font-size:13px;color:var(--muted);font-style:italic;overflow-wrap:anywhere}
+.camp .wk{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
+.camp .wk .bar{flex:1}
+.kr{border-radius:14px;background:var(--surface2);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.kr-head{display:flex;align-items:center;gap:8px}
+.kr-head b{flex:1;min-width:0;overflow-wrap:anywhere}
+.kr-type{font-size:11px;font-weight:800;border-radius:99px;padding:1px 8px;flex:none}
+.kr-type.process{background:color-mix(in srgb,var(--mint) 18%,transparent);color:color-mix(in srgb,var(--mint) 60%,var(--ink))}
+.kr-type.result{background:color-mix(in srgb,var(--gold) 22%,transparent);color:color-mix(in srgb,var(--gold) 45%,var(--ink))}
+.rbar{position:relative;height:10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);overflow:visible}
+.rbar>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--gc),color-mix(in srgb,var(--gc) 60%,#fff))}
+.rbar>u{position:absolute;top:-4px;bottom:-4px;width:3px;border-radius:2px;background:var(--ink);opacity:.55}
+.kr-btns{display:flex;gap:6px;flex-wrap:wrap}
+.kr-btns .btn{padding:5px 12px;font-size:12.5px;border-radius:99px}
+.wkc{background:linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--sky) 10%,var(--surface)))}
+.wk-item{display:grid;grid-template-columns:1fr auto auto;gap:4px 8px;align-items:center;border-radius:14px;background:var(--surface);border:2px solid var(--line);padding:9px 10px}
+.wk-item.ok{border-color:var(--mint)}
+.wk-item .wt{font-weight:800;min-width:0;overflow-wrap:anywhere;font-size:14px}
+.wk-item .wt small{display:block;font-weight:700;font-size:11.5px;color:var(--muted)}
+.wk-item .wn{font-family:var(--font-display);font-weight:800;font-variant-numeric:tabular-nums;font-size:15px}
+.wk-item .rbar{grid-column:1/-1;--gc:var(--sky)}
+.wk-item.ok .rbar{--gc:var(--mint)}
+.wk-plus{width:34px;height:34px;border-radius:12px;background:var(--sky);color:#fff;display:grid;place-items:center;font-weight:800}
+.wk-plus svg{width:18px;height:18px}
+.wk-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.wk-foot .ifthen{flex-basis:100%;color:var(--muted);font-weight:700}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:5px;border-radius:99px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.rv-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.rv-row span{flex:1;min-width:0;overflow-wrap:anywhere}
+.rv-row b{font-variant-numeric:tabular-nums}
+.rv-row b.ok{color:var(--mint)}
+.cand{border-radius:14px;border:2px solid var(--line);background:var(--surface2);padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.cand.on{border-color:var(--sky);background:color-mix(in srgb,var(--sky) 10%,var(--surface2))}
+.cand-top{display:flex;align-items:center;gap:8px;text-align:left;font-weight:800;width:100%}
+.cand-top .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;flex:none;background:var(--surface)}
+.cand.on .cand-top .box{background:var(--sky);border-color:var(--sky);color:#fff}
+.cand-top .box svg{width:14px;height:14px}
+.cand-top span{flex:1;min-width:0;overflow-wrap:anywhere}
+.range-row{display:grid;grid-template-columns:70px 20px 70px 1fr;gap:6px;align-items:center;font-size:13px}
+.range-row input{padding:7px 8px;text-align:center}
+.own{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.own button{border-radius:12px;border:2px solid var(--line);background:var(--surface2);padding:10px 0;font-weight:800;font-size:16px}
+.own button.on{border-color:var(--accent);background:var(--accent-soft)}
+.chips-s{display:flex;flex-wrap:wrap;gap:6px}
+.chips-s button{border-radius:99px;padding:4px 11px;font-size:12.5px;font-weight:700;border:1.5px solid var(--line);background:var(--surface2)}
+.chips-s button.on{border-color:var(--accent);background:var(--accent-soft)}
+.hint{font-size:12.5px;color:var(--muted);border-left:3px solid var(--line);padding-left:8px}
+.warn{font-size:13px;border-radius:12px;padding:8px 10px;background:color-mix(in srgb,var(--gold) 16%,var(--surface2));border:1.5px solid var(--gold)}
 /* Niveau de joueur */
 .player{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
 .player .plvl{background:var(--ink);color:var(--bg);border-radius:10px;padding:2px 9px;font-family:var(--font-display);flex:none}
@@ -546,6 +599,11 @@ const ACH = [
   ['promise25','Parole d’or','Tenir 25 promesses', s=>(s.stats.promises||0)>=25],
   ['record1','Preuve du réel','Battre un record dans tes mesures', s=>(s.stats.records||0)>=1],
   ['record10','En progrès','Battre 10 records', s=>(s.stats.records||0)>=10],
+  ['camp1','Cap sur 12 semaines','Lancer une campagne', s=>(s.stats.campaigns||0)>=1],
+  ['review1','Le point du lundi','Faire ton premier bilan du lundi', s=>(s.stats.reviews||0)>=1],
+  ['review4','Pilote','Faire 4 bilans du lundi', s=>(s.stats.reviews||0)>=4],
+  ['week70','Semaine tenue','Tenir 70 % de tes engagements de la semaine', s=>(s.stats.goodWeeks||0)>=1],
+  ['kr1','Résultat clé','Atteindre un résultat clé de campagne', s=>(s.stats.krs||0)>=1],
 ];
 
 const QUESTS = [
@@ -754,7 +812,7 @@ const LS_KEY = 'eclosion.save.v1';
 function freshState(){
   return {v:1, started:false, goals:[], streak:{count:0,best:0,lastDay:null,jokers:1,jokerWeek:null,repair:null,lastRepair:null,carry:0},
     daily:null, achievements:{}, stats:{actions:0,crits:0,megas:0,milestones:0,evolutions:0,chests:0,pets:0,perks:0,xp:0,night:false,early:false},
-    log:[], days:{}, coins:40, owned:[], plan:null, settings:{sound:true, music:true, musicVol:50}, updatedAt:0};
+    log:[], days:{}, coins:40, owned:[], plan:null, week:null, weeks:[], adjustLog:[], reviewSnooze:null, settings:{sound:true, music:true, musicVol:50}, updatedAt:0};
 }
 function migrate(s){
   const f = freshState();
@@ -767,6 +825,9 @@ function migrate(s){
   o.log = Array.isArray(s.log)?s.log:[];
   o.coins = typeof s.coins==='number' ? s.coins : 40;
   o.plan = s.plan && typeof s.plan==='object' ? s.plan : null;
+  o.week = s.week && typeof s.week==='object' ? s.week : null;
+  o.weeks = Array.isArray(s.weeks) ? s.weeks : [];
+  o.adjustLog = Array.isArray(s.adjustLog) ? s.adjustLog : [];
   o.owned = Array.isArray(s.owned) ? s.owned : [];
   if (s.days && typeof s.days==='object') o.days = s.days;
   else { o.days = {}; o.log.forEach(l=>{ const k=dayKey(new Date(l.t)); const d=o.days[k]||(o.days[k]={n:0,xp:0}); d.n++; d.xp+=l.xp||0; }); }
@@ -775,6 +836,8 @@ function migrate(s){
     if (!G.acc || typeof G.acc!=='object') G.acc = {};
     G.sadNeed = 0; // l'ancien malus de tristesse n'existe plus
     if (!G.comeback || typeof G.comeback!=='object') G.comeback = null;
+    if (!G.campaign || typeof G.campaign!=='object') G.campaign = null;
+    G.pastCampaigns = Array.isArray(G.pastCampaigns) ? G.pastCampaigns : [];
     G.metrics = (Array.isArray(G.metrics)?G.metrics:[]).map(m=>Object.assign({id:uid(),name:'Mesure',unit:'',dir:'up',entries:[],rewardWeek:null},m));
     G.skills = (G.skills||[]).map(k=>Object.assign({id:uid(),name:'Compétence',xp:0,parentId:null,unlockLevel:1,perks:[]},k));
     G.actions = (G.actions||[]).map(a=>Object.assign({id:uid(),name:'Action',diff:'moyen',skillId:null},a));
@@ -970,7 +1033,8 @@ function grant(g, sk, base, opts){
   const cb = g.comeback && g.comeback.n>0 ? g.comeback.pct : 0;
   const planPct = opts.plan ? 25 : 0;
   const bonus = Math.min(0.3, streakBonusDays()*0.02);
-  const xp = Math.max(1, Math.round(base*mult*(1+bonus+cb/100+planPct/100)));
+  const cw = curWeek(), vedPct = cw && cw.vedette===g.id ? 15 : 0;
+  const xp = Math.max(1, Math.round(base*mult*(1+bonus+cb/100+planPct/100+vedPct/100)));
   if (cb){ g.comeback.n--; if (g.comeback.n<=0) g.comeback=null; }
   g.lastActive = dayKey();
   const before = stageOf(g);
@@ -981,7 +1045,7 @@ function grant(g, sk, base, opts){
   if (opts.legendary) g.legendary = true;
   const after = stageOf(g);
   if (after>before){ ev.push({type:'evolve', g, from:before, to:after}); state.stats.evolutions++; }
-  return {xp, crit, cb, planPct, comebackStart, ev, skXp, parXp, parentId};
+  return {xp, crit, cb, planPct, vedPct, comebackStart, ev, skXp, parXp, parentId};
 }
 
 /* ===================== Sons (générés, sans fichiers) ===================== */
@@ -1450,6 +1514,8 @@ function doAction(gid, aid, e, el){
   const oldPct = stageProgress(g).pct;
   const pItem = planItemFor(g.id, a.id);
   const res = grant(g, sk, DIFF[a.diff].xp, {crit:true, plan: !!pItem});
+  const wkDone = weekHit(g.id, a.id);
+  if (wkDone) setTimeout(()=>{ sfx.achv(); toast({icon:IC.check.replace('currentColor','#3F8CFF'), title:'Engagement de la semaine tenu', sub:wkDone.text, color:'var(--sky)'}); }, 600);
   if (pItem){ pItem.done = true; state.stats.promises=(state.stats.promises||0)+1; state.daily.c.promises=(state.daily.c.promises||0)+1; }
   const st=state.stats, c=state.daily.c;
   st.actions++; c.actions++; c.xp+=res.xp;
@@ -1641,7 +1707,8 @@ function openPlanEditor(){
   let sel = p && !p.skipped ? p.items.map(it=>({...it})) : [];
   const CUES = ['mon café','le petit-déjeuner','le déjeuner','le travail','la salle','le dîner'];
   const body = ()=>{
-    const groups = state.goals.filter(g=>g.actions.length).map(g=>`<div class="pick-goal"><span>${esc(g.name)}</span><div class="chips">${g.actions.map(a=>{ const on=sel.some(x=>x.g===g.id&&x.a===a.id); return `<button type="button" class="chip d-${a.diff} ${on?'':'off'}" data-pick="${g.id}|${a.id}"><span>${esc(a.name)}</span>${on?'<b>✓</b>':''}</button>`; }).join('')}</div></div>`).join('');
+    const cwk = curWeek(), inWk = (gid,aid)=> !!(cwk && cwk.items.some(it=>it.g===gid && it.actionId===aid));
+    const groups = state.goals.filter(g=>g.actions.length).map(g=>`<div class="pick-goal"><span>${esc(g.name)}</span><div class="chips">${g.actions.map(a=>{ const on=sel.some(x=>x.g===g.id&&x.a===a.id); return `<button type="button" class="chip d-${a.diff} ${on?'':'off'}" data-pick="${g.id}|${a.id}"><span>${esc(a.name)}</span>${inWk(g.id,a.id)?'<b title="Engagement de la semaine">semaine</b>':''}${on?'<b>✓</b>':''}</button>`; }).join('')}</div></div>`).join('');
     const cues = sel.map((it,i)=>{ const g=getGoal(it.g), a=g&&g.actions.find(x=>x.id===it.a); if(!a) return '';
       return `<div class="cue-row"><b>${esc(a.name)}</b><label class="tiny" for="cue${i}">Après… (facultatif)</label><input id="cue${i}" data-cue="${i}" maxlength="40" placeholder="Ex. mon café" value="${esc(it.cue||'')}"><div class="cue-sugg">${CUES.map(c=>`<button type="button" data-sugg="${i}" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>`; }).join('');
     return `<h2>Mes coups du jour</h2><p class="tiny" style="margin:0">Choisis 1 à 3 actions. Préciser <b>après quoi</b> tu les feras augmente nettement tes chances de passer à l’acte.</p>
@@ -1736,6 +1803,302 @@ function openMetricLog(g, m){
       if (!res) toast({title:'Nouveau record !', sub:'La récompense en XP est déjà prise cette semaine pour cette mesure, mais bravo !', color:'var(--gold)'});
       offerUndo(snap, 'Record : '+m.name);
     });
+  });
+}
+
+/* ===================== Couche Plan : campagne, semaine, bilan ===================== */
+function num(v){ const n=parseFloat(String(v).replace(',','.')); return isFinite(n)?n:null; }
+function fmtDay(k){ return parseDay(k).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}); }
+function campaignStart(){ const d=new Date(), wd=(d.getDay()+6)%7; d.setDate(d.getDate() + (wd<=2 ? -wd : 7-wd)); return dayKey(d); } // lundi de cette semaine (lun-mer) ou lundi prochain
+function campaignWeek(c){ const n=daysBetween(c.start, dayKey()); return n<0 ? 0 : Math.floor(n/7)+1; }
+function campaignEnd(c){ return addDays(c.start, c.weeks*7-1); }
+function krValue(g, kr){ if (kr.metricId){ const m=g.metrics.find(x=>x.id===kr.metricId); const e=m&&m.entries[m.entries.length-1]; return e?e.v:0; } return kr.value||0; }
+function krStatus(g, kr){ const v=krValue(g,kr); return v>=kr.max ? 'over' : v>=kr.min ? 'ok' : 'no'; }
+function rbar(v, min, max){ const top=Math.max(max, v, 1); return `<div class="rbar" aria-hidden="true"><i style="width:${Math.min(100, v/top*100)}%"></i><u style="left:calc(${Math.min(100,min/top*100)}% - 1px)"></u><u style="left:calc(${Math.min(100,max/top*100)}% - 2px)"></u></div>`; }
+function curWeek(){ const w=state.week; return w && w.k===weekKey() ? w : null; }
+function wkTarget(w, it){ return w.minimalMode ? 1 : Math.max(1, it.min||1); }
+function weekRate(w){ if (!w || !w.items.length) return null; return w.items.reduce((a,it)=>a+Math.min(1,(it.count||0)/wkTarget(w,it)),0)/w.items.length; }
+function weekHit(gid, aid){ const w=curWeek(); if (!w) return null; let reached=null; w.items.forEach(it=>{ if (it.g===gid && it.actionId===aid){ const before=it.count||0; it.count=before+1; const eff=wkTarget(w,it); if (before<eff && it.count>=eff) reached=it; } }); return reached; }
+function reviewDue(){ return state.goals.some(g=>g.actions.length||g.campaign) && !curWeek(); }
+
+function weekCard(){
+  if (reviewDue()){
+    if (state.reviewSnooze===dayKey()) return '';
+    const first = !state.week;
+    return `<section class="card wkc"><div class="section-h"><h2>${first?'Ma semaine':'Bilan du lundi'}</h2><span class="tiny">2 min</span></div>
+      <p class="tiny" style="margin:0 0 10px">${first?'Choisis 1 à 3 engagements par objectif pour cette semaine, chacun avec une plage et une version minimale. Des objectifs proches font avancer plus sûrement qu’un but lointain.':'Regarde ta semaine passée, puis choisis tes engagements pour celle-ci. Sans aucune note rouge.'}</p>
+      <div class="sheet-actions"><button type="button" class="btn" data-act="reviewLater">Plus tard</button><button type="button" class="btn primary" data-act="reviewOpen">${first?'Planifier ma semaine':'Faire mon bilan'}</button></div></section>`;
+  }
+  const w = curWeek(); if (!w || !w.items.length) return '';
+  const rate = weekRate(w), ved = getGoal(w.vedette);
+  const items = w.items.map(it=>{ const g=getGoal(it.g); if (!g) return ''; const eff=wkTarget(w,it), c=it.count||0, ok=c>=eff;
+    return `<div class="wk-item ${ok?'ok':''}"><span class="wt">${esc(it.text)}<small>${esc(g.name)}${w.minimalMode&&it.minimal?' · min. : '+esc(it.minimal):''}</small></span><span class="wn">${c}<span class="tiny"> / ${w.minimalMode?1:(it.min===it.max?it.min:it.min+'–'+it.max)}</span></span>
+      ${it.actionId?`<button type="button" class="icon-btn flat" data-act="wkAdjust" data-i="${it.id}" aria-label="Ajuster">${IC.pen}</button>`:`<button type="button" class="wk-plus" data-act="wkInc" data-i="${it.id}" aria-label="Ajouter 1">${IC.plus}</button>`}
+      ${rbar(c, eff, w.minimalMode?1:Math.max(eff,it.max||eff))}
+      ${it.actionId?'':`<span class="tiny" style="grid-column:1/-1"><button type="button" class="tiny" data-act="wkAdjust" data-i="${it.id}" style="text-decoration:underline">Ajuster</button></span>`}</div>`; }).join('');
+  return `<section class="card wkc"><div class="section-h"><h2>Ma semaine</h2><span class="tiny">${Math.round((rate||0)*100)} % tenu · objectif 70 %</span></div>
+    <div class="rows">${items}</div>
+    <div class="wk-foot" style="margin-top:10px">${ved?`<span>Vedette : <b>${esc(creatureName(ved))}</b> (+15 % d’XP)</span>`:''}
+      <button type="button" class="btn" style="padding:5px 12px;font-size:12.5px;border-radius:99px;margin-left:auto" data-act="wkMinimal">${w.minimalMode?'Revenir à la semaine normale':'Semaine difficile ? Mode minimal'}</button>
+      ${w.ifthen&&w.ifthen.si?`<span class="ifthen">Si ${esc(w.ifthen.si)}, alors ${esc(w.ifthen.alors||'…')}</span>`:''}</div></section>`;
+}
+
+// Bilan du lundi : regarder, calibrer, choisir, vedette et si-alors
+function openReview(){
+  const prev = state.week && !curWeek() ? state.week : null;
+  const prevRate = prev ? weekRate(prev) : null;
+  const hist = state.weeks.slice(-4).map(x=>x.rate).filter(x=>x!==null);
+  if (prevRate!==null) hist.push(prevRate);
+  const recent = hist.slice(-4), avg = recent.length ? recent.reduce((a,b)=>a+b,0)/recent.length : null;
+  const goals = state.goals.filter(g=>g.actions.length||g.campaign);
+  let step = prev ? 1 : 3, note = '', vedette = (prev && prev.vedette && getGoal(prev.vedette)) ? prev.vedette : (goals[0]||{}).id, si='', alors='';
+  // Candidats : les actions de chaque objectif, pré-réglées d'après la semaine passée
+  const sel = [];
+  const prevItem = (gid, aid, text)=> prev && prev.items.find(it=>it.g===gid && (aid ? it.actionId===aid : it.text===text));
+  const cands = {};
+  goals.forEach(g=>{ cands[g.id] = g.actions.map(a=>{ const pi=prevItem(g.id,a.id); return {key:g.id+'|'+a.id, g:g.id, actionId:a.id, text:a.name, min: pi?pi.min:(a.target>0?Math.max(1,a.target-1):2), max: pi?pi.max:(a.target>0?a.target:3), minimal: pi?pi.minimal:'1 fois'}; });
+    if (prev) prev.items.filter(it=>it.g===g.id && !it.actionId).forEach(it=>cands[g.id].push({key:g.id+'|free|'+it.text, g:g.id, actionId:null, text:it.text, min:it.min, max:it.max, minimal:it.minimal||''}));
+  });
+  if (prev) prev.items.forEach(it=>{ const c=(cands[it.g]||[]).find(c=>c.actionId ? c.actionId===it.actionId : c.text===it.text); if (c && !sel.includes(c)) sel.push(c); });
+  const STEPS = prev ? 4 : 2;
+  const stepIdx = ()=> prev ? step : step-2;
+  const readInputs = sh=>{
+    const n=sh.querySelector('#rvNote'); if (n) note=n.value;
+    sh.querySelectorAll('[data-cmin]').forEach(i=>{ const c=sel.find(x=>x.key===i.dataset.cmin); if (c){ const v=num(i.value); if (v!==null) c.min=Math.max(0,Math.round(v)); } });
+    sh.querySelectorAll('[data-cmax]').forEach(i=>{ const c=sel.find(x=>x.key===i.dataset.cmax); if (c){ const v=num(i.value); if (v!==null) c.max=Math.max(0,Math.round(v)); } });
+    sh.querySelectorAll('[data-cminimal]').forEach(i=>{ const c=sel.find(x=>x.key===i.dataset.cminimal); if (c) c.minimal=i.value.trim(); });
+    const a=sh.querySelector('#rvSi'); if (a) si=a.value.trim(); const b=sh.querySelector('#rvAlors'); if (b) alors=b.value.trim();
+  };
+  const body = ()=>{
+    const bar = `<div class="steps">${Array.from({length:STEPS},(_,i)=>`<i class="${i<stepIdx()?'on':''}"></i>`).join('')}</div>`;
+    if (step===1){
+      const rows = prev.items.map(it=>{ const g=getGoal(it.g), eff=wkTarget(prev,it), c=it.count||0; return `<div class="rv-row"><span>${esc(it.text)} <span class="tiny">· ${esc(g?g.name:'')}</span></span><b class="${c>=eff?'ok':''}">${c} / ${eff}${c>=eff?' ✓':''}</b></div>`; }).join('') || '<p class="tiny">Aucun engagement la semaine passée.</p>';
+      const reward = prevRate===null ? '' : prevRate>=.999 ? 'Semaine tenue à 100 % : coffre de 30 éclats !' : prevRate>=.7 ? 'Semaine tenue : coffre de 20 éclats !' : 'Chaque engagement tenu compte. On ajuste et on repart.';
+      return `${bar}<h2>Ta semaine passée</h2><div>${rows}</div>
+        <p style="margin:0"><b>${prevRate===null?'':Math.round(prevRate*100)+' % tenu.'}</b> ${reward}</p>
+        <div class="field"><label for="rvNote">Qu’est-ce qui a aidé, ou gêné ? (facultatif)</label><input id="rvNote" maxlength="120" placeholder="Une ligne suffit" value="${esc(note)}"></div>
+        <div class="sheet-actions"><button class="btn" type="button" data-x="close">Plus tard</button><button class="btn primary" type="button" data-next>Suivant</button></div>`;
+    }
+    if (step===2){
+      const msg = avg===null ? 'Pas encore assez d’historique. Vise des plages que tu tiens environ 3 semaines sur 4.'
+        : avg>=.9 ? `Ces dernières semaines, tu tiens en moyenne ${Math.round(avg*100)} % de tes engagements. C’est peut-être un peu facile : tu peux monter d’un cran.`
+        : avg<.6 ? `Ces dernières semaines, tu tiens en moyenne ${Math.round(avg*100)} % de tes engagements. Allège un peu : moins d’engagements ou des plages plus basses. Viser 70 à 80 % entretient la motivation.`
+        : `Ces dernières semaines, tu tiens en moyenne ${Math.round(avg*100)} % de tes engagements. C’est la bonne zone (70 à 80 %) : garde la même charge.`;
+      return `${bar}<h2>Calibrer</h2><p style="margin:0">${msg}</p><p class="hint">On surestime presque toujours ce qu’on fera. Ton propre historique est la meilleure boussole.</p>
+        <div class="sheet-actions"><button class="btn" type="button" data-prev>Retour</button><button class="btn primary" type="button" data-next>Choisir mes engagements</button></div>`;
+    }
+    if (step===3){
+      const blocks = goals.map(g=>{ const list = cands[g.id]||[]; const n=sel.filter(c=>c.g===g.id).length;
+        return `<div class="field"><span class="lbl">${esc(g.name)} <span class="tiny">(${n}/3)</span></span>${list.map(c=>{ const on=sel.includes(c);
+          return `<div class="cand ${on?'on':''}"><button type="button" class="cand-top" data-cand="${esc(c.key)}"><span class="box">${on?IC.check:''}</span><span>${esc(c.text)}</span></button>
+            ${on?`<div class="range-row"><input aria-label="Minimum" inputmode="numeric" data-cmin="${esc(c.key)}" value="${c.min}"><span style="text-align:center">à</span><input aria-label="Maximum" inputmode="numeric" data-cmax="${esc(c.key)}" value="${c.max}"><span class="tiny">fois cette semaine</span></div>
+            <input data-cminimal="${esc(c.key)}" maxlength="60" placeholder="Version minimale (ex. 1 relance de 5 min)" value="${esc(c.minimal||'')}">`:''}</div>`; }).join('')}
+          <div class="range-row" style="grid-template-columns:1fr auto"><input data-free="${g.id}" maxlength="60" placeholder="Autre engagement, avec tes mots"><button type="button" class="btn" style="padding:7px 12px" data-addfree="${g.id}">Ajouter</button></div></div>`; }).join('');
+      return `${bar}<h2>Tes engagements</h2><p class="tiny" style="margin:0">1 à 3 par objectif (10 au maximum). Une plage « 3 à 5 » : le bas est ton engagement, le haut ton défi. Les actions cochées se comptent toutes seules quand tu les valides.</p>
+        ${blocks}
+        <div class="sheet-actions">${prev?'<button class="btn" type="button" data-prev>Retour</button>':'<button class="btn" type="button" data-x="close">Plus tard</button>'}<button class="btn primary" type="button" data-next ${sel.length?'':'disabled'}>Suivant (${sel.length})</button></div>`;
+    }
+    const who = goals.map(g=>`<button type="button" data-ved="${g.id}" class="${g.id===vedette?'on':''}"><div class="mini">${creatureSVG(g.species,g.color,stageOf(g),'happy',g.xp/100,g.acc)}</div>${esc(creatureName(g))}</button>`).join('');
+    return `${bar}<h2>Vedette et plan de secours</h2>
+      <div class="field"><span class="lbl">Quelle créature veux-tu pousser cette semaine ? (+15 % d’XP)</span><div class="who">${who}</div></div>
+      <div class="field"><span class="lbl">Ton plan de secours pour l’obstacle le plus probable (facultatif)</span>
+        <input id="rvSi" maxlength="80" placeholder="Si… (ex. je rentre épuisé)" value="${esc(si)}"><input id="rvAlors" maxlength="80" placeholder="alors je… (ex. fais la version minimale)" value="${esc(alors)}"></div>
+      <div class="sheet-actions"><button class="btn" type="button" data-prev>Retour</button><button class="btn primary" type="button" id="rvSave">C’est parti !</button></div>`;
+  };
+  openSheet(body(), sh=>{
+    sh.addEventListener('click', e=>{
+      const t=e.target;
+      if (t.closest('[data-next]')){ readInputs(sh); step++; sh.innerHTML=body(); sh.scrollTop=0; return; }
+      if (t.closest('[data-prev]')){ readInputs(sh); step--; sh.innerHTML=body(); sh.scrollTop=0; return; }
+      const cd=t.closest('[data-cand]');
+      if (cd){ readInputs(sh); const all=Object.values(cands).flat(); const c=all.find(x=>x.key===cd.dataset.cand); const i=sel.indexOf(c);
+        if (i>=0) sel.splice(i,1);
+        else if (sel.filter(x=>x.g===c.g).length>=3) toast({title:'3 engagements maximum par objectif', sub:'Mieux vaut peu, mais tenu.', color:'var(--muted)'});
+        else if (sel.length>=10) toast({title:'10 engagements maximum', sub:'Garde de la place pour respirer.', color:'var(--muted)'});
+        else sel.push(c);
+        sh.innerHTML=body(); return; }
+      const af=t.closest('[data-addfree]');
+      if (af){ readInputs(sh); const inp=sh.querySelector(`[data-free="${af.dataset.addfree}"]`); const txt=inp&&inp.value.trim(); if (!txt) return;
+        const c={key:af.dataset.addfree+'|free|'+txt+'|'+uid(), g:af.dataset.addfree, actionId:null, text:txt, min:1, max:2, minimal:''}; cands[c.g].push(c);
+        if (sel.filter(x=>x.g===c.g).length<3 && sel.length<10) sel.push(c); sh.innerHTML=body(); return; }
+      const vd=t.closest('[data-ved]'); if (vd){ readInputs(sh); vedette=vd.dataset.ved; sh.innerHTML=body(); return; }
+      if (t.closest('#rvSave')){
+        readInputs(sh); ensureDay();
+        const pl0 = playerLevel().lvl;
+        if (prev){
+          state.weeks.push({k:prev.k, rate:prevRate, n:prev.items.length, note:note.slice(0,120)}); if (state.weeks.length>52) state.weeks.shift();
+          if (prevRate!==null && prevRate>=.7){ addCoins(prevRate>=.999?30:20); state.stats.goodWeeks=(state.stats.goodWeeks||0)+1; }
+        }
+        state.week = {k:weekKey(), items: sel.map(c=>({id:uid(), g:c.g, actionId:c.actionId, text:c.text, min:Math.min(c.min,c.max), max:Math.max(c.min,c.max), minimal:c.minimal||'', count:0})), vedette, ifthen:{si, alors}, minimalMode:false};
+        state.stats.reviews=(state.stats.reviews||0)+1;
+        const vg = getGoal(vedette); let res=null;
+        if (vg){ res = grant(vg, null, 25, {crit:false}); trackDay(res.xp,0); logIt(vg,'Bilan du lundi',res.xp,0); }
+        closeSheet();
+        sfx.chest(); confetti(innerWidth/2, innerHeight*.35, prev&&prevRate>=.7?120:50, null, 1.1);
+        toast({icon:IC.star, title:'Ta semaine est prête', sub:`${state.week.items.length} engagement${state.week.items.length>1?'s':''}${res?` · +${res.xp} XP pour ${creatureName(vg)}`:''}`, color:'var(--sky)', ms:4500});
+        if (res) handleEvents(res, vg);
+        checkAchievements(); checkPlayerLevel(pl0); commit(); render();
+      }
+    });
+  });
+}
+
+// Campagne de 12 semaines : objectif final, WOOP, résultats clés, propriété
+function campaignSection(g){
+  const c = g.campaign;
+  if (!c) return `<section class="card camp" style="--gc:${g.color}"><div class="section-h"><h2>Campagne</h2><span class="tiny">12 semaines</span></div>
+    <p class="tiny" style="margin:0 0 10px">Relie tes actions du jour à un résultat daté : ton objectif final, l’obstacle qui risque de t’arrêter, et 2 à 3 résultats clés à atteindre en 12 semaines. C’est toi qui écris tout.</p>
+    <button type="button" class="btn primary block" data-act="campNew" data-g="${g.id}">Lancer ma campagne</button></section>`;
+  const wk = campaignWeek(c), ended = wk>c.weeks;
+  const krs = c.krs.map(kr=>{ const v=krValue(g,kr), st=krStatus(g,kr); const m=kr.metricId&&g.metrics.find(x=>x.id===kr.metricId);
+    return `<div class="kr"><div class="kr-head"><b>${esc(kr.name)}</b><span class="kr-type ${kr.type}">${kr.type==='process'?'processus':'résultat'}</span></div>
+      ${rbar(v, kr.min, kr.max)}
+      <span class="tiny">${fmtNum(v)} ${esc(kr.unit||'')} · objectif ${fmtNum(kr.min)} à ${fmtNum(kr.max)}${st==='over'?' · dépassé !':st==='ok'?' · atteint ✓':''}${m?` · suit la mesure « ${esc(m.name)} »`:''}</span>
+      <div class="kr-btns">${m?'':`<button type="button" class="btn primary" data-act="krUpdate" data-g="${g.id}" data-k="${kr.id}">Mettre à jour</button>`}<button type="button" class="btn" data-act="krAdjust" data-g="${g.id}" data-k="${kr.id}">Ajuster</button></div></div>`; }).join('');
+  return `<section class="card camp" style="--gc:${g.color}"><div class="section-h"><h2>Campagne</h2><button type="button" class="icon-btn flat" data-act="campEdit" data-g="${g.id}" aria-label="Modifier la campagne">${IC.pen}</button></div>
+    <div class="rows">
+      <div class="final">${esc(c.final.text)}${c.final.date?` <span class="tiny">· d’ici le ${fmtDay(c.final.date)}</span>`:''}</div>
+      ${c.final.why?`<div class="why">Pourquoi : ${esc(c.final.why)}</div>`:''}
+      <div class="wk">${wk===0?`Commence le ${fmtDay(c.start)}`:ended?'Campagne terminée':`Semaine ${wk}/${c.weeks}`}<div class="bar small"><i style="width:${Math.min(100,Math.max(0,wk-(ended?0:1))/c.weeks*100)}%"></i></div><span class="tiny">fin ${fmtDay(campaignEnd(c))}</span></div>
+      ${krs}
+      ${c.woop&&c.woop.obstacle?`<p class="hint" style="margin:0">Si ${esc(c.woop.obstacle)}, alors ${esc(c.woop.plan||'…')}</p>`:''}
+      ${ended?`<button type="button" class="btn primary block" data-act="campReview" data-g="${g.id}">Faire le bilan de campagne</button>`:''}
+    </div></section>`;
+}
+function openCampaignEditor(g, editing){
+  const c0 = editing && g.campaign ? JSON.parse(JSON.stringify(g.campaign)) : null;
+  const d = c0 || {start: campaignStart(), weeks:12, final:{text:'', date:'', why:''}, woop:{best:'', obstacle:'', plan:''}, own:0,
+    krs:[{id:uid(), name:'', type:'process', min:'', max:'', unit:'', metricId:null, value:0},{id:uid(), name:'', type:'process', min:'', max:'', unit:'', metricId:null, value:0}]};
+  if (!d.final.date) d.final.date = campaignEnd(d);
+  let step = 1, err = '';
+  const read = sh=>{
+    const v = id=>{ const el=sh.querySelector('#'+id); return el? el.value.trim() : null; };
+    if (step===1){ d.final.text=v('cfText'); d.final.date=v('cfDate')||d.final.date; d.final.why=v('cfWhy'); }
+    if (step===2){ d.woop.best=v('cwBest'); d.woop.obstacle=v('cwObs'); d.woop.plan=v('cwPlan'); }
+    if (step===3) d.krs.forEach((kr,i)=>{ kr.name=v('krn'+i); const mn=num(v('krmin'+i)), mx=num(v('krmax'+i)); kr.min = mn===null?'':mn; kr.max = mx===null?'':mx; kr.unit=v('kru'+i); const ms=sh.querySelector('#krm'+i); kr.metricId = ms && ms.value ? ms.value : null; });
+  };
+  const body = ()=>{
+    const bar = `<div class="steps">${[1,2,3,4].map(i=>`<i class="${i<=step?'on':''}"></i>`).join('')}</div>`;
+    const errHtml = err?`<p class="warn" style="margin:0">${esc(err)}</p>`:'';
+    if (step===1) return `${bar}<h2>Ton objectif final</h2><p class="tiny" style="margin:0">Écris-le avec tes mots : un résultat qu’on peut constater, et une date. C’est l’étape finale qui rendra ${esc(creatureName(g))} légendaire.</p>
+      <div class="field"><label for="cfText">Objectif final</label><textarea id="cfText" maxlength="160" style="min-height:70px;font-family:inherit;font-size:15px" placeholder="Ex. Promesse d’embauche signée pour le poste que je vise">${esc(d.final.text)}</textarea></div>
+      <div class="field"><label for="cfDate">Pour quand ?</label><input id="cfDate" type="date" value="${esc(d.final.date)}"></div>
+      <div class="field"><label for="cfWhy">Pourquoi ça compte pour toi ?</label><input id="cfWhy" maxlength="140" placeholder="Avec tes mots" value="${esc(d.final.why)}"></div>
+      ${errHtml}<div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" data-next>Suivant</button></div>`;
+    if (step===2) return `${bar}<h2>Meilleur résultat et obstacle</h2><p class="tiny" style="margin:0">Imagine d’abord le meilleur résultat, puis ce qui, <b>en toi</b>, risque de t’arrêter. Enfin, prévois ta parade.</p>
+      <div class="field"><label for="cwBest">Le meilleur résultat, ce que tu ressentiras</label><input id="cwBest" maxlength="140" placeholder="Avec tes mots" value="${esc(d.woop.best)}"></div>
+      <div class="field"><label for="cwObs">Si… (l’obstacle intérieur le plus probable)</label><input id="cwObs" maxlength="100" placeholder="Ex. je repousse quand je suis fatigué" value="${esc(d.woop.obstacle)}"></div>
+      <div class="field"><label for="cwPlan">…alors je (ta parade)</label><input id="cwPlan" maxlength="100" placeholder="Ex. je fais juste la version minimale" value="${esc(d.woop.plan)}"></div>
+      ${errHtml}<div class="sheet-actions"><button class="btn" type="button" data-prev>Retour</button><button class="btn primary" type="button" data-next>Suivant</button></div>`;
+    if (step===3){
+      const mopts = sel=> `<option value="">Je mets à jour moi-même</option>` + g.metrics.map(m=>`<option value="${m.id}" ${m.id===sel?'selected':''}>Suivre la mesure « ${esc(m.name)} »</option>`).join('');
+      const rows = d.krs.map((kr,i)=>`<div class="kr"><div class="kr-head"><b>Résultat clé ${i+1}</b>${d.krs.length>1?`<button type="button" class="icon-btn flat" data-krdel="${i}" aria-label="Retirer">${IC.x}</button>`:''}</div>
+        <input id="krn${i}" maxlength="70" placeholder="${i===0?'Ex. Candidatures ciblées envoyées':'Ex. Séances faites'}" value="${esc(kr.name)}">
+        <div class="chips-s"><button type="button" data-krtype="${i}|process" class="${kr.type==='process'?'on':''}">Processus : dépend de moi</button><button type="button" data-krtype="${i}|result" class="${kr.type==='result'?'on':''}">Résultat : dépend en partie des autres</button></div>
+        <div class="range-row"><input id="krmin${i}" inputmode="decimal" placeholder="min" value="${kr.min}"><span style="text-align:center">à</span><input id="krmax${i}" inputmode="decimal" placeholder="max" value="${kr.max}"><input id="kru${i}" maxlength="12" placeholder="unité" value="${esc(kr.unit||'')}"></div>
+        ${g.metrics.length?`<select id="krm${i}">${mopts(kr.metricId)}</select>`:''}</div>`).join('');
+      return `${bar}<h2>Tes résultats clés</h2><p class="tiny" style="margin:0">2 à 3 résultats à atteindre en 12 semaines, en plage : le bas est ton engagement, le haut ton défi. Au moins un doit dépendre de toi (processus), et au plus un des autres (résultat).</p>
+        ${rows}${d.krs.length<3?'<button type="button" class="add-row" data-kradd>'+IC.plus+' Ajouter un résultat clé</button>':''}
+        ${errHtml}<div class="sheet-actions"><button class="btn" type="button" data-prev>Retour</button><button class="btn primary" type="button" data-next>Suivant</button></div>`;
+    }
+    return `${bar}<h2>Est-ce vraiment ton objectif ?</h2><p style="margin:0">« ${esc(d.final.text)} »</p>
+      <div class="field"><span class="lbl">De 1 à 5, à quel point c’est le tien ?</span><div class="own">${[1,2,3,4,5].map(n=>`<button type="button" data-own="${n}" class="${d.own===n?'on':''}">${n}</button>`).join('')}</div></div>
+      ${d.own && d.own<=3?`<p class="warn" style="margin:0">On s’engage vraiment quand l’objectif nous ressemble. Prends une minute pour le reformuler avec tes mots, ou valide-le tel quel si tu es sûr de toi.</p>`:''}
+      <div class="sheet-actions"><button class="btn" type="button" data-prev>${d.own && d.own<=3?'Reformuler':'Retour'}</button><button class="btn primary" type="button" id="cSave" ${d.own?'':'disabled'}>${editing?'Enregistrer':'Lancer la campagne'}</button></div>`;
+  };
+  const validate = ()=>{
+    if (step===1 && !d.final.text) return 'Écris ton objectif final, même en quelques mots.';
+    if (step===3){
+      const krs = d.krs.filter(k=>k.name);
+      if (krs.length<1) return 'Donne un nom à au moins un résultat clé.';
+      if (krs.some(k=>k.min==='' || k.max==='')) return 'Indique une plage (minimum et maximum) pour chaque résultat clé.';
+      if (!krs.some(k=>k.type==='process')) return 'Au moins un résultat clé doit dépendre de toi (processus).';
+      if (krs.filter(k=>k.type==='result').length>1) return 'Garde au plus un résultat qui dépend des autres : les autres doivent dépendre de toi.';
+    }
+    return '';
+  };
+  openSheet(body(), sh=>{
+    sh.addEventListener('click', e=>{
+      const t=e.target;
+      if (t.closest('[data-next]')){ read(sh); err=validate(); if (!err) step++; sh.innerHTML=body(); sh.scrollTop=0; return; }
+      if (t.closest('[data-prev]')){ read(sh); err=''; step = (step===4 && d.own && d.own<=3) ? 1 : step-1; sh.innerHTML=body(); sh.scrollTop=0; return; }
+      const kt=t.closest('[data-krtype]'); if (kt){ read(sh); const [i,ty]=kt.dataset.krtype.split('|'); d.krs[+i].type=ty; sh.innerHTML=body(); return; }
+      const kd=t.closest('[data-krdel]'); if (kd){ read(sh); d.krs.splice(+kd.dataset.krdel,1); sh.innerHTML=body(); return; }
+      if (t.closest('[data-kradd]')){ read(sh); d.krs.push({id:uid(), name:'', type:'process', min:'', max:'', unit:'', metricId:null, value:0}); sh.innerHTML=body(); return; }
+      const ow=t.closest('[data-own]'); if (ow){ d.own=+ow.dataset.own; sh.innerHTML=body(); return; }
+      if (t.closest('#cSave')){
+        d.krs = d.krs.filter(k=>k.name).map(k=>({...k, min:Math.min(k.min,k.max), max:Math.max(k.min,k.max)}));
+        const isNew = !g.campaign;
+        g.campaign = d; closeSheet();
+        if (isNew){ ensureDay(); const pl0=playerLevel().lvl; const res=grant(g, null, 50, {crit:false}); trackDay(res.xp,0); logIt(g,'Campagne lancée',res.xp,0); state.stats.campaigns=(state.stats.campaigns||0)+1;
+          sfx.level(); confetti(innerWidth/2, innerHeight*.35, 90, null, 1.2);
+          toast({icon:IC.star, title:'Campagne lancée !', sub:`${campaignWeek(d)===0?'Elle commence le '+fmtDay(d.start):'Semaine 1/12'} · +${res.xp} XP`, color:'var(--accent)', ms:4500});
+          handleEvents(res, g); checkAchievements(); checkPlayerLevel(pl0); }
+        commit(); render();
+      }
+    });
+  });
+}
+function openKrUpdate(g, kr){
+  openSheet(`<h2>${esc(kr.name)}</h2><p class="tiny" style="margin:0">Objectif : ${fmtNum(kr.min)} à ${fmtNum(kr.max)} ${esc(kr.unit||'')}</p>
+    <div class="field"><label for="kuVal">Où en es-tu ?</label><input id="kuVal" inputmode="decimal" value="${fmtNum(kr.value||0)}"></div>
+    <div class="chips-s"><button type="button" data-kuadd="1">+1</button><button type="button" data-kuadd="5">+5</button></div>
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="kuSave">Enregistrer</button></div>`, sh=>{
+    sh.addEventListener('click', e=>{
+      const ad=e.target.closest('[data-kuadd]'); if (ad){ const inp=sh.querySelector('#kuVal'); inp.value = fmtNum((num(inp.value)||0) + (+ad.dataset.kuadd)); return; }
+      if (!e.target.closest('#kuSave')) return;
+      const v=num(sh.querySelector('#kuVal').value); if (v===null){ sh.querySelector('#kuVal').focus(); return; }
+      const before=krStatus(g,kr); kr.value=v; const after=krStatus(g,kr); closeSheet();
+      if (before==='no' && after!=='no'){ state.stats.krs=(state.stats.krs||0)+1; sfx.level(); confetti(innerWidth/2, innerHeight*.4, 90, null, 1.2); toast({icon:IC.star, title:'Résultat clé atteint !', sub:kr.name+' · le bonus sera versé au bilan de campagne', color:'var(--gold)', ms:4500}); checkAchievements(); }
+      else sfx.pop();
+      commit(); render();
+    });
+  });
+}
+// Ajuster une plage, jamais abandonner : aucune perte
+function openAdjust(o){
+  let reason = '';
+  const REASONS = ['Trop ambitieux','Imprévu','Priorité changée','Trop facile'];
+  openSheet(`<h2>Ajuster</h2><p style="margin:0"><b>${esc(o.label)}</b></p><p class="tiny" style="margin:0">Ajuster n’enlève rien : ton XP, ta série et ta créature restent intactes. Un objectif ajusté reste un objectif tenu.</p>
+    <div class="range-row"><input id="ajMin" inputmode="decimal" value="${fmtNum(o.min)}" aria-label="Minimum"><span style="text-align:center">à</span><input id="ajMax" inputmode="decimal" value="${fmtNum(o.max)}" aria-label="Maximum"><span class="tiny">${o.kind==='week'?'fois cette semaine':''}</span></div>
+    <div class="field"><span class="lbl">Pourquoi ? (un tap)</span><div class="chips-s" id="ajR">${REASONS.map(r=>`<button type="button" data-r="${r}">${r}</button>`).join('')}</div></div>
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="ajSave">Ajuster</button></div>
+    ${o.onRemove?'<button class="btn block" type="button" id="ajDel">Retirer cet engagement</button>':''}`, sh=>{
+    sh.addEventListener('click', e=>{
+      const rb=e.target.closest('[data-r]'); if (rb){ reason=rb.dataset.r; sh.querySelectorAll('#ajR button').forEach(b=>b.classList.toggle('on', b===rb)); return; }
+      if (e.target.closest('#ajDel')){ o.onRemove(); commit(); closeSheet(); render(); toast({title:'Engagement retiré', sub:'Moins, mais mieux.', color:'var(--muted)'}); return; }
+      if (!e.target.closest('#ajSave')) return;
+      let mn=num(sh.querySelector('#ajMin').value), mx=num(sh.querySelector('#ajMax').value);
+      if (mn===null || mx===null){ sh.querySelector('#ajMin').focus(); return; }
+      if (mn>mx){ const t=mn; mn=mx; mx=t; }
+      const down = mx < o.max || mn < o.min;
+      o.onSave(mn, mx);
+      state.adjustLog.push({t:Date.now(), kind:o.kind, down, reason}); if (state.adjustLog.length>60) state.adjustLog.shift();
+      const recentDown = state.adjustLog.filter(a=>a.down && Date.now()-a.t < 30*864e5).length;
+      commit(); closeSheet(); render();
+      if (down && recentDown>=3) toast({title:'Ajusté', sub:`${recentDown} ajustements à la baisse ce mois-ci : la semaine prochaine, prends peut-être moins d’engagements.`, color:'var(--sky)', ms:5500});
+      else toast({title:'Ajusté', sub:'C’est noté, sans aucune perte.', color:'var(--sky)'});
+    });
+  });
+}
+function openCampaignReview(g){
+  const c=g.campaign; if (!c) return;
+  const lessons = {};
+  const label = {over:'Dépassé', ok:'Atteint', no:'Pas encore'};
+  openSheet(`<h2>Bilan de campagne</h2><p style="margin:0">« ${esc(c.final.text)} »</p>
+    ${c.krs.map(kr=>{ const st=krStatus(g,kr); return `<div class="kr"><div class="kr-head"><b>${esc(kr.name)}</b><span class="kr-type ${st==='no'?'process':'result'}">${label[st]}</span></div><span class="tiny">${fmtNum(krValue(g,kr))} ${esc(kr.unit||'')} · objectif ${fmtNum(kr.min)} à ${fmtNum(kr.max)}</span><input data-lesson="${kr.id}" maxlength="120" placeholder="Ce que j’en retiens (facultatif)"></div>`; }).join('')}
+    <p class="tiny" style="margin:0">Récompenses : 100 XP pour le bilan, 600 XP par résultat clé atteint, 300 XP de plus s’il est dépassé.</p>
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Plus tard</button><button class="btn primary" type="button" id="crSave">Valider le bilan</button></div>`, sh=>{
+    sh.querySelector('#crSave').onclick = ()=>{
+      sh.querySelectorAll('[data-lesson]').forEach(i=>{ lessons[i.dataset.lesson]=i.value.trim(); });
+      ensureDay(); const pl0=playerLevel().lvl;
+      let base=100; c.krs.forEach(kr=>{ const st=krStatus(g,kr); if (st!=='no') base+=600; if (st==='over') base+=300; kr.final=st; kr.lesson=lessons[kr.id]||''; });
+      const res=grant(g, null, base, {crit:false}); trackDay(res.xp,0); logIt(g,'Bilan de campagne',res.xp,0); addCoins(30);
+      g.pastCampaigns.push({...c, closedAt:Date.now()}); g.campaign=null;
+      closeSheet(); sfx.evolve(); confetti(innerWidth/2, innerHeight*.35, 160, null, 1.5);
+      toast({icon:IC.star, title:'Campagne bouclée !', sub:`+${res.xp} XP et +30 éclats. Prête pour la suivante ?`, color:'var(--gold)', ms:5000});
+      handleEvents(res, g); checkAchievements(); checkPlayerLevel(pl0); commit(); render();
+    };
   });
 }
 
@@ -1971,6 +2334,7 @@ function viewHome(){
     ${playerRow()}
     ${garden()}
     ${repairCard()}
+    ${weekCard()}
     ${planCard()}
     ${questBox()}
     ${state.goals.map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
@@ -2006,6 +2370,7 @@ function viewGoal(id){
       ${mt?`<div class="mood">${mt}</div>`:''}
       <div class="evo-path">${path}</div>
     </section>
+    ${campaignSection(g)}
     <section class="card"><div class="section-h"><h2>Actions</h2><span class="tiny">1 touche = XP</span></div><div class="rows">
       ${g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
       <button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action</button></div></section>
@@ -2064,6 +2429,8 @@ function viewSettings(){
       <p><b>Série</b> : +2 % d'XP par jour consécutif (max +30 %). Un joker gratuit par semaine (max 2) protège ta série si tu rates un jour. Plus de joker ? Ta flamme devient une braise : fais 2 actions (ou 1 difficile) dans les 48 h pour la rallumer (une fois par semaine). Si elle s'éteint quand même, tu gardes la moitié de ton bonus.</p>
       <p><b>Retrouvailles</b> : après 3 jours sans t'occuper d'un objectif, sa créature t'attend, un peu triste, et après 7 jours elle s'endort. Aucune punition : quand tu reviens, elle saute de joie et tes premières actions rapportent un bonus (+30 % sur 2 actions, ou +50 % sur 3 après 7 jours). Au plus une fois tous les 14 jours par objectif.</p>
       <p><b>Plan du jour</b> : chaque matin, choisis 1 à 3 actions et, si tu veux, le moment où tu les feras (« Après mon café… »). Chaque promesse tenue rapporte +25 % d'XP. Rien ne se passe si tu n'y arrives pas.</p>
+      <p><b>Campagne de 12 semaines</b> : dans chaque objectif, fixe ton objectif final (avec ta date et ton pourquoi), l'obstacle qui risque de t'arrêter et 2 à 3 résultats clés en plage (« 3 à 5 »). Au moins un doit dépendre de toi (processus). Le bouton « Ajuster » change une plage sans aucune perte.</p>
+      <p><b>Bilan du lundi</b> : 2 minutes pour regarder ta semaine, choisir 1 à 3 engagements par objectif (avec une version minimale) et ta créature vedette (+15 % d'XP). Semaine tenue à 70 % : coffre de 20 éclats. Si la semaine s'annonce dure, active la « semaine minimale ».</p>
       <p><b>Mesures</b> : dans chaque objectif, note tes vrais chiffres (candidatures, charges, aisance…). Chaque record battu rapporte 75 XP et 10 éclats (une fois par semaine et par mesure).</p>
       <p><b>Niveau de joueur</b> : toute l'XP que tu gagnes, tous objectifs confondus, fait monter ton niveau et ton titre (Novice, Apprenti, Aventurier… jusqu'à Légende).</p>
       <p><b>Objectif par semaine</b> : sur une action (bouton crayon), tu peux fixer un nombre de fois par semaine. Quand tu l'atteins, bonus de 60 XP. Le compteur repart chaque lundi.</p>
@@ -2118,6 +2485,16 @@ document.addEventListener('click', e=>{
     case 'settings': go('settings'); break;
     case 'chest': openChest(); break;
     case 'planOpen': openPlanEditor(); break;
+    case 'reviewOpen': openReview(); break;
+    case 'reviewLater': state.reviewSnooze=dayKey(); commit(); render(); break;
+    case 'wkInc': { const w=curWeek(), it=w&&w.items.find(x=>x.id===el.dataset.i); if (it){ const before=it.count||0; it.count=before+1; const eff=wkTarget(w,it); if (before<eff && it.count>=eff){ sfx.achv(); toast({icon:IC.check.replace('currentColor','#3F8CFF'), title:'Engagement de la semaine tenu', sub:it.text, color:'var(--sky)'}); } else sfx.pop(); const r=el.getBoundingClientRect(); stars(r.left+r.width/2, r.top+r.height/2, 6, null, .8); commit(); render(); } break; }
+    case 'wkAdjust': { const w=curWeek(), it=w&&w.items.find(x=>x.id===el.dataset.i); if (it) openAdjust({kind:'week', label:it.text, min:it.min, max:it.max, onSave:(mn,mx)=>{ it.min=mn; it.max=mx; }, onRemove:()=>{ w.items=w.items.filter(x=>x!==it); }}); break; }
+    case 'wkMinimal': { const w=curWeek(); if (w){ w.minimalMode=!w.minimalMode; commit(); render(); toast({title: w.minimalMode?'Semaine minimale activée':'Semaine normale', sub: w.minimalMode?'Chaque engagement compte dès sa version minimale. Prends soin de toi.':'Tes plages habituelles reviennent.', color:'var(--sky)'}); } break; }
+    case 'campNew': openCampaignEditor(g); break;
+    case 'campEdit': openCampaignEditor(g, true); break;
+    case 'krUpdate': { const kr=g.campaign&&g.campaign.krs.find(k=>k.id===el.dataset.k); if (kr) openKrUpdate(g, kr); break; }
+    case 'krAdjust': { const kr=g.campaign&&g.campaign.krs.find(k=>k.id===el.dataset.k); if (kr) openAdjust({kind:'kr', label:kr.name, min:kr.min, max:kr.max, onSave:(mn,mx)=>{ kr.min=mn; kr.max=mx; }}); break; }
+    case 'campReview': openCampaignReview(g); break;
     case 'planSkip': state.plan={date:dayKey(), items:[], skipped:true}; commit(); render(); break;
     case 'planDo': { const it=(state.plan&&state.plan.items||[])[+el.dataset.i]; if (it && !it.done) doAction(it.g, it.a, e, el); break; }
     case 'addMetric': openMetricEditor(g, null); break;
