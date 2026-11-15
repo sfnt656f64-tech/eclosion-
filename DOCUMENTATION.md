@@ -313,15 +313,20 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 
 ## 8. Les écrans
 
+**Principe d'affichage (version 13)** : un écran épuré. L'accueil ne montre que l'essentiel du jour ; le détail est rangé dans des onglets ou des zones dépliables. Toute nouvelle fonction doit s'intégrer dans cette structure plutôt qu'ajouter un bloc de plus.
+
 - **Premier lancement** : trois œufs, et deux boutons : « Commencer avec mes 3 objectifs » (exemples modifiables) ou « Partir de zéro ».
-- **Accueil** :
-  - en-tête avec musique ♪, éclats 💎 (ouvre la boutique), série 🔥 et jokers 🛡 ;
-  - barre de niveau de joueur ;
-  - **le jardin** : toutes les créatures ensemble dans un paysage dont le ciel suit l'heure réelle (matin, jour, coucher de soleil, nuit étoilée) ;
-  - quête du jour avec le coffre ;
-  - une carte par objectif : créature, forme, progression, humeur et boutons d'action ;
+- **Accueil**, dans cet ordre :
+  - en-tête avec deux pastilles seulement : éclats 💎 (ouvre la boutique) et série 🔥 (les jokers sont dans son infobulle). La musique se règle dans Réglages, le niveau de joueur est dans Succès ;
+  - **le jardin** : toutes les créatures ensemble dans un paysage dont le ciel suit l'heure réelle ;
+  - **une seule carte « Aujourd'hui »** en trois parties : braise à rallumer (si besoin) et plan du jour, quêtes du jour avec un petit coffre, puis « Ma semaine » en une ligne (taux et barre), dépliable avec « Voir » (préférence gardée sur l'appareil). Le bilan du lundi y apparaît en une ligne quand il est dû ;
+  - « Mes objectifs » : une carte par objectif avec **3 actions au maximum** (celles de la semaine et du plan d'abord, puis les plus utilisées) et un bouton « +N autres » vers la fiche. Les objectifs en pause sont en carte compacte à la fin ;
   - « Nouvel objectif ».
-- **Fiche d'un objectif** : grande créature, bouton « Habiller », chemin d'évolution (formes non atteintes en silhouette « ??? »), actions, étapes (la finale en doré), arbre des compétences avec niveaux, capacités et sous-compétences.
+- **Fiche d'un objectif** : la créature, sa forme, sa progression et le bouton « Habiller », puis **trois onglets** (collés en haut quand on fait défiler) :
+  - **Actions** : les actions et les étapes (la finale en doré) ;
+  - **Progrès** : la campagne, les mesures et le chemin d'évolution (formes non atteintes en silhouette « ??? ») ;
+  - **Compétences** : l'arbre des compétences avec niveaux, capacités et sous-compétences.
+  L'onglet ouvert reste le même quand on valide une action ; il revient sur « Actions » quand on ouvre un autre objectif.
 - **Succès** : niveau de joueur, chiffres clés, **calendrier d'activité** sur 12 semaines (cases de plus en plus vertes), grille des succès, journal des dernières actions.
 - **Réglages** : état de la sauvegarde, effets sonores, musique et volume, « Tester le son », exporter et importer une sauvegarde, aide « Comment ça marche », et deux réinitialisations :
   - « Remettre ma progression à zéro » garde les objectifs, compétences, actions et étapes ;
@@ -345,7 +350,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v12` ; passer à `eclosion-v13`, etc.), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v13` ; passer à `eclosion-v14`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 

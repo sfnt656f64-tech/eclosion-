@@ -473,13 +473,44 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 .pause-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;border-radius:99px;padding:2px 9px;background:color-mix(in srgb,var(--sky) 16%,transparent);color:color-mix(in srgb,var(--sky) 55%,var(--ink))}
 .pause-banner{display:flex;align-items:center;gap:10px;border:2px dashed var(--sky);background:color-mix(in srgb,var(--sky) 8%,var(--surface))}
 .pause-banner>div{flex:1;min-width:0}
+/* Accueil épuré : carte « Aujourd'hui » */
+.today{display:flex;flex-direction:column;gap:0;padding:6px 16px}
+.today>.tsec{padding:12px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.today>.tsec:first-child{border-top:0}
+.thead{display:flex;align-items:center;gap:8px}
+.thead h3{font-size:16px;flex:1}
+.thead .tiny{flex:none}
+.tlink{font-weight:800;font-size:13px;color:var(--accent);padding:2px 4px}
+.tline{display:flex;align-items:center;gap:10px}
+.tline .grow{flex:1;min-width:0}
+.btn.sm{padding:7px 14px;font-size:13px;border-radius:99px}
+.qmini{display:flex;flex-direction:column;gap:4px}
+.qmini .qrow{padding:2px 0;grid-template-columns:20px 1fr auto}
+.qmini .qrow .chk{width:20px;height:20px;border-radius:7px}
+.qmini .qtxt{font-weight:700;font-size:13.5px}
+.chest-mini{display:flex;align-items:center;gap:6px;border-radius:99px;padding:3px 10px 3px 4px;font-weight:800;font-size:12px;border:1.5px solid var(--line);background:var(--surface2)}
+.chest-mini svg{width:30px;height:25px}
+.chest-mini.ready{border-color:var(--gold);background:var(--gold-soft);color:var(--orange);animation:chestReady 1.1s ease-in-out infinite}
+.chest-mini:disabled{cursor:default}
+.chest-mini.locked svg{filter:grayscale(.7);opacity:.7}
+.trepair{display:flex;align-items:center;gap:8px;border-radius:12px;padding:8px 10px;background:color-mix(in srgb,var(--orange) 12%,var(--surface));border:1.5px dashed var(--orange);font-size:13px;font-weight:700}
+.trepair svg{width:22px;height:22px;flex:none;animation:ember 1.2s ease-in-out infinite}
+.goals-h{display:flex;align-items:center;margin-top:4px}
+.goals-h h2{font-size:20px;flex:1}
+.chip.more{background:var(--surface2);color:var(--muted);box-shadow:none;border:2px solid var(--line)}
+/* Fiche épurée : onglets */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border-radius:16px;padding:4px;box-shadow:var(--shadow);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.tabs button{border-radius:12px;padding:9px 4px;font-weight:800;font-size:14px;color:var(--muted)}
+.tabs button.on{background:var(--accent-soft);color:var(--accent)}
+.hero.compact .cr-wrap.lg{width:min(190px,50vw);height:min(190px,50vw)}
+.hero-actions{display:flex;gap:8px;justify-content:center}
 /* Niveau de joueur */
 .player{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
 .player .plvl{background:var(--ink);color:var(--bg);border-radius:10px;padding:2px 9px;font-family:var(--font-display);flex:none}
 .player .bar{flex:1;--gc:var(--gold)}
 .player .tiny{flex:none}
 /* Le jardin : toutes les créatures ensemble, ciel selon l'heure */
-.garden{position:relative;height:200px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:linear-gradient(var(--sky1),var(--sky2));--sky1:#8FD3FF;--sky2:#E3F6FF;--hill1:#7BD88F;--hill2:#4FC37A;--orb:#FFE07A}
+.garden{position:relative;height:170px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:linear-gradient(var(--sky1),var(--sky2));--sky1:#8FD3FF;--sky2:#E3F6FF;--hill1:#7BD88F;--hill2:#4FC37A;--orb:#FFE07A}
 .garden.t-dawn{--sky1:#FFB7A1;--sky2:#FFE9C7;--hill1:#8CD69A;--hill2:#58BE80;--orb:#FFD27A}
 .garden.t-dusk{--sky1:#7A5BC9;--sky2:#FFAE8A;--hill1:#5FAF86;--hill2:#3F8F70;--orb:#FFB36B}
 .garden.t-night{--sky1:#17173F;--sky2:#3B2F7A;--hill1:#2F6E66;--hill2:#235650;--orb:#F4F1D0}
@@ -1833,8 +1864,42 @@ function weekRate(w){ if (!w || !w.items.length) return null; return w.items.red
 function weekHit(gid, aid){ const w=curWeek(); if (!w) return null; let reached=null; w.items.forEach(it=>{ if (it.g===gid && it.actionId===aid){ const before=it.count||0; it.count=before+1; const eff=wkTarget(w,it); if (before<eff && it.count>=eff) reached=it; } }); return reached; }
 function reviewDue(){ return state.goals.some(g=>!g.paused && (g.actions.length||g.campaign)) && !curWeek(); }
 
-function weekCard(){
+let weekOpen = (()=>{ try{ return localStorage.getItem('eclosion.weekOpen')==='1'; }catch(e){ return false; } })();
+function todayCard(){
+  const secs = [];
+  // Braise à rallumer
+  const R = state.streak.repair;
+  const repair = R ? `<div class="trepair">${IC.flame}<span>Rallume ta flamme : encore ${Math.max(0,R.need-(R.got||0))} action${R.need-(R.got||0)>1?'s':''} ${R.until===dayKey()?'aujourd’hui':'aujourd’hui ou demain'} (une difficile compte double).</span></div>` : '';
+  // Plan du jour
+  const hasActions = state.goals.some(g=>!g.paused && g.actions.length);
+  const p = todayPlan();
+  if (hasActions && !(p && p.skipped)){
+    if (!p) secs.push(`<div class="tsec">${repair}<div class="tline"><div class="grow"><h3 style="font-size:16px">Mes coups du jour</h3><span class="tiny">1 à 3 actions, +25 % d’XP chacune</span></div><button type="button" class="tlink" data-act="planSkip">Pas aujourd’hui</button><button type="button" class="btn primary sm" data-act="planOpen">Choisir</button></div></div>`);
+    else {
+      const done = p.items.filter(it=>it.done).length;
+      const items = p.items.map((it,i)=>{ const g=getGoal(it.g), a=g&&g.actions.find(x=>x.id===it.a); if(!a) return '';
+        return `<button type="button" class="plan-item ${it.done?'done':''}" data-act="planDo" data-i="${i}"><span class="ptxt">${it.cue?`<span class="pcue">Après ${esc(it.cue)}</span>`:''}${esc(a.name)}</span>${it.done?'<span class="stamp">Tenue</span>':`<b>+25 %</b>`}</button>`; }).join('');
+      secs.push(`<div class="tsec">${repair}<div class="thead"><h3>Mes coups du jour</h3><span class="tiny">${done}/${p.items.length}</span><button type="button" class="icon-btn flat" data-act="planOpen" aria-label="Modifier mon plan">${IC.pen}</button></div>${items}</div>`);
+    }
+  } else if (repair) secs.push(`<div class="tsec">${repair}</div>`);
+  // Quêtes
+  secs.push(questBox());
+  // Semaine
   if (reviewDue()){
+    if (state.reviewSnooze!==dayKey()) secs.push(`<div class="tsec"><div class="tline"><div class="grow"><h3 style="font-size:16px">${state.week?'Bilan du lundi':'Ma semaine'}</h3><span class="tiny">2 min pour choisir tes engagements</span></div><button type="button" class="tlink" data-act="reviewLater">Plus tard</button><button type="button" class="btn primary sm" data-act="reviewOpen">${state.week?'Faire':'Planifier'}</button></div></div>`);
+  } else {
+    const w = curWeek();
+    if (w && w.items.length){
+      const rate = weekRate(w)||0, ok = w.items.filter(it=>(it.count||0)>=wkTarget(w,it)).length;
+      secs.push(`<div class="tsec"><div class="thead"><h3>Ma semaine</h3><span class="tiny">${ok}/${w.items.length} tenus · ${Math.round(rate*100)} %</span><button type="button" class="tlink" data-act="wkToggle">${weekOpen?'Réduire':'Voir'}</button></div>
+        <div class="bar small" style="--gc:var(--sky)"><i style="width:${Math.round(rate*100)}%"></i></div>
+        ${weekOpen?weekCard():''}</div>`);
+    }
+  }
+  return `<section class="card today">${secs.join('')}</section>`;
+}
+function weekCard(){
+  if (false){
     if (state.reviewSnooze===dayKey()) return '';
     const first = !state.week;
     return `<section class="card wkc"><div class="section-h"><h2>${first?'Ma semaine':'Bilan du lundi'}</h2><span class="tiny">2 min</span></div>
@@ -1848,11 +1913,10 @@ function weekCard(){
       ${it.actionId?`<button type="button" class="icon-btn flat" data-act="wkAdjust" data-i="${it.id}" aria-label="Ajuster">${IC.pen}</button>`:`<button type="button" class="wk-plus" data-act="wkInc" data-i="${it.id}" aria-label="Ajouter 1">${IC.plus}</button>`}
       ${rbar(c, eff, w.minimalMode?1:Math.max(eff,it.max||eff))}
       ${it.actionId?'':`<span class="tiny" style="grid-column:1/-1"><button type="button" class="tiny" data-act="wkAdjust" data-i="${it.id}" style="text-decoration:underline">Ajuster</button></span>`}</div>`; }).join('');
-  return `<section class="card wkc"><div class="section-h"><h2>Ma semaine</h2><span class="tiny">${Math.round((rate||0)*100)} % tenu · objectif 70 %</span></div>
-    <div class="rows">${items}</div>
+  return `<div class="rows" style="margin-top:4px">${items}</div>
     <div class="wk-foot" style="margin-top:10px">${ved?`<span>Vedette : <b>${esc(creatureName(ved))}</b> (+15 % d’XP)</span>`:''}
       <button type="button" class="btn" style="padding:5px 12px;font-size:12.5px;border-radius:99px;margin-left:auto" data-act="wkMinimal">${w.minimalMode?'Revenir à la semaine normale':'Semaine difficile ? Mode minimal'}</button>
-      ${w.ifthen&&w.ifthen.si?`<span class="ifthen">Si ${esc(w.ifthen.si)}, alors ${esc(w.ifthen.alors||'…')}</span>`:''}</div></section>`;
+      ${w.ifthen&&w.ifthen.si?`<span class="ifthen">Si ${esc(w.ifthen.si)}, alors ${esc(w.ifthen.alors||'…')}</span>`:''}</div>`;
 }
 
 // Bilan du lundi : regarder, calibrer, choisir, vedette et si-alors
@@ -2327,18 +2391,16 @@ function starterGoals(){
 }
 
 /* ===================== Vues ===================== */
-let view = 'home';
-function go(v){ view=v; render(); window.scrollTo({top:0}); }
+let view = 'home', goalTab = 'actions';
+function go(v){ if (v.startsWith('goal:') && v!==view) goalTab='actions'; view=v; render(); window.scrollTo({top:0}); }
 
 function questBox(){
-  const d = state.daily; if (!d) return '<section class="card quest" id="questBox"></section>';
-  const done = questsDone();
-  const now=new Date(), mid=new Date(now); mid.setHours(24,0,0,0); const hrs=Math.ceil((mid-now)/36e5);
+  const d = state.daily; if (!d) return '<div class="tsec" id="questBox"></div>';
+  const done = questsDone(), n = d.quests.filter(q=>qProgress(q)>=q.target).length;
   const rows = d.quests.map(q=>{ const v=Math.min(q.target,qProgress(q)), ok=v>=q.target; return `<div class="qrow ${ok?'done':''}"><span class="chk">${ok?IC.check:''}</span><span class="qtxt">${esc(q.text)}</span><span class="tiny">${v}/${q.target}</span></div>`; }).join('');
   const cls = d.claimed? 'opened' : done? 'ready' : 'locked';
-  const lbl = d.claimed? 'Ouvert' : done? 'Ouvrir !' : 'Verrouillé';
-  return `<section class="card quest" id="questBox"><div class="section-h"><h2>Quête du jour</h2><span class="tiny">Nouvelles dans ${hrs} h</span></div>
-    <div class="quest-body"><div class="quest-list">${rows}</div><button type="button" class="chest-btn ${cls}" data-act="chest" ${done&&!d.claimed?'':'disabled'} aria-label="Coffre du jour">${CHEST()}<span class="chest-lbl">${lbl}</span></button></div></section>`;
+  const lbl = d.claimed? 'Ouvert' : done? 'Ouvrir !' : `${n}/3`;
+  return `<div class="tsec" id="questBox"><div class="thead"><h3>Quêtes du jour</h3><button type="button" class="chest-mini ${cls}" data-act="chest" ${done&&!d.claimed?'':'disabled'} aria-label="Coffre du jour">${CHEST()}${lbl}</button></div><div class="qmini">${rows}</div></div>`;
 }
 function chipFor(g,a){
   const sk=getSkill(g,a.skillId), locked = sk && isLocked(g,sk);
@@ -2371,6 +2433,12 @@ function heatmap(){
     cells += `<i class="${fut?'hf':n===0?'':n<3?'h1':n<6?'h2':'h3'}${k===today?' today':''}" title="${k} : ${n} action${n>1?'s':''}"></i>`; }
   return {html:`<div class="heat">${cells}</div><div class="heat-legend tiny">moins <i></i><i class="h1"></i><i class="h2"></i><i class="h3"></i> plus</div>`, active};
 }
+// Les 3 actions les plus utiles : celles de la semaine et du plan d'abord, puis les plus utilisées
+function topActions(g){
+  const w=curWeek(), p=todayPlan();
+  const score = a => (w && w.items.some(it=>it.g===g.id && it.actionId===a.id) ? 100 : 0) + (p && p.items.some(it=>it.g===g.id && it.a===a.id && !it.done) ? 50 : 0) + weekCount(a)*2 + todayCount(a);
+  return g.actions.map((a,i)=>({a,i,s:score(a)})).sort((x,y)=> y.s-x.s || x.i-y.i).slice(0,3).map(x=>x.a);
+}
 function goalCard(g){
   const st=stageOf(g), pr=stageProgress(g), mt=moodText(g);
   if (g.paused) return `<article class="gcard paused" style="--gc:${g.color}">
@@ -2384,28 +2452,24 @@ function goalCard(g){
         <h3>${esc(g.name)}</h3>
         <div class="sub">${esc(creatureName(g))} <span class="stage-badge">${STAGES[st].name}</span></div>
         <div class="bar" data-bar="${g.id}"><i style="width:${pr.pct}%"></i></div>
-        <div class="tiny">${pr.text}</div>
-        ${mt?`<div class="mood">${mt}</div>`:''}
+        ${mt?`<div class="mood">${mt}</div>`:`<div class="tiny">${pr.text}</div>`}
       </div>
       <button type="button" class="icon-btn flat" data-act="open" data-g="${g.id}" aria-label="Ouvrir">${IC.chev}</button>
     </div>
-    ${g.actions.length?`<div class="chips">${g.actions.map(a=>chipFor(g,a)).join('')}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
+    ${g.actions.length?`<div class="chips">${topActions(g).map(a=>chipFor(g,a)).join('')}${g.actions.length>3?`<button type="button" class="chip more" data-act="open" data-g="${g.id}"><span>+${g.actions.length-3} autre${g.actions.length-3>1?'s':''}</span></button>`:''}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
   </article>`;
 }
 function topPills(){
   const S=state.streak, today=dayKey(), on = S.lastDay===today;
-  const mOn = state.settings.music;
-  return `<div class="pills"><button type="button" class="pill music-btn ${mOn?'':'off'}" data-act="music" aria-pressed="${mOn}" aria-label="Musique ${mOn?'activée':'coupée'}">${IC.note}</button><button type="button" class="pill coin-pill" data-act="shop" aria-label="Boutique, ${state.coins||0} éclats">${IC.coin}${state.coins||0}</button><span class="pill streak ${S.repair?'ember':on?'':'off'}" title="${S.repair?'Flamme en braise : à rallumer':'Jours consécutifs'}">${IC.flame}${S.count}</span><span class="pill" title="Jokers de série">${IC.shield}${S.jokers}</span></div>`;
+  return `<div class="pills"><button type="button" class="pill coin-pill" data-act="shop" aria-label="Boutique, ${state.coins||0} éclats">${IC.coin}${state.coins||0}</button><span class="pill streak ${S.repair?'ember':on?'':'off'}" title="${S.repair?'Flamme en braise : à rallumer':`Série de ${S.count} jours · ${S.jokers} joker${S.jokers>1?'s':''}`}">${IC.flame}${S.count}</span></div>`;
 }
 function viewHome(){
+  const active = state.goals.filter(g=>!g.paused), paused = state.goals.filter(g=>g.paused);
   return `<header class="top"><div class="brand">${IC.egg}Éclosion</div>${topPills()}</header>
-    ${playerRow()}
     ${garden()}
-    ${repairCard()}
-    ${weekCard()}
-    ${planCard()}
-    ${questBox()}
-    ${[...state.goals.filter(g=>!g.paused), ...state.goals.filter(g=>g.paused)].map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
+    ${todayCard()}
+    ${state.goals.length?'<div class="goals-h"><h2>Mes objectifs</h2></div>':''}
+    ${[...active, ...paused].map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
     <button type="button" class="add-goal" data-act="newGoal">${IC.plus} Nouvel objectif</button>`;
 }
 function skillTree(g, parentId){
@@ -2429,29 +2493,30 @@ function viewGoal(id){
   const msSorted = [...g.milestones].sort((a,b)=>(a.size==='finale')-(b.size==='finale'));
   return `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="Retour">${IC.back}</button><h1>${esc(g.name)}</h1><button type="button" class="icon-btn" data-act="editGoal" data-g="${g.id}" aria-label="Modifier l'objectif">${IC.pen}</button></header>
     ${g.paused?`<section class="card pause-banner"><div><b>${esc(creatureName(g))} hiberne</b><div class="tiny">En pause depuis le ${fmtDay(g.paused.since)}. Rien n'est perdu, et elle ne sera pas triste. Valider une de ses actions la réveille aussi.</div></div><button type="button" class="btn primary" style="padding:8px 14px;border-radius:99px" data-act="wake" data-g="${g.id}">Réveiller</button></section>`:''}
-    <section class="card hero" style="--gc:${g.color}">
+    <section class="card hero compact" style="--gc:${g.color}">
       <div class="cr-wrap lg" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>
       <h2>${esc(creatureName(g))}</h2>
-      <button type="button" class="btn dress-btn" data-act="shop" data-g="${g.id}">${IC.coin} Habiller</button>
       <span class="stage-badge">${STAGES[st].name} · ${SPECIES[g.species].desc}</span>
       <div class="bar" data-bar="${g.id}"><i style="width:${pr.pct}%"></i></div>
       <div class="tiny">${pr.text}</div>
       ${mt?`<div class="mood">${mt}</div>`:''}
-      <div class="evo-path">${path}</div>
+      <div class="hero-actions"><button type="button" class="btn dress-btn" data-act="shop" data-g="${g.id}">${IC.coin} Habiller</button></div>
     </section>
-    ${campaignSection(g)}
-    <section class="card"><div class="section-h"><h2>Actions</h2><span class="tiny">1 touche = XP</span></div><div class="rows">
+    <nav class="tabs" aria-label="Sections de l’objectif">${[['actions','Actions'],['progress','Progrès'],['skills','Compétences']].map(([k,l])=>`<button type="button" data-act="gtab" data-t="${k}" class="${goalTab===k?'on':''}" aria-pressed="${goalTab===k}">${l}</button>`).join('')}</nav>
+    ${goalTab==='progress' ? campaignSection(g) : ''}
+    ${goalTab==='actions' ? `<section class="card"><div class="section-h"><h2>Actions</h2></div><div class="rows">
       ${g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
       <button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action</button></div></section>
     <section class="card"><div class="section-h"><h2>Étapes</h2><span class="tiny">${g.milestones.filter(m=>m.done).length}/${g.milestones.length} franchies</span></div><div class="rows">
       ${msSorted.map(m=>`<div class="row"><button type="button" class="ms-btn ${m.done?'done':''} ${m.size==='finale'?'final':''}" data-act="ms" data-g="${g.id}" data-m="${m.id}"><span class="box">${m.done?IC.check:''}</span><span class="mtxt">${esc(m.name)}${m.done&&m.doneAt?`<br><span class="tiny">Fait le ${fmtDate(m.doneAt)}</span>`:''}</span><b>${m.size==='finale'?'FINALE':'+'+MSIZE[m.size].xp}</b></button><button type="button" class="icon-btn flat" data-act="editMs" data-g="${g.id}" data-m="${m.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}
-      <button type="button" class="add-row" data-act="addMs" data-g="${g.id}">${IC.plus} Ajouter une étape</button></div></section>
-    <section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Mesures</h2><span class="tiny">tes vrais progrès, en chiffres</span></div><div class="rows">
+      <button type="button" class="add-row" data-act="addMs" data-g="${g.id}">${IC.plus} Ajouter une étape</button></div></section>` : ''}
+    ${goalTab==='progress' ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Mesures</h2></div><div class="rows">
       ${g.metrics.map(m=>metricCard(g,m)).join('') || '<p class="tiny" style="margin:0">Note ce qui prouve que tu avances : candidatures envoyées, charge soulevée, aisance à l’oral sur 10… Chaque record battu rapporte 75 XP et 10 éclats.</p>'}
       <button type="button" class="add-row" data-act="addMetric" data-g="${g.id}">${IC.plus} Ajouter une mesure</button></div></section>
-    <section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Compétences</h2><span class="tiny">les sous-compétences reçoivent l’XP, leur parent la moitié</span></div><div class="rows">
+    <section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Évolution</h2></div><div class="evo-path">${path}</div></section>` : ''}
+    ${goalTab==='skills' ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Compétences</h2></div><p class="tiny" style="margin:0 0 8px">Une sous-compétence reçoit l’XP de ses actions, et sa compétence parente la moitié.</p><div class="rows">
       ${skillTree(g,null)}
-      <button type="button" class="add-row" data-act="addSkill" data-g="${g.id}">${IC.plus} Ajouter une compétence</button></div></section>`;
+      <button type="button" class="add-row" data-act="addSkill" data-g="${g.id}">${IC.plus} Ajouter une compétence</button></div></section>` : ''}`;
 }
 function viewTrophies(){
   const got = ACH.filter(a=>state.achievements[a[0]]).length;
@@ -2555,6 +2620,8 @@ document.addEventListener('click', e=>{
     case 'settings': go('settings'); break;
     case 'chest': openChest(); break;
     case 'planOpen': openPlanEditor(); break;
+    case 'gtab': goalTab = el.dataset.t; render(); break;
+    case 'wkToggle': weekOpen=!weekOpen; try{ localStorage.setItem('eclosion.weekOpen', weekOpen?'1':'0'); }catch(e){} render(); break;
     case 'wake': if (g) wakeGoal(g); break;
     case 'reviewOpen': openReview(); break;
     case 'reviewLater': state.reviewSnooze=dayKey(); commit(); render(); break;
