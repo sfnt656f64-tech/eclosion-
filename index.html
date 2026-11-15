@@ -876,7 +876,7 @@ const LS_KEY = 'eclosion.save.v1';
 function freshState(){
   return {v:1, started:false, goals:[], streak:{count:0,best:0,lastDay:null,jokers:1,jokerWeek:null,repair:null,lastRepair:null,carry:0},
     daily:null, achievements:{}, stats:{actions:0,crits:0,megas:0,milestones:0,evolutions:0,chests:0,pets:0,perks:0,xp:0,night:false,early:false},
-    log:[], days:{}, coins:40, owned:[], plan:null, week:null, weeks:[], adjustLog:[], reviewSnooze:null, settings:{sound:true, music:true, musicVol:50, planTools:false, skillsSteps:false}, updatedAt:0};
+    log:[], days:{}, coins:40, owned:[], actionsUpgrade:null, plan:null, week:null, weeks:[], adjustLog:[], reviewSnooze:null, settings:{sound:true, music:true, musicVol:50, planTools:false, skillsSteps:false}, updatedAt:0};
 }
 function migrate(s){
   const f = freshState();
@@ -1610,7 +1610,7 @@ function doAction(gid, aid, e, el){
   if (!a.today || a.today.d!==tk) a.today={d:tk,n:0}; a.today.n++;
   if (!a.week || a.week.k!==wk) a.week={k:wk,n:0,done:false}; a.week.n++;
   let perfect = false;
-  if (todayCount(a)===1 && g.actions.length>=2 && g.actions.every(x=>todayCount(x)>0) && g.perfectDay!==dayKey()){
+  if (!(a.target>0) && todayCount(a)===1 && dailyActions(g).length>=2 && dailyActions(g).every(x=>todayCount(x)>0) && g.perfectDay!==dayKey()){
     g.perfectDay = dayKey(); perfect = true; state.stats.perfectDays=(state.stats.perfectDays||0)+1;
     const pb = grant(g, null, 25, {crit:false}); res.ev.push(...pb.ev); c.xp += pb.xp; addCoins(5); trackDay(pb.xp,0);
   }
@@ -2430,6 +2430,46 @@ const STARTER_METRICS = {
   'Être très musclé': [['Charge au développé couché','kg','up'],['Tour de bras','cm','up']],
   'Mieux parler, m’imposer et convaincre': [['Aisance à l’oral','/10','up'],['Prises de parole cette semaine','','up']],
 };
+// Actions proposées : concrètes, faisables en moins de 30 min, avec un verbe
+const ACTION_SETS = [
+  {title:'CDI', match:/cdi|emploi|job|poste|recrut/i, actions:[['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau'],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]]},
+  {title:'Muscu', match:/muscl|muscu|sport|force|corps/i, actions:[['Faire ma séance (20 min minimum)','difficile','Force',3],['Une source de protéines à chaque repas','facile','Nutrition'],['Être au lit avant minuit','facile','Récupération'],['10 min de marche ou de mobilité','facile','Récupération']]},
+  {title:'Parler clairement et peser dans les échanges', match:/parl|oral|convain|impos|communi/i, actions:[['M’enregistrer 2 min : répondre en commençant par la réponse','moyen','Éloquence'],['Réécouter et noter 1 chose à améliorer','facile','Éloquence'],['Faire une demande claire à quelqu’un','moyen','Assurance'],['Donner mon avis en réunion : 1 phrase + « parce que… »','difficile','Assurance',2]]},
+];
+function upgradeOffered(){ return !state.actionsUpgrade && state.goals.some(g=>!g.paused && g.actions.length) && ACTION_SETS.some(set=>state.goals.some(g=>set.match.test(g.name))); }
+function upgradeCard(){
+  if (!upgradeOffered()) return '';
+  return `<section class="card" style="display:flex;gap:12px;align-items:center"><div style="flex:1;min-width:0"><b>De meilleures actions pour tes objectifs</b><div class="tiny">Plus concrètes et faciles à cocher. Tu choisis lesquelles garder.</div></div><button type="button" class="tlink" data-act="upgradeNo">Non merci</button><button type="button" class="btn primary sm" data-act="upgradeOpen">Voir</button></section>`;
+}
+function openActionUpgrade(){
+  const picks = ACTION_SETS.map(set=>{ const g = state.goals.find(x=>set.match.test(x.name)); return {gid: g?g.id:'', on: set.actions.map(()=>true)}; });
+  const body = ()=> `<h2>Nouvelles actions</h2><p class="tiny" style="margin:0">Elles remplacent les actions actuelles de l’objectif choisi. Ton XP, ta créature et tes compétences sont gardés. Décoche ce que tu ne veux pas.</p>
+    ${ACTION_SETS.map((set,si)=>`<div class="field"><span class="lbl">${esc(set.title)}</span>
+      <select data-goal="${si}"><option value="">Ne pas changer</option>${state.goals.map(g=>`<option value="${g.id}" ${g.id===picks[si].gid?'selected':''}>Pour : ${esc(g.name)}</option>`).join('')}</select>
+      ${picks[si].gid ? `<div class="cklist">${set.actions.map((a,ai)=>`<button type="button" class="ck d-${a[1]} ${picks[si].on[ai]?'done':''}" data-pk="${si}|${ai}"><span class="ckbox">${picks[si].on[ai]?IC.check:''}</span><span class="cktxt">${esc(a[0])}${a[3]?`<small>${a[3]} fois par semaine</small>`:''}</span><b>+${DIFF[a[1]].xp}</b></button>`).join('')}</div>` : ''}</div>`).join('')}
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Plus tard</button><button class="btn primary" type="button" id="upApply">Remplacer</button></div>`;
+  openSheet(body(), sh=>{
+    sh.addEventListener('change', e=>{ const sel=e.target.closest('[data-goal]'); if (sel){ picks[+sel.dataset.goal].gid = sel.value; redraw(sh, body()); } });
+    sh.addEventListener('click', e=>{
+      const pk=e.target.closest('[data-pk]'); if (pk){ const [si,ai]=pk.dataset.pk.split('|').map(Number); picks[si].on[ai]=!picks[si].on[ai]; redraw(sh, body()); return; }
+      if (!e.target.closest('#upApply')) return;
+      let changed = 0;
+      ACTION_SETS.forEach((set,si)=>{
+        const g = getGoal(picks[si].gid); if (!g) return;
+        const chosen = set.actions.filter((a,ai)=>picks[si].on[ai]); if (!chosen.length) return;
+        g.actions = chosen.map(([name,diff,skName,target])=>{ const sk = g.skills.find(k=>k.name===skName); return {id:uid(), name, diff, skillId: sk?sk.id:null, target: target||0}; });
+        changed++;
+      });
+      // Nettoyer les références vers les anciennes actions
+      const exists = (gid,aid)=>{ const g=getGoal(gid); return !!(g && g.actions.some(a=>a.id===aid)); };
+      if (state.plan && state.plan.items) state.plan.items = state.plan.items.filter(it=>exists(it.g,it.a));
+      if (state.week && state.week.items) state.week.items = state.week.items.filter(it=>!it.actionId || exists(it.g,it.actionId));
+      state.actionsUpgrade = 'done';
+      commit(); closeSheet(); render();
+      if (changed){ sfx.level(); confetti(innerWidth/2, innerHeight*.35, 70, null, 1.1); toast({icon:IC.check.replace('currentColor','#22C38E'), title:'Nouvelles actions en place', sub:`${changed} objectif${changed>1?'s':''} mis à jour. Tu peux toujours les modifier avec le crayon.`, color:'var(--mint)', ms:4500}); }
+    });
+  }, {sticky:true});
+}
 function starterGoals(){
   const mk=(name,creature,species,color,skills,actions,ms)=>{
     const ids={}; const S=skills.map(s=>{ const id=uid(); ids[s.n]=id; return {id,name:s.n,xp:0,parentId:null,unlockLevel:s.u||1,perks:(s.p||[]).map(([level,n])=>({level,name:n})),_par:s.par}; });
@@ -2441,15 +2481,15 @@ function starterGoals(){
   return [
     mk('Trouver un CDI en France','Braisou','braise','#FF8A5B',
       [{n:'Candidatures',p:[[3,'Lettre de motivation modèle'],[6,'Candidature éclair']]},{n:'Réseau',p:[[4,'Carnet d’adresses']]},{n:'LinkedIn',par:'Réseau',u:3},{n:'Entretiens',p:[[5,'Pitch de 2 minutes']]},{n:'Négociation',par:'Entretiens',u:4}],
-      [['Envoyer une candidature','moyen','Candidatures'],['Relancer un recruteur','facile','Réseau'],['Contacter quelqu’un de mon réseau','moyen','Réseau'],['Préparer un entretien','difficile','Entretiens']],
+      [['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau'],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]],
       [['Premier entretien décroché','moyenne','Entretiens'],['3 entretiens passés','grande','Entretiens'],['Signer un CDI','finale',null]]),
     mk('Être très musclé','Rocaillon','cristal','#3F8CFF',
       [{n:'Force',p:[[5,'Programme avancé'],[10,'Charges lourdes']]},{n:'Nutrition',p:[[4,'Menus de la semaine']]},{n:'Récupération'}],
-      [['Séance complète','difficile','Force',3],['Manger assez de protéines','facile','Nutrition'],['Dormir 8 heures','facile','Récupération']],
+      [['Faire ma séance (20 min minimum)','difficile','Force',3],['Une source de protéines à chaque repas','facile','Nutrition'],['Être au lit avant minuit','facile','Récupération'],['10 min de marche ou de mobilité','facile','Récupération']],
       [['+2 kg de muscle','moyenne','Force'],['+5 kg de muscle','grande','Force'],['Atteindre mon physique idéal','finale',null]]),
     mk('Mieux parler, m’imposer et convaincre','Nuvelin','nuage','#9B6BFF',
       [{n:'Éloquence',p:[[4,'Voix posée']]},{n:'Assurance',p:[[5,'Regard franc']]},{n:'Persuasion',p:[[3,'Structure d’argument']]},{n:'Improvisation',par:'Éloquence',u:4}],
-      [['M’entraîner à parler 10 min','moyen','Éloquence'],['Donner mon avis dans un groupe','difficile','Assurance'],['Lire ou écouter un contenu sur la persuasion','facile','Persuasion']],
+      [['M’enregistrer 2 min : répondre en commençant par la réponse','moyen','Éloquence'],['Réécouter et noter 1 chose à améliorer','facile','Éloquence'],['Faire une demande claire à quelqu’un','moyen','Assurance'],['Donner mon avis en réunion : 1 phrase + « parce que… »','difficile','Assurance',2]],
       [['Prendre la parole devant un groupe','moyenne','Assurance'],['Convaincre quelqu’un d’une idée importante','grande','Persuasion'],['Parler avec aisance en toutes circonstances','finale',null]]),
   ];
 }
@@ -2472,7 +2512,8 @@ function ckFor(g, a){
   const week = a.target>0 ? `<small>${weekCount(a)}/${a.target} cette semaine${weekCount(a)>=a.target?' ✓':''}</small>` : '';
   return `<button type="button" class="ck d-${a.diff} ${done?'done':''} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}" aria-pressed="${done}"><span class="ckbox">${done?IC.check:locked?IC.lock:''}</span><span class="cktxt"><span>${esc(a.name)}</span>${t>1?`<i class="rep">×${t}</i>`:''}${week}</span><b>+${DIFF[a.diff].xp}</b></button>`;
 }
-function dayProgress(g){ const n=g.actions.length, d=g.actions.filter(a=>todayCount(a)>0).length; return {n, d}; }
+function dailyActions(g){ return g.actions.filter(a=>!(a.target>0)); }
+function dayProgress(g){ const ds=dailyActions(g), n=ds.length, d=ds.filter(a=>todayCount(a)>0).length; return {n, d}; }
 function dayLine(g){ const {n,d}=dayProgress(g); if (!n) return ''; const full=d===n; return `<div class="dayline ${full?'full':''}"><span>${full?'Journée complète ✓':`Aujourd’hui : ${d}/${n}`}</span><div class="bar small"><i style="width:${d/n*100}%"></i></div></div>`; }
 function chipFor(g,a){
   const sk=getSkill(g,a.skillId), locked = sk && isLocked(g,sk);
@@ -2539,6 +2580,7 @@ function viewHome(){
   const active = state.goals.filter(g=>!g.paused), paused = state.goals.filter(g=>g.paused);
   return `<header class="top"><div class="brand">${IC.egg}Éclosion</div>${topPills()}</header>
     ${garden()}
+    ${upgradeCard()}
     ${todayCard()}
     ${state.goals.length?'<div class="goals-h"><h2>Mes objectifs</h2></div>':''}
     ${[...active, ...paused].map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
@@ -2625,6 +2667,7 @@ function viewSettings(){
       <div class="tiny" id="audioDiag"></div></section>
     <section class="card rows">      <div class="switch"><span>Compétences et étapes<br><span class="tiny" style="font-weight:600">Les compétences avec leurs niveaux, et les étapes de chaque objectif. Désactivées, rien n'est effacé.</span></span> <button type="button" data-act="skillsSteps" class="${extrasOn()?'on':''}" aria-label="Compétences et étapes" aria-pressed="${extrasOn()}"></button></div>
       <div class="switch"><span>Outils de planification<br><span class="tiny" style="font-weight:600">Campagne de 12 semaines, bilan du lundi, plan du jour et mesures. Désactivés, rien n'est effacé.</span></span> <button type="button" data-act="planTools" class="${planOn()?'on':''}" aria-label="Outils de planification" aria-pressed="${planOn()}"></button></div></section>
+    <section class="card rows"><div class="section-h"><h2>Actions proposées</h2></div><p class="tiny" style="margin:0">Des actions concrètes et faciles à cocher pour le CDI, la muscu et la prise de parole.</p><button type="button" class="btn" data-act="upgradeOpen">Voir les actions proposées</button></section>
     <section class="card rows"><div class="section-h"><h2>Sauvegarde de secours</h2></div>
       <p class="tiny" style="margin:0">Télécharge un fichier avec toutes tes données. Tu pourras le réimporter si besoin.</p>
       <button type="button" class="btn" data-act="export">Exporter mes données</button>
@@ -2638,7 +2681,7 @@ function viewSettings(){
       <p><b>Actions</b> : gestes répétés (Facile +10, Moyen +25, Difficile +50, Épique +100 XP). 12 % de chance de critique ×2, 3 % de méga critique ×5.</p>
       ${extrasOn()?`<p><b>Étapes</b> : résultats concrets (+150 à +600 XP). L'étape finale rend la créature légendaire.</p>`:''}
       <p><b>Évolutions</b> : Bébé à 100 XP, Jeune à 800, Adulte à 3 000. Légendaire quand tu atteins ton objectif (bouton « J'ai atteint mon objectif ! » sur sa fiche).</p>
-      <p><b>Check-list</b> : chaque action se coche quand tu la fais aujourd'hui, et tu peux la refaire (×2, ×3…). Tout coché pour un objectif : journée complète, +25 XP et 5 éclats. Les cases se remettent à zéro chaque jour.</p>
+      <p><b>Check-list</b> : chaque action se coche quand tu la fais aujourd'hui, et tu peux la refaire (×2, ×3…). Toutes les actions du jour cochées pour un objectif : journée complète, +25 XP et 5 éclats (les actions prévues quelques fois par semaine sont en bonus). Les cases se remettent à zéro chaque jour.</p>
       <p><b>Série</b> : +2 % d'XP par jour consécutif (max +30 %). Un joker gratuit par semaine (max 2) protège ta série si tu rates un jour. Plus de joker ? Ta flamme devient une braise : fais 2 actions (ou 1 difficile) dans les 48 h pour la rallumer (une fois par semaine). Si elle s'éteint quand même, tu gardes la moitié de ton bonus.</p>
       <p><b>Retrouvailles</b> : après 3 jours sans t'occuper d'un objectif, sa créature t'attend, un peu triste, et après 7 jours elle s'endort. Aucune punition : quand tu reviens, elle saute de joie et tes premières actions rapportent un bonus (+30 % sur 2 actions, ou +50 % sur 3 après 7 jours). Au plus une fois tous les 14 jours par objectif.</p>
       ${planOn()?`<p><b>Plan du jour</b> : chaque matin, choisis 1 à 3 actions et, si tu veux, le moment où tu les feras (« Après mon café… »). Chaque promesse tenue rapporte +25 % d'XP. Rien ne se passe si tu n'y arrives pas.</p>`:''}
@@ -2700,6 +2743,8 @@ document.addEventListener('click', e=>{
     case 'chest': openChest(); break;
     case 'planOpen': openPlanEditor(); break;
     case 'gtab': goalTab = el.dataset.t; render(); break;
+    case 'upgradeOpen': openActionUpgrade(); break;
+    case 'upgradeNo': state.actionsUpgrade='dismissed'; commit(); render(); toast({title:'C’est noté', sub:'Tu pourras les retrouver dans Réglages.', color:'var(--muted)'}); break;
     case 'skillsSteps': state.settings.skillsSteps=!state.settings.skillsSteps; if (!state.settings.skillsSteps && goalTab==='skills') goalTab='actions'; fixDailyQuests(); commit(); render(); toast({title: state.settings.skillsSteps?'Compétences et étapes affichées':'Compétences et étapes cachées', sub: state.settings.skillsSteps?'Elles sont de retour sur la fiche de chaque objectif.':'Tes données sont gardées de côté.', color:'var(--sky)'}); break;
     case 'goalReached': if (g) reachGoal(g); break;
     case 'planTools': state.settings.planTools=!state.settings.planTools; if (!state.settings.planTools) goalTab='actions'; fixDailyQuests(); commit(); render(); toast({title: state.settings.planTools?'Outils de planification activés':'Mode simple', sub: state.settings.planTools?'Campagne, bilan du lundi, plan du jour et mesures sont de retour.':'Juste tes créatures et tes actions. Tes plans sont gardés de côté.', color:'var(--sky)'}); break;
