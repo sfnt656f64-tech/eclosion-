@@ -95,7 +95,7 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 /* Quête du jour */
 .quest{background:linear-gradient(135deg,var(--surface),var(--gold-soft))}
 .qrow{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:5px 0}
-.qrow .chk{width:22px;height:22px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;background:var(--surface)}
+.qrow .chk{width:22px;height:22px;border-radius:8px;border:2px solid color-mix(in srgb,var(--muted) 60%,transparent);display:grid;place-items:center;background:var(--surface)}
 .qrow.done .chk{background:var(--mint);border-color:var(--mint);color:#fff}
 .qrow.done .qtxt{text-decoration:line-through;color:var(--muted)}
 .qrow .chk svg{width:14px;height:14px}
@@ -511,7 +511,7 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 .ck .ckbox{width:26px;height:26px;border-radius:9px;border:2.5px solid var(--dc);flex:none;display:grid;place-items:center;background:var(--surface)}
 .ck .ckbox svg{width:16px;height:16px}
 .ck .cktxt{flex:1;min-width:0;overflow-wrap:anywhere}
-.ck .cktxt small{display:block;font-weight:700;font-size:11.5px;color:var(--muted)}
+.ck .cktxt small{display:block;font-weight:700;font-size:12px;color:color-mix(in srgb,var(--ink) 70%,transparent)}
 .ck b{font-size:12px;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
 .ck .rep{font-style:normal;font-size:11.5px;background:var(--dc);color:#fff;border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:1px}
 .ck.done{background:color-mix(in srgb,var(--dc) 12%,var(--surface))}
@@ -525,6 +525,13 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 .dayline.full{color:var(--mint)}
 .goal-done{display:flex;justify-content:center}
 .goal-done .btn{border-color:var(--gold);background:var(--gold-soft)}
+/* Accueil : blocs du jour et de la semaine, objectifs repliables */
+.blk-h{font-size:12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:2px 0 -2px;display:flex;justify-content:space-between}
+.fold{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;flex:none}
+.fold svg{width:20px;height:20px;transition:transform .2s}
+.fold.closed svg{transform:rotate(-90deg)}
+.yest-link{display:block;margin:0 auto;font-weight:800;font-size:13px;color:var(--muted);text-decoration:underline;padding:6px}
+.garden .gname{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:#2B2350;background:rgba(255,255,255,.85);border-radius:99px;padding:0 6px;white-space:nowrap;pointer-events:none}
 /* Niveau de joueur */
 .player{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
 .player .plvl{background:var(--ink);color:var(--bg);border-radius:10px;padding:2px 9px;font-family:var(--font-display);flex:none}
@@ -670,17 +677,20 @@ const ACH = [
 ];
 
 const PLAN_ACH = new Set(["promise1", "promise25", "record1", "record10", "camp1", "review1", "review4", "week70", "kr1"]);
+// Quêtes du jour : elles poussent vers les actions qui font avancer (rien au hasard)
+const activeActions = st => st.goals.filter(g=>!g.paused).flatMap(g=>g.actions);
+const activeGoalsWithActions = st => st.goals.filter(g=>!g.paused && g.actions.length).length;
 const QUESTS = [
-  {id:'act3', text:'Valider 3 actions', target:3, key:'actions'},
-  {id:'act5', text:'Valider 5 actions', target:5, key:'actions'},
+  {id:'mid3', text:'Valider 3 actions à +25 ou plus', target:3, key:'mid', need:s=>activeActions(s).some(a=>DIFF[a.diff].xp>=25)},
   {id:'xp150',text:'Gagner 150 XP', target:150, key:'xp'},
   {id:'xp300',text:'Gagner 300 XP', target:300, key:'xp'},
-  {id:'hard', text:'Réussir une action difficile ou épique', target:1, key:'hard'},
-  {id:'multi',text:'Progresser sur 2 objectifs', target:2, key:'goals', need:s=>s.goals.filter(g=>!g.paused).length>=2},
+  {id:'hard', text:'Faire 1 action à +50 ou plus', target:1, key:'hard', need:s=>activeActions(s).some(a=>DIFF[a.diff].xp>=50)},
+  {id:'multi',text:'Avancer sur tous tes objectifs', target:2, key:'goals', need:s=>activeGoalsWithActions(s)>=2, make:s=>{ const n=Math.min(3, activeGoalsWithActions(s)); return {text: n>=3?'Avancer sur tes 3 objectifs':`Avancer sur tes ${n} objectifs`, target:n}; }},
+  {id:'perfect',text:'Compléter ta journée sur 1 objectif', target:1, key:'perfects', need:s=>s.goals.some(g=>!g.paused && g.actions.filter(a=>!(a.target>0)).length>=2)},
   {id:'promise', text:'Tenir 2 promesses du plan du jour', target:2, key:'promises', need:s=>!!(s.settings&&s.settings.planTools) && s.goals.some(g=>g.actions.length)},
   {id:'ms',   text:'Valider une étape', target:1, key:'milestones', need:s=>!!(s.settings&&s.settings.skillsSteps) && s.goals.some(g=>g.milestones.some(m=>!m.done))},
-  {id:'crit', text:'Obtenir un coup critique', target:1, key:'crits'},
 ];
+function questOf(q){ const m = q.make ? q.make(state) : {}; return {id:q.id, text:m.text||q.text, target:m.target||q.target, key:q.key}; }
 
 /* ===================== Petits outils ===================== */
 const $ = s=>document.querySelector(s);
@@ -688,11 +698,13 @@ const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt
 const uid = ()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4);
 const pick = a=>a[Math.floor(Math.random()*a.length)];
 const pad = n=>String(n).padStart(2,'0');
-function dayKey(d){d=d||new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+// La journée commence à 4 h du matin : une action cochée à 1 h compte pour la veille
+function gameNow(){ return new Date(Date.now() - 4*3600*1000); }
+function dayKey(d){d=d||gameNow();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function parseDay(k){const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d);}
 function daysBetween(a,b){return Math.round((parseDay(b)-parseDay(a))/864e5);}
 function addDays(k,n){const d=parseDay(k);d.setDate(d.getDate()+n);return dayKey(d);}
-function weekKey(){const d=new Date();const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return dayKey(d);}
+function weekKey(){const d=gameNow();const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return dayKey(d);}
 function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return function(){h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return (h>>>0)/4294967296;};}
 function mix(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);const r=Math.round(((pa>>16)&255)*(1-t)+((pb>>16)&255)*t),g=Math.round(((pa>>8)&255)*(1-t)+((pb>>8)&255)*t),bl=Math.round((pa&255)*(1-t)+(pb&255)*t);return '#'+((1<<24)|(r<<16)|(g<<8)|bl).toString(16).slice(1);}
 function fmtDate(t){const d=new Date(t);return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+pad(d.getHours())+'h'+pad(d.getMinutes());}
@@ -902,7 +914,10 @@ function migrate(s){
     if (!G.comeback || typeof G.comeback!=='object') G.comeback = null;
     if (!G.campaign || typeof G.campaign!=='object') G.campaign = null;
     if (!G.paused || typeof G.paused!=='object') G.paused = null;
+    if (typeof G.deadline!=='string') G.deadline = '';
+    G.maxStage = Math.max(G.maxStage||0, (()=>{ const t=(G.curve&&G.curve.t)||[0,100,800,3000]; let s=0; for(let i=1;i<4;i++) if ((G.xp||0)>=t[i]) s=i; return s; })());
     G.pastCampaigns = Array.isArray(G.pastCampaigns) ? G.pastCampaigns : [];
+    if (!G.migRelance){ G.actions.forEach(a=>{ if (a.name==='Relancer les candidatures de plus de 7 jours' && !(a.target>0)) a.target=1; }); G.migRelance=true; }
     G.metrics = (Array.isArray(G.metrics)?G.metrics:[]).map(m=>Object.assign({id:uid(),name:'Mesure',unit:'',dir:'up',entries:[],rewardWeek:null},m));
     G.skills = (G.skills||[]).map(k=>Object.assign({id:uid(),name:'Compétence',xp:0,parentId:null,unlockLevel:1,perks:[]},k));
     G.actions = (G.actions||[]).map(a=>Object.assign({id:uid(),name:'Action',diff:'moyen',skillId:null},a));
@@ -911,6 +926,7 @@ function migrate(s){
   });
   return o;
 }
+function calibrateAll(st){ let n=0; st.goals.forEach(g=>{ if (!g.curve){ calibrate(g); n++; } }); if (n && st===state) persistLocal(); return n; }
 function loadLocal(){ try{ const raw = localStorage.getItem(LS_KEY); return raw? migrate(JSON.parse(raw)) : null; }catch(e){ return null; } }
 function persistLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -960,7 +976,7 @@ async function initSync(){
       const b = snap.data();
       if (!b || typeof b.json!=='string') return;
       if ((b.updatedAt||0) > (state.updatedAt||0)){
-        try{ state = migrate(JSON.parse(b.json)); persistLocal(); ensureDay(); render(); }catch(e){}
+        try{ state = migrate(JSON.parse(b.json)); calibrateAll(state); persistLocal(); ensureDay(); render(); }catch(e){}
       } else if ((b.updatedAt||0) < (state.updatedAt||0)){
         scheduleRemote();
       }
@@ -969,7 +985,30 @@ async function initSync(){
 }
 
 /* ===================== Règles du jeu ===================== */
-function stageOf(g){ if (g.legendary) return 4; let s=0; for(let i=1;i<4;i++) if (g.xp>=STAGES[i].xp) s=i; return s; }
+function stageTh(g){ return g.curve && Array.isArray(g.curve.t) ? g.curve.t : [0,100,800,3000]; }
+function stageOf(g){ if (g.legendary) return 4; const t=stageTh(g); let s=0; for(let i=1;i<4;i++) if (g.xp>=t[i]) s=i; return Math.max(s, g.maxStage||0); }
+// Rythme : en gardant ses habitudes (environ 3 jours sur 4), la créature devient Adulte vers l'échéance
+const STAGE_FRAC = [0, 0.04, 0.30, 0.93];
+function expectedDailyXp(g){
+  const listed = g.actions.reduce((sum,a)=> sum + DIFF[a.diff].xp * (a.target>0 ? a.target/7 : 1), 0);
+  if (!listed) return 60;
+  const perfect = g.actions.filter(a=>!(a.target>0)).length>=2 ? 25*0.4 : 0;
+  return (listed*1.24*1.15 + perfect) * 0.75 * 1.35; // critiques, série, journée complète, bonus de la semaine (mesuré par simulation), 3 jours sur 4
+}
+function calibrate(g){
+  const s = Math.min(3, stageOf(g));
+  if (s>=3){ g.curve = {at: dayKey(), t: stageTh(g).map((x,i)=> i<=3 ? Math.min(x, g.xp) : x)}; return; }
+  const old = stageTh(g);
+  const base = g.curve ? Math.min(old[s], g.xp) : g.xp;
+  const days = g.deadline ? Math.max(21, daysBetween(dayKey(), g.deadline)) : 84;
+  const T = expectedDailyXp(g)*days + Math.max(0, g.xp-base);
+  const t = [0,0,0,0];
+  for (let k=0;k<=s;k++) t[k] = s ? Math.round(base*k/s) : 0;
+  t[s] = base;
+  for (let k=s+1;k<4;k++) t[k] = Math.round(base + T*(STAGE_FRAC[k]-STAGE_FRAC[s])/(1-STAGE_FRAC[s]));
+  g.curve = {at: dayKey(), t};
+}
+function eggP(g){ const t=stageTh(g); return Math.max(0, Math.min(1, g.xp / Math.max(1, t[1]))); }
 function skillLevel(xp){ let lvl=1, need=40; xp=xp||0; while(xp>=need){ xp-=need; lvl++; need=40+20*(lvl-1);} return {lvl, cur:xp, need}; }
 function getGoal(id){ return state.goals.find(g=>g.id===id); }
 function getSkill(g,id){ return id? g.skills.find(s=>s.id===id) : null; }
@@ -988,8 +1027,8 @@ function stageProgress(g){
   const s = stageOf(g);
   if (s===4) return {pct:100, text:'Forme légendaire atteinte'};
   if (s===3) return {pct:100, text:`${g.xp} XP · valide l'étape finale pour la forme ultime`};
-  const a=STAGES[s].xp, b=STAGES[s+1].xp;
-  return {pct: Math.min(100, (g.xp-a)/(b-a)*100), text:`${g.xp} / ${b} XP vers ${STAGES[s+1].name}`};
+  const t=stageTh(g), a=Math.min(t[s], g.xp), b=Math.max(t[s+1], a+1);
+  return {pct: Math.max(0, Math.min(100, (g.xp-a)/(b-a)*100)), text:`${g.xp} / ${b} XP vers ${STAGES[s+1].name}`};
 }
 function creatureName(g){ return g.creature || SPECIES[g.species].name; }
 function planOn(){ return !!(state.settings && state.settings.planTools); }
@@ -1008,11 +1047,14 @@ function checkPlayerLevel(before){
   setTimeout(()=>{ sfx.level(); stars(innerWidth/2,90,24,null,1.6); ring(innerWidth/2,90,'#FFC233',140,8); toast({icon:IC.star, title:`Niveau ${p.lvl} ! Tu es ${p.title}`, sub:'Ton niveau de joueur augmente. +20 éclats', color:'var(--gold)', ms:4500}); }, 650);
 }
 // Suivi par jour (calendrier d'activité) et compteurs par action
-function trackDay(xp, n){
-  const k=dayKey(), d=state.days[k]||(state.days[k]={n:0,xp:0}); d.n+=n; d.xp+=xp;
+function trackDay(xp, n, key){
+  const k=key||dayKey(), d=state.days[k]||(state.days[k]={n:0,xp:0}); d.n+=n; d.xp+=xp;
   const keys=Object.keys(state.days); if (keys.length>130) keys.sort().slice(0,keys.length-130).forEach(x=>delete state.days[x]);
 }
-function todayCount(a){ return a.today && a.today.d===dayKey() ? a.today.n : 0; }
+function todayCount(a){ return a.today && a.today.d>=dayKey() ? a.today.n : 0; }
+function yesterdayKey(){ return addDays(dayKey(), -1); }
+function yesterdayCount(a){ const y=yesterdayKey(); if (a.today && a.today.d===y) return a.today.n; if (a.prev && a.prev.d===y) return a.prev.n; return 0; }
+function weekKeyOf(k){ const d=parseDay(k), wd=(d.getDay()+6)%7; d.setDate(d.getDate()-wd); return dayKey(d); }
 function weekCount(a){ return a.week && a.week.k===weekKey() ? a.week.n : 0; }
 function timeOfDay(){ const h=new Date().getHours(); return h<6?'night':h<9?'dawn':h<18?'day':h<21?'dusk':'night'; }
 
@@ -1027,7 +1069,7 @@ function ensureDay(){
     if (gap>=2){
       const missed = gap-1;
       const canRepair = !S.lastRepair || daysBetween(S.lastRepair, today)>=7;
-      if (missed <= S.jokers){ S.jokers -= missed; S.lastDay = addDays(today,-1); toast({icon:IC.shield, title:`Joker utilisé`, sub:`Ta série de ${S.count} jours est protégée.`, color:'var(--sky)'}); }
+      if (missed <= S.jokers){ S.jokers -= missed; S.jokerUse = {day: today, n: missed}; S.lastDay = addDays(today,-1); toast({icon:IC.shield, title:`Joker utilisé`, sub:`Ta série de ${S.count} jours est protégée.`, color:'var(--sky)'}); }
       else if (canRepair && missed <= S.jokers+1){
         // Réparation sous 48 h : les jokers couvrent ce qu'ils peuvent, la flamme devient une braise à rallumer
         S.jokers -= (missed-1);
@@ -1046,14 +1088,16 @@ function ensureDay(){
 function fixDailyQuests(){
   const d=state.daily; if (!d || !d.quests) return false;
   let changed=false;
-  d.quests = d.quests.map(q=>{
-    const def = QUESTS.find(x=>x.id===q.id);
-    if (!def || !def.need || def.need(state)) return q;
-    const used = new Set(d.quests.map(x=>x.key));
+  const out = [];
+  const keep = q=>{ const def = QUESTS.find(x=>x.id===q.id); return def && (!def.need || def.need(state)); };
+  d.quests.forEach(q=>{
+    if (keep(q)) { out.push(q); return; }
+    const used = new Set([...out, ...d.quests.filter(keep)].map(x=>x.key));
     const alt = QUESTS.find(x=>!used.has(x.key) && (!x.need || x.need(state)));
-    if (!alt) return q;
-    changed=true; return {id:alt.id, text:alt.text, target:alt.target, key:alt.key};
+    if (!alt) { out.push(q); return; }
+    changed=true; out.push(questOf(alt));
   });
+  d.quests = out;
   return changed;
 }
 function makeDaily(day){
@@ -1061,8 +1105,8 @@ function makeDaily(day){
   const pool = QUESTS.filter(q=>!q.need || q.need(state));
   const chosen=[], keys=new Set();
   let guard=0;
-  while(chosen.length<3 && guard++<100){ const q = pool[Math.floor(rnd()*pool.length)]; if (keys.has(q.key)) continue; keys.add(q.key); chosen.push({id:q.id,text:q.text,target:q.target,key:q.key}); }
-  return {day, quests:chosen, c:{actions:0,xp:0,hard:0,goals:[],pets:0,milestones:0,crits:0}, claimed:false};
+  while(chosen.length<3 && guard++<100){ const q = pool[Math.floor(rnd()*pool.length)]; if (keys.has(q.key)) continue; keys.add(q.key); chosen.push(questOf(q)); }
+  return {day, quests:chosen, c:{actions:0,xp:0,hard:0,mid:0,perfects:0,goals:[],pets:0,milestones:0,crits:0}, claimed:false};
 }
 function qProgress(q){ const c=state.daily.c; return q.key==='goals'? c.goals.length : (c[q.key]||0); }
 function questsDone(){ return state.daily && state.daily.quests.every(q=>qProgress(q)>=q.target); }
@@ -1073,6 +1117,7 @@ function streakBonusDays(){ const S=state.streak; return Math.max(S.count||0, S.
 function streakBonusPct(){ return Math.round(Math.min(.3, streakBonusDays()*.02)*100); }
 function breakStreak(){
   const S=state.streak, prev=S.count;
+  S.broken = {day: dayKey(), prev, lastDay: S.lastDay};
   S.carry = Math.floor(Math.min(prev,15)/2); S.count=0; S.repair=null;
   if (prev>1) toast({icon:IC.flame, title:'Nouvelle série, nouveau départ', sub: S.carry ? `Tu gardes la moitié de ton bonus : +${S.carry*2} % d'XP.` : 'Une action aujourd’hui pour lancer ta flamme !', color:'var(--orange)'});
 }
@@ -1088,7 +1133,7 @@ function touchStreak(w){
       return 'repaired';
     }
   }
-  if (S.lastDay===today) return false;
+  if (S.lastDay && S.lastDay>=today) return false;
   if (S.lastDay && daysBetween(S.lastDay,today)===1 && S.count>0) S.count++; else S.count=1;
   S.lastDay = today; S.best = Math.max(S.best, S.count);
   if (S.carry && S.count>=S.carry) S.carry=0;
@@ -1129,6 +1174,7 @@ function grant(g, sk, base, opts){
   if (opts.legendary) g.legendary = true;
   const after = stageOf(g);
   if (after>before){ ev.push({type:'evolve', g, from:before, to:after}); state.stats.evolutions++; }
+  if (after<4) g.maxStage = Math.max(g.maxStage||0, after);
   return {xp, crit, cb, planPct, vedPct, comebackStart, ev, skXp, parXp, parentId};
 }
 
@@ -1607,17 +1653,18 @@ function doAction(gid, aid, e, el){
   st.actions++; c.actions++; c.xp+=res.xp;
   // Compteurs du jour et de la semaine, bonus si l'objectif hebdo est atteint
   const tk=dayKey(), wk=weekKey();
-  if (!a.today || a.today.d!==tk) a.today={d:tk,n:0}; a.today.n++;
+  if (!a.today || a.today.d<tk){ if (a.today) a.prev={d:a.today.d, n:a.today.n}; a.today={d:tk,n:0}; } a.today.n++;
   if (!a.week || a.week.k!==wk) a.week={k:wk,n:0,done:false}; a.week.n++;
   let perfect = false;
   if (!(a.target>0) && todayCount(a)===1 && dailyActions(g).length>=2 && dailyActions(g).every(x=>todayCount(x)>0) && g.perfectDay!==dayKey()){
-    g.perfectDay = dayKey(); perfect = true; state.stats.perfectDays=(state.stats.perfectDays||0)+1;
+    g.perfectDay = dayKey(); perfect = true; c.perfects=(c.perfects||0)+1; state.stats.perfectDays=(state.stats.perfectDays||0)+1;
     const pb = grant(g, null, 25, {crit:false}); res.ev.push(...pb.ev); c.xp += pb.xp; addCoins(5); trackDay(pb.xp,0);
   }
   let weekBonus = 0;
   if (a.target>0 && !a.week.done && a.week.n>=a.target){ a.week.done=true; addCoins(10); const b=grant(g, sk, 60, {crit:false}); weekBonus=b.xp; res.ev.push(...b.ev); c.xp+=b.xp; }
   trackDay(res.xp+weekBonus, 1);
   if (a.diff==='difficile'||a.diff==='epique') c.hard++;
+  if (DIFF[a.diff].xp>=25) c.mid=(c.mid||0)+1;
   if (!c.goals.includes(g.id)) c.goals.push(g.id);
   if (res.crit){ st.crits++; c.crits++; if (res.crit===2) st.megas++; }
   const h = new Date().getHours(); if (h>=23) st.night=true; if (h<7) st.early=true;
@@ -2041,7 +2088,7 @@ function openReview(){
         ${blocks}
         <div class="sheet-actions">${prev?'<button class="btn" type="button" data-prev>Retour</button>':'<button class="btn" type="button" data-x="close">Plus tard</button>'}<button class="btn primary" type="button" data-next ${sel.length?'':'disabled'}>Suivant (${sel.length})</button></div>`;
     }
-    const who = goals.map(g=>`<button type="button" data-ved="${g.id}" class="${g.id===vedette?'on':''}"><div class="mini">${creatureSVG(g.species,g.color,stageOf(g),'happy',g.xp/100,g.acc)}</div>${esc(creatureName(g))}</button>`).join('');
+    const who = goals.map(g=>`<button type="button" data-ved="${g.id}" class="${g.id===vedette?'on':''}"><div class="mini">${creatureSVG(g.species,g.color,stageOf(g),'happy',eggP(g),g.acc)}</div>${esc(creatureName(g))}</button>`).join('');
     return `${bar}<h2>Vedette et plan de secours</h2>
       <div class="field"><span class="lbl">Quelle créature veux-tu pousser cette semaine ? (+15 % d’XP)</span><div class="who">${who}</div></div>
       <div class="field"><span class="lbl">Ton plan de secours pour l’obstacle le plus probable (facultatif)</span>
@@ -2253,6 +2300,49 @@ function openCampaignReview(g){
   });
 }
 
+/* ===================== Cocher une action oubliée hier ===================== */
+function yesterdayStreak(){
+  const S=state.streak, today=dayKey(), y=addDays(today,-1);
+  if (S.lastDay && S.lastDay>=y && !(S.lastDay===today && S.count===1 && !S.broken)) { if (S.jokerUse && S.jokerUse.day===today){ S.jokers++; S.jokerUse=null; } return; }
+  if (S.repair){ S.repair=null; S.count++; S.lastDay=y; S.best=Math.max(S.best,S.count); return; }
+  if (S.broken && S.broken.day===today && S.broken.lastDay===addDays(y,-1)){
+    const actedToday = S.lastDay===today;
+    S.count = S.broken.prev + 1 + (actedToday?1:0); S.lastDay = actedToday?today:y; S.carry=0; S.broken=null; S.best=Math.max(S.best,S.count); return;
+  }
+  if (S.lastDay===today && S.count===1){ S.count=2; S.best=Math.max(S.best,2); return; }
+  if (!S.lastDay || S.lastDay<y){ S.count = (S.lastDay===addDays(y,-1) && S.count>0) ? S.count+1 : 1; S.lastDay=y; S.best=Math.max(S.best,S.count); }
+}
+function doYesterday(gid, aid){
+  const g=getGoal(gid); if(!g) return; const a=g.actions.find(x=>x.id===aid); if(!a || yesterdayCount(a)>0) return;
+  const y=yesterdayKey(), pl0=playerLevel().lvl;
+  const sk = getSkill(g, a.skillId);
+  const res = grant(g, sk && !isLocked(g,sk) ? sk : null, DIFF[a.diff].xp, {crit:false});
+  if (a.today && a.today.d===y) a.today.n++;
+  else if (a.today && a.today.d>y) a.prev={d:y, n:1};
+  else { if (a.today) a.prev={d:a.today.d, n:a.today.n}; a.today={d:y, n:1}; }
+  if (weekKeyOf(y)===weekKey()){
+    if (!a.week || a.week.k!==weekKey()) a.week={k:weekKey(), n:0, done:false};
+    a.week.n++;
+    if (a.target>0 && !a.week.done && a.week.n>=a.target){ a.week.done=true; addCoins(10); const b=grant(g, sk, 60, {crit:false}); res.ev.push(...b.ev); }
+  }
+  state.stats.actions++; trackDay(res.xp, 1, y); logIt(g, a.name+' (hier)', res.xp, 0);
+  yesterdayStreak();
+  sfx.pop(); handleEvents(res, g); checkAchievements(); checkPlayerLevel(pl0); commit();
+  const sh=document.querySelector('#sheetBg .sheet'); if (sh) redraw(sh, yesterdayBody());
+  render();
+  toast({icon:IC.check.replace('currentColor','#22C38E'), title:'Coché pour hier', sub:`${a.name} · +${res.xp} XP`, color:'var(--mint)'});
+}
+function yesterdayBody(){
+  const goals = state.goals.filter(g=>!g.paused && g.actions.length);
+  return `<h2>Oublié de cocher hier ?</h2><p class="tiny" style="margin:0">Coche ce que tu as fait hier. Chaque action ne peut être cochée qu’une fois pour hier.</p>
+    ${goals.map(g=>`<div class="field"><span class="lbl">${esc(g.name)}</span><div class="cklist">${g.actions.map(a=>{ const done=yesterdayCount(a)>0;
+      return `<button type="button" class="ck ${done?'done':''}" style="--dc:${g.color}" ${done?'disabled':''} data-yest="${g.id}|${a.id}"><span class="ckbox">${done?IC.check:''}</span><span class="cktxt"><span>${esc(a.name)}</span></span><b>+${DIFF[a.diff].xp}</b></button>`; }).join('')}</div></div>`).join('')}
+    <button class="btn block" type="button" data-x="close">Fermer</button>`;
+}
+function openYesterday(){
+  openSheet(yesterdayBody(), sh=>{ sh.addEventListener('click', e=>{ const b=e.target.closest('[data-yest]'); if (b){ const [gid,aid]=b.dataset.yest.split('|'); doYesterday(gid, aid); } }); });
+}
+
 /* ===================== Objectif atteint ===================== */
 function reachGoal(g){
   let m = g.milestones.find(x=>x.size==='finale' && !x.done);
@@ -2325,6 +2415,7 @@ function openGoalEditor(g){
     <div class="field"><label for="gName">Ton objectif</label><input id="gName" maxlength="80" placeholder="Ex. Courir un semi-marathon" value="${esc(d.name)}"></div>
     <div class="field"><span class="lbl">Sa créature</span><div class="species" id="spBox">${speciesHtml()}</div><span class="tiny" id="spDesc">${SPECIES[sp].name} : ${SPECIES[sp].desc}</span></div>
     <div class="field"><span class="lbl">Couleur</span><div class="swatches" id="swBox">${COLORS.map(c=>`<button type="button" aria-label="Couleur ${c}" data-c="${c}" style="--sw:${c}" class="${c===col?'on':''}"></button>`).join('')}</div></div>
+    <div class="field"><label for="gDl">Échéance (facultatif)</label><input id="gDl" type="date" value="${esc(d.deadline||'')}"><span class="tiny">Ta créature devient Adulte vers cette date si tu gardes ton rythme. Sans date : sur 12 semaines.</span></div>
     <div class="field"><label for="gCre">Nom de la créature (facultatif)</label><input id="gCre" maxlength="24" placeholder="${SPECIES[sp].name}" value="${esc(d.creature)}"></div>
     <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="gSave">${isNew?'Faire naître l’œuf':'Enregistrer'}</button></div>
     ${isNew?'':`<button class="btn block" type="button" id="gPause">${g.paused?'Réveiller cette créature':'Mettre en pause (hibernation)'}</button><span class="tiny">${g.paused?'':(planOn() ? 'La créature dort paisiblement le temps d’une campagne : pas de tristesse, rien de perdu. Elle sort de tes bilans et de tes plans.' : 'La créature dort paisiblement : pas de tristesse, rien de perdu. Réveille-la quand tu veux.')}</span>`}
@@ -2335,8 +2426,9 @@ function openGoalEditor(g){
     sh.querySelector('#gSave').onclick = ()=>{
       const name = sh.querySelector('#gName').value.trim(); if(!name){ sh.querySelector('#gName').focus(); return; }
       const cre = sh.querySelector('#gCre').value.trim();
-      if (isNew){ const ng = migrate({goals:[{id:uid(),name,creature:cre,species:sp,color:col,createdAt:Date.now()}]}).goals[0]; state.goals.push(ng); state.started=true; commit(); closeSheet(); go('goal:'+ng.id); toast({icon:IC.egg, title:'Un nouvel œuf !', sub:'Ajoute des actions pour le faire éclore.', color:'var(--accent)'}); }
-      else { g.name=name; g.creature=cre; g.species=sp; g.color=col; commit(); closeSheet(); render(); }
+      const dl = sh.querySelector('#gDl').value || '';
+      if (isNew){ const ng = migrate({goals:[{id:uid(),name,creature:cre,species:sp,color:col,createdAt:Date.now(),deadline:dl}]}).goals[0]; calibrate(ng); state.goals.push(ng); state.started=true; commit(); closeSheet(); go('goal:'+ng.id); toast({icon:IC.egg, title:'Un nouvel œuf !', sub:'Ajoute des actions pour le faire éclore.', color:'var(--accent)'}); }
+      else { const dlChanged = (g.deadline||'')!==dl; g.name=name; g.creature=cre; g.species=sp; g.color=col; g.deadline=dl; if (dlChanged) calibrate(g); commit(); closeSheet(); render(); }
     };
     const gp = sh.querySelector('#gPause'); if (gp) gp.onclick = ()=>{ closeSheet(); if (g.paused) wakeGoal(g); else pauseGoal(g); };
     const del = sh.querySelector('[data-del]');
@@ -2394,6 +2486,7 @@ function openActionEditor(g, a){
       const skEl=sh.querySelector('#aSk'); const skillId = skEl ? (skEl.value||null) : (a ? a.skillId : null);
       const target = Math.max(0, Math.min(50, parseInt(sh.querySelector('#aTarget').value)||0));
       if (isNew) g.actions.push({id:uid(),name,diff,skillId,target}); else Object.assign(a,{name,diff,skillId,target});
+      if (stageOf(g)===0 && g.xp===0) calibrate(g);
       commit(); closeSheet(); render();
     };
     const del=sh.querySelector('[data-del]');
@@ -2432,7 +2525,7 @@ const STARTER_METRICS = {
 };
 // Actions proposées : concrètes, faisables en moins de 30 min, avec un verbe
 const ACTION_SETS = [
-  {title:'Recherche d’emploi', match:/cdi|emploi|job|poste|recrut/i, actions:[['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau'],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]]},
+  {title:'Recherche d’emploi', match:/cdi|emploi|job|poste|recrut/i, actions:[['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau',1],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]]},
   {title:'Sport', match:/muscl|muscu|sport|force|corps/i, actions:[['Faire ma séance (20 min minimum)','difficile','Force',3],['Une source de protéines à chaque repas','facile','Nutrition'],['Être au lit avant minuit','facile','Récupération'],['10 min de marche ou de mobilité','facile','Récupération']]},
   {title:'Réponses d’entretien claires', match:/parl|oral|convain|impos|communi|répond|question|entretien|aise/i, actions:[['M’enregistrer : répondre à 1 question d’entretien en moins de 2 min, réponse d’abord','moyen','Éloquence'],['Réécouter et noter 1 chose à améliorer','facile','Éloquence'],['Réenregistrer la même réponse en plus court et plus clair','moyen','Éloquence'],['Faire écouter 1 réponse à quelqu’un et lui demander s’il a tout compris','difficile','Assurance',1],['Donner mon avis en réunion : 1 phrase + « parce que… »','difficile','Assurance',2]]},
 ];
@@ -2459,6 +2552,7 @@ function openActionUpgrade(){
       ACTION_SETS.forEach((set,si)=>{
         const g = getGoal(picks[si].gid); if (!g) return;
         const chosen = set.actions.filter((a,ai)=>picks[si].on[ai]); if (!chosen.length) return;
+        g.__recal = true;
         g.actions = chosen.map(([name,diff,skName,target])=>{ const sk = g.skills.find(k=>k.name===skName); return {id:uid(), name, diff, skillId: sk?sk.id:null, target: target||0}; });
         changed++;
       });
@@ -2466,6 +2560,7 @@ function openActionUpgrade(){
       const exists = (gid,aid)=>{ const g=getGoal(gid); return !!(g && g.actions.some(a=>a.id===aid)); };
       if (state.plan && state.plan.items) state.plan.items = state.plan.items.filter(it=>exists(it.g,it.a));
       if (state.week && state.week.items) state.week.items = state.week.items.filter(it=>!it.actionId || exists(it.g,it.actionId));
+      state.goals.forEach(g=>{ if (g.__recal){ delete g.__recal; calibrate(g); } });
       state.actionsUpgrade = UPGRADE_V;
       commit(); closeSheet(); render();
       if (changed){ sfx.level(); confetti(innerWidth/2, innerHeight*.35, 70, null, 1.1); toast({icon:IC.check.replace('currentColor','#22C38E'), title:'Nouvelles actions en place', sub:`${changed} objectif${changed>1?'s':''} mis à jour. Tu peux toujours les modifier avec le crayon.`, color:'var(--mint)', ms:4500}); }
@@ -2483,7 +2578,7 @@ function starterGoals(){
   return [
     mk('Décrocher un nouvel emploi','Braisou','braise','#FF8A5B',
       [{n:'Candidatures',p:[[3,'Lettre de motivation modèle'],[6,'Candidature éclair']]},{n:'Réseau',p:[[4,'Carnet d’adresses']]},{n:'LinkedIn',par:'Réseau',u:3},{n:'Entretiens',p:[[5,'Pitch de 2 minutes']]},{n:'Négociation',par:'Entretiens',u:4}],
-      [['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau'],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]],
+      [['Envoyer 1 candidature ciblée + 1 message à quelqu’un dans l’entreprise','difficile','Candidatures'],['Relancer les candidatures de plus de 7 jours','facile','Réseau',1],['Envoyer 1 message LinkedIn personnalisé à un contact visé','moyen','LinkedIn'],['Rédiger 1 réponse d’entretien (méthode STAR)','moyen','Entretiens'],['Faire 1 appel réseau de 15 min','epique','Réseau',1]],
       [['Premier entretien décroché','moyenne','Entretiens'],['3 entretiens passés','grande','Entretiens'],['Signer un CDI','finale',null]]),
     mk('Retrouver une routine sportive','Rocaillon','cristal','#3F8CFF',
       [{n:'Force',p:[[5,'Programme avancé'],[10,'Charges lourdes']]},{n:'Nutrition',p:[[4,'Menus de la semaine']]},{n:'Récupération'}],
@@ -2505,18 +2600,29 @@ function questBox(){
   const done = questsDone(), n = d.quests.filter(q=>qProgress(q)>=q.target).length;
   const rows = d.quests.map(q=>{ const v=Math.min(q.target,qProgress(q)), ok=v>=q.target; return `<div class="qrow ${ok?'done':''}"><span class="chk">${ok?IC.check:''}</span><span class="qtxt">${esc(q.text)}</span><span class="tiny">${v}/${q.target}</span></div>`; }).join('');
   const cls = d.claimed? 'opened' : done? 'ready' : 'locked';
-  const lbl = d.claimed? 'Ouvert' : done? 'Ouvrir !' : `${n}/3`;
+  const lbl = d.claimed? 'Ouvert' : done? 'Ouvrir !' : `${n}/${d.quests.length}`;
   return `<div class="tsec" id="questBox"><div class="thead"><h3>Quêtes du jour</h3><button type="button" class="chest-mini ${cls}" data-act="chest" ${done&&!d.claimed?'':'disabled'} aria-label="Coffre du jour">${CHEST()}${lbl}</button></div><div class="qmini">${rows}</div></div>`;
 }
 // Une ligne de check-list : cochée si l'action est faite aujourd'hui, on peut la refaire (×2, ×3…)
 function ckFor(g, a){
   const sk=getSkill(g,a.skillId), locked = sk && isLocked(g,sk), t=todayCount(a), done=t>0;
-  const week = a.target>0 ? `<small>${weekCount(a)}/${a.target} cette semaine${weekCount(a)>=a.target?' ✓':''}</small>` : '';
-  return `<button type="button" class="ck d-${a.diff} ${done?'done':''} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}" aria-pressed="${done}"><span class="ckbox">${done?IC.check:locked?IC.lock:''}</span><span class="cktxt"><span>${esc(a.name)}</span>${t>1?`<i class="rep">×${t}</i>`:''}${week}</span><b>+${DIFF[a.diff].xp}</b></button>`;
+  const week = '';
+  return `<button type="button" class="ck ${done?'done':''} ${locked?'locked':''}" style="--dc:${g.color}" data-act="do" data-g="${g.id}" data-a="${a.id}" aria-pressed="${done}"><span class="ckbox">${done?IC.check:locked?IC.lock:''}</span><span class="cktxt"><span>${esc(a.name)}</span>${t>1?`<i class="rep">×${t}</i>`:''}${week}</span><b>+${DIFF[a.diff].xp}</b></button>`;
 }
 function dailyActions(g){ return g.actions.filter(a=>!(a.target>0)); }
 function dayProgress(g){ const ds=dailyActions(g), n=ds.length, d=ds.filter(a=>todayCount(a)>0).length; return {n, d}; }
-function dayLine(g){ const {n,d}=dayProgress(g); if (!n) return ''; const full=d===n; return `<div class="dayline ${full?'full':''}"><span>${full?'Journée complète ✓':`Aujourd’hui : ${d}/${n}`}</span><div class="bar small"><i style="width:${d/n*100}%"></i></div></div>`; }
+function ckWeek(g, a){
+  const w=weekCount(a), ok=w>=a.target, t=todayCount(a);
+  return `<button type="button" class="ck ${ok?'done':''}" style="--dc:${g.color}" data-act="do" data-g="${g.id}" data-a="${a.id}" aria-pressed="${ok}"><span class="ckbox">${ok?IC.check:''}</span><span class="cktxt"><span>${esc(a.name)}</span><small>${w}/${a.target} cette semaine${t?` · fait aujourd’hui${t>1?` ×${t}`:''}`:''}</small></span><b>+${DIFF[a.diff].xp}</b></button>`;
+}
+let folded = (()=>{ try{ return JSON.parse(localStorage.getItem('eclosion.folded')||'[]'); }catch(e){ return []; } })();
+function checklistBlocks(g){
+  const daily = g.actions.filter(a=>!(a.target>0)), weekly = g.actions.filter(a=>a.target>0);
+  const wDone = weekly.filter(a=>weekCount(a)>=a.target).length;
+  return `${daily.length?`${dayLine(g)}<div class="cklist">${daily.map(a=>ckFor(g,a)).join('')}</div>`:''}
+    ${weekly.length?`<div class="blk-h"><span>Cette semaine</span><span>${wDone}/${weekly.length}</span></div><div class="cklist">${weekly.map(a=>ckWeek(g,a)).join('')}</div>`:''}`;
+}
+function dayLine(g){ const {n,d}=dayProgress(g); if (!n) return ''; const full=d===n; return `<div class="dayline ${full?'full':''}"><span>${full?'Aujourd’hui : journée complète ✓':`Aujourd’hui : ${d}/${n}`}</span><div class="bar small"><i style="width:${d/n*100}%"></i></div></div>`; }
 function chipFor(g,a){
   const sk=getSkill(g,a.skillId), locked = sk && isLocked(g,sk);
   return `<button type="button" class="chip d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}">${locked?IC.lock:''}<span>${esc(a.name)}</span><b>+${DIFF[a.diff].xp}</b>${countBadge(a)}</button>`;
@@ -2535,7 +2641,7 @@ function garden(){
   sky += `<span class="cloud" style="top:26px;animation-duration:70s;animation-delay:-20s"></span><span class="cloud" style="top:58px;animation-duration:95s;animation-delay:-60s;opacity:.7;scale:.8"></span>`;
   const label = {dawn:'Le jardin au petit matin', day:'Le jardin', dusk:'Le jardin au coucher du soleil', night:'Le jardin, la nuit'}[tod];
   const crs = state.goals.map((g,i)=>{ const st=stageOf(g);
-    return `<div class="cr-wrap" style="left:${((i+.5)/n*100).toFixed(1)}%;bottom:${6+(i%2)*14}px;width:${s}px;height:${s}px;margin-left:-${s/2}px" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Faire chanter ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>`; }).join('');
+    return `<div class="cr-wrap" style="left:${((i+.5)/n*100).toFixed(1)}%;bottom:${6+(i%2)*14}px;width:${s}px;height:${s}px;margin-left:-${s/2}px" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Faire chanter ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),eggP(g),g.acc)}<span class="gname">${esc(creatureName(g))}</span></div>`; }).join('');
   return `<section class="garden t-${tod}" aria-label="Jardin des créatures"><span class="orb"></span>${sky}
     <svg class="hills" viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><path d="M0 46 Q 90 8 200 42 T 400 30 V112 H0Z" style="fill:var(--hill1)"/><path d="M0 76 Q 120 44 250 70 T 400 60 V112 H0Z" style="fill:var(--hill2)"/></svg>
     <span class="gtag">${label}</span>${crs}</section>`;
@@ -2557,21 +2663,21 @@ function topActions(g){
 function goalCard(g){
   const st=stageOf(g), pr=stageProgress(g), mt=moodText(g);
   if (g.paused) return `<article class="gcard paused" style="--gc:${g.color}">
-    <div class="cr-wrap" data-act="open" data-g="${g.id}" role="button" tabindex="0" aria-label="Ouvrir ${esc(g.name)}">${creatureSVG(g.species,g.color,st,'sleep',g.xp/100,g.acc)}</div>
+    <div class="cr-wrap" data-act="open" data-g="${g.id}" role="button" tabindex="0" aria-label="Ouvrir ${esc(g.name)}">${creatureSVG(g.species,g.color,st,'sleep',eggP(g),g.acc)}</div>
     <div class="ginfo" data-act="open" data-g="${g.id}" role="button" tabindex="0"><h3 style="font-size:16px">${esc(g.name)}</h3><span><span class="pause-badge">En pause</span> <span class="tiny">depuis le ${fmtDay(g.paused.since)}</span></span></div>
     <button type="button" class="btn" style="padding:8px 14px;border-radius:99px" data-act="wake" data-g="${g.id}">Réveiller</button></article>`;
   return `<article class="gcard" style="--gc:${g.color}">
     <div class="gtop">
-      <div class="cr-wrap sm" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>
+      <div class="cr-wrap sm" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),eggP(g),g.acc)}</div>
       <div class="ginfo" data-act="open" data-g="${g.id}" role="button" tabindex="0">
         <h3>${esc(g.name)}</h3>
-        <div class="sub">${esc(creatureName(g))} <span class="stage-badge">${STAGES[st].name}</span></div>
+        <div class="sub">${esc(creatureName(g))} · ${STAGES[st].name}</div>
         <div class="bar" data-bar="${g.id}"><i style="width:${pr.pct}%"></i></div>
         ${mt?`<div class="mood">${mt}</div>`:`<div class="tiny">${pr.text}</div>`}
       </div>
-      <button type="button" class="icon-btn flat" data-act="open" data-g="${g.id}" aria-label="Ouvrir">${IC.chev}</button>
+      ${!planOn() && g.actions.length ? `<button type="button" class="fold ${folded.includes(g.id)?'closed':''}" data-act="fold" data-g="${g.id}" aria-label="${folded.includes(g.id)?'Déplier':'Replier'}" aria-expanded="${!folded.includes(g.id)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>` : `<button type="button" class="icon-btn flat" data-act="open" data-g="${g.id}" aria-label="Ouvrir">${IC.chev}</button>`}
     </div>
-    ${g.actions.length && !planOn() ? `${dayLine(g)}<div class="cklist">${g.actions.map(a=>ckFor(g,a)).join('')}</div>` : g.actions.length?`<div class="chips">${(planOn()?topActions(g):g.actions).map(a=>chipFor(g,a)).join('')}${planOn()&&g.actions.length>3?`<button type="button" class="chip more" data-act="open" data-g="${g.id}"><span>+${g.actions.length-3} autre${g.actions.length-3>1?'s':''}</span></button>`:''}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
+    ${g.actions.length && !planOn() ? (folded.includes(g.id) ? dayLine(g) : checklistBlocks(g)) : g.actions.length?`<div class="chips">${(planOn()?topActions(g):g.actions).map(a=>chipFor(g,a)).join('')}${planOn()&&g.actions.length>3?`<button type="button" class="chip more" data-act="open" data-g="${g.id}"><span>+${g.actions.length-3} autre${g.actions.length-3>1?'s':''}</span></button>`:''}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
   </article>`;
 }
 function topPills(){
@@ -2586,7 +2692,8 @@ function viewHome(){
     ${todayCard()}
     ${state.goals.length?'<div class="goals-h"><h2>Mes objectifs</h2></div>':''}
     ${[...active, ...paused].map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
-    <button type="button" class="add-goal" data-act="newGoal">${IC.plus} Nouvel objectif</button>`;
+    <button type="button" class="add-goal" data-act="newGoal">${IC.plus} Nouvel objectif</button>
+    ${state.goals.some(g=>!g.paused && g.actions.some(a=>yesterdayCount(a)===0)) ? '<button type="button" class="yest-link" data-act="yesterday">Oublié de cocher hier ?</button>' : ''}`;
 }
 function skillTree(g, parentId){
   const list = g.skills.filter(s=>(s.parentId||null)===(parentId||null) || (!parentId && s.parentId && !getSkill(g,s.parentId)));
@@ -2611,12 +2718,13 @@ function viewGoal(id){
   return `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="Retour">${IC.back}</button><h1>${esc(g.name)}</h1><button type="button" class="icon-btn" data-act="editGoal" data-g="${g.id}" aria-label="Modifier l'objectif">${IC.pen}</button></header>
     ${g.paused?`<section class="card pause-banner"><div><b>${esc(creatureName(g))} hiberne</b><div class="tiny">En pause depuis le ${fmtDay(g.paused.since)}. Rien n'est perdu, et elle ne sera pas triste. Valider une de ses actions la réveille aussi.</div></div><button type="button" class="btn primary" style="padding:8px 14px;border-radius:99px" data-act="wake" data-g="${g.id}">Réveiller</button></section>`:''}
     <section class="card hero compact" style="--gc:${g.color}">
-      <div class="cr-wrap lg" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>
+      <div class="cr-wrap lg" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),eggP(g),g.acc)}</div>
       <h2>${esc(creatureName(g))}</h2>
       <span class="stage-badge">${STAGES[st].name} · ${SPECIES[g.species].desc}</span>
       <div class="bar" data-bar="${g.id}"><i style="width:${pr.pct}%"></i></div>
       <div class="tiny">${pr.text}</div>
       ${mt?`<div class="mood">${mt}</div>`:''}
+      ${g.deadline?`<div class="tiny">Échéance : ${fmtDay(g.deadline)}</div>`:''}
       <div class="hero-actions"><button type="button" class="btn dress-btn" data-act="shop" data-g="${g.id}">${IC.coin} Habiller</button></div>
       ${!extrasOn() && !g.legendary ? `<div class="goal-done"><button type="button" class="btn dress-btn" data-act="goalReached" data-g="${g.id}">${IC.star} J’ai atteint mon objectif !</button></div>` : ''}
       ${simple?`<div class="evo-path">${path}</div>`:''}
@@ -2624,7 +2732,7 @@ function viewGoal(id){
     ${simple?'':`<nav class="tabs" aria-label="Sections de l’objectif">${[['actions','Actions'],['progress','Progrès'],['skills','Compétences']].filter(([k])=>k!=='skills'||extrasOn()).map(([k,l])=>`<button type="button" data-act="gtab" data-t="${k}" class="${goalTab===k?'on':''}" aria-pressed="${goalTab===k}">${l}</button>`).join('')}</nav>`}
     ${tab==='progress' ? campaignSection(g) : ''}
     ${(simple||tab==='actions') ? `<section class="card"><div class="section-h"><h2>Actions</h2></div><div class="rows">
-      ${simple ? `${dayLine(g)}${g.actions.map(a=>`<div class="ck-row">${ckFor(g,a)}<button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}` : g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
+      ${simple ? `${dayLine(g)}${g.actions.map(a=>`<div class="ck-row">${a.target>0?ckWeek(g,a):ckFor(g,a)}<button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}` : g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
       <button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action</button></div></section>
     ${extrasOn()?`<section class="card"><div class="section-h"><h2>Étapes</h2><span class="tiny">${g.milestones.filter(m=>m.done).length}/${g.milestones.length} franchies</span></div><div class="rows">
       ${msSorted.map(m=>`<div class="row"><button type="button" class="ms-btn ${m.done?'done':''} ${m.size==='finale'?'final':''}" data-act="ms" data-g="${g.id}" data-m="${m.id}"><span class="box">${m.done?IC.check:''}</span><span class="mtxt">${esc(m.name)}${m.done&&m.doneAt?`<br><span class="tiny">Fait le ${fmtDate(m.doneAt)}</span>`:''}</span><b>${m.size==='finale'?'FINALE':'+'+MSIZE[m.size].xp}</b></button><button type="button" class="icon-btn flat" data-act="editMs" data-g="${g.id}" data-m="${m.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}
@@ -2682,7 +2790,8 @@ function viewSettings(){
     <section class="card help"><div class="section-h"><h2>Comment ça marche</h2></div>
       <p><b>Actions</b> : gestes répétés (Facile +10, Moyen +25, Difficile +50, Épique +100 XP). 12 % de chance de critique ×2, 3 % de méga critique ×5.</p>
       ${extrasOn()?`<p><b>Étapes</b> : résultats concrets (+150 à +600 XP). L'étape finale rend la créature légendaire.</p>`:''}
-      <p><b>Évolutions</b> : Bébé à 100 XP, Jeune à 800, Adulte à 3 000. Légendaire quand tu atteins ton objectif (bouton « J'ai atteint mon objectif ! » sur sa fiche).</p>
+      <p><b>Évolutions</b> : elles sont calées sur l'échéance de ton objectif (à régler avec le crayon). En gardant ton rythme, ta créature éclot dans les premiers jours, devient Jeune vers le premier tiers et Adulte vers la date prévue. Sans échéance : sur 12 semaines. Légendaire quand tu atteins ton objectif. Ta créature ne régresse jamais.</p>
+      <p><b>Journée</b> : elle commence à 4 h du matin, donc une action cochée à 1 h compte pour la veille. Oublié de cocher hier ? Le lien « Oublié de cocher hier ? » en bas de l'accueil te le permet, une fois par action.</p>
       <p><b>Check-list</b> : chaque action se coche quand tu la fais aujourd'hui, et tu peux la refaire (×2, ×3…). Toutes les actions du jour cochées pour un objectif : journée complète, +25 XP et 5 éclats (les actions prévues quelques fois par semaine sont en bonus). Les cases se remettent à zéro chaque jour.</p>
       <p><b>Série</b> : +2 % d'XP par jour consécutif (max +30 %). Un joker gratuit par semaine (max 2) protège ta série si tu rates un jour. Plus de joker ? Ta flamme devient une braise : fais 2 actions (ou 1 difficile) dans les 48 h pour la rallumer (une fois par semaine). Si elle s'éteint quand même, tu gardes la moitié de ton bonus.</p>
       <p><b>Retrouvailles</b> : après 3 jours sans t'occuper d'un objectif, sa créature t'attend, un peu triste, et après 7 jours elle s'endort. Aucune punition : quand tu reviens, elle saute de joie et tes premières actions rapportent un bonus (+30 % sur 2 actions, ou +50 % sur 3 après 7 jours). Au plus une fois tous les 14 jours par objectif.</p>
@@ -2745,6 +2854,8 @@ document.addEventListener('click', e=>{
     case 'chest': openChest(); break;
     case 'planOpen': openPlanEditor(); break;
     case 'gtab': goalTab = el.dataset.t; render(); break;
+    case 'fold': { const i=folded.indexOf(el.dataset.g); if (i>=0) folded.splice(i,1); else folded.push(el.dataset.g); try{ localStorage.setItem('eclosion.folded', JSON.stringify(folded)); }catch(e){} render(); break; }
+    case 'yesterday': openYesterday(); break;
     case 'upgradeOpen': openActionUpgrade(); break;
     case 'upgradeNo': state.actionsUpgrade='dismissed-'+UPGRADE_V; commit(); render(); toast({title:'C’est noté', sub:'Tu pourras les retrouver dans Réglages.', color:'var(--muted)'}); break;
     case 'skillsSteps': state.settings.skillsSteps=!state.settings.skillsSteps; if (!state.settings.skillsSteps && goalTab==='skills') goalTab='actions'; fixDailyQuests(); commit(); render(); toast({title: state.settings.skillsSteps?'Compétences et étapes affichées':'Compétences et étapes cachées', sub: state.settings.skillsSteps?'Elles sont de retour sur la fiche de chaque objectif.':'Tes données sont gardées de côté.', color:'var(--sky)'}); break;
@@ -2778,7 +2889,7 @@ document.addEventListener('click', e=>{
     case 'ms': doMilestone(el.dataset.g, el.dataset.m); break;
     case 'addSkill': openSkillEditor(g, null); break;
     case 'editSkill': openSkillEditor(g, g.skills.find(s=>s.id===el.dataset.s)); break;
-    case 'starter': state.goals = starterGoals().map(x=>migrate({goals:[x]}).goals[0]); state.started=true; ensureDay(); commit(); sfx.level(); confetti(innerWidth/2, innerHeight/2, 120); go('home'); toast({icon:IC.egg, title:'Tes 3 œufs sont prêts !', sub:'Valide une action pour commencer.', color:'var(--accent)'}); break;
+    case 'starter': state.goals = starterGoals().map(x=>migrate({goals:[x]}).goals[0]); state.goals.forEach(calibrate); state.started=true; ensureDay(); commit(); sfx.level(); confetti(innerWidth/2, innerHeight/2, 120); go('home'); toast({icon:IC.egg, title:'Tes 3 œufs sont prêts !', sub:'Valide une action pour commencer.', color:'var(--accent)'}); break;
     case 'blank': state.started=true; ensureDay(); commit(); render(); openGoalEditor(null); break;
     case 'sound': state.settings.sound=!state.settings.sound; commit(); render(); if(state.settings.sound) sfx.pop(); break;
     case 'soundTest': {
@@ -2835,7 +2946,7 @@ function doImport(){
     if (!data || !Array.isArray(data.goals)){ zone.innerHTML='<p class="mood">Sauvegarde invalide : aucun objectif trouvé.</p>'; return; }
     zone.innerHTML = `<div class="confirm-box"><b>Remplacer tes données actuelles par cette sauvegarde (${data.goals.length} objectif${data.goals.length>1?'s':''}) ?</b><div class="sheet-actions"><button class="btn" type="button" id="impNo">Non</button><button class="btn danger" type="button" id="impYes">Oui, remplacer</button></div></div>`;
     $('#impNo').onclick=()=>zone.innerHTML='';
-    $('#impYes').onclick=()=>{ state = migrate(data); state.started=true; ensureDay(); commit(); toast({title:'Sauvegarde importée',color:'var(--mint)'}); go('home'); };
+    $('#impYes').onclick=()=>{ state = migrate(data); calibrateAll(state); state.started=true; ensureDay(); commit(); toast({title:'Sauvegarde importée',color:'var(--mint)'}); go('home'); };
   };
   if (file){ const r=new FileReader(); r.onload=()=>apply(r.result); r.readAsText(file); }
   else if (txt) apply(txt);
@@ -2848,11 +2959,12 @@ function doResetProgress(){
   $('#rpYes').onclick=()=>{
     const f=freshState(), now=Date.now();
     state.goals.forEach(g=>{
-      g.xp=0; g.legendary=false; g.sadNeed=0; g.lastActive=null; g.createdAt=now; g.acc={};
+      g.xp=0; g.legendary=false; g.sadNeed=0; g.curve=null; g.maxStage=0; g.lastActive=null; g.createdAt=now; g.acc={};
       g.skills.forEach(k=>{ k.xp=0; });
       g.actions.forEach(a=>{ delete a.today; delete a.week; });
       g.milestones.forEach(m=>{ m.done=false; delete m.doneAt; delete m.gained; });
     });
+    state.goals.forEach(calibrate);
     state.streak=f.streak; state.daily=null; state.achievements={}; state.stats=f.stats; state.log=[]; state.days={}; state.coins=f.coins; state.owned=[];
     undoSnap=null; ensureDay(); commit(); go('home');
     toast({icon:IC.egg, title:'Progression remise à zéro', sub:'Tes objectifs sont toujours là. À toi de jouer !', color:'var(--accent)'});
@@ -2953,6 +3065,7 @@ setInterval(()=>{
 }, 900);
 
 /* ===================== Démarrage ===================== */
+calibrateAll(state);
 if (state.started) ensureDay();
 render();
 initSync();
