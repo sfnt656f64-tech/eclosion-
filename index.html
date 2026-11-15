@@ -1,0 +1,2100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F3EFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Éclosion">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}
+#installBtn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;border:0;border-radius:99px;padding:12px 20px;font:800 15px "Nunito",system-ui,sans-serif;background:#FF5D86;color:#fff;box-shadow:0 6px 20px rgba(70,45,140,.3);cursor:pointer}</style>
+<title>Éclosion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout : une colonne d'app mobile (max 560px) centrée, barre d'onglets fixe en bas, feuilles modales qui montent du bas. */
+:root{
+  --bg:#F3EFFF; --bg-glow1:#FFE3EC; --bg-glow2:#DDF3FF;
+  --surface:#FFFFFF; --surface2:#F6F2FF; --line:#E7E0FA;
+  --ink:#2B2350; --muted:#6F6893;
+  --accent:#FF5D86; --accent-soft:#FFE4EC; --on-accent:#FFFFFF;
+  --gold:#FFB52E; --gold-soft:#FFF1D2; --mint:#22C38E; --sky:#3F8CFF; --violet:#9B6BFF; --orange:#FF8A3D;
+  --shadow:0 8px 24px rgba(70,45,140,.10), 0 1px 2px rgba(70,45,140,.08);
+  --font-display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --font-body:"Nunito", "Segoe UI", system-ui, sans-serif;
+  --r:20px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16122A; --bg-glow1:#2B1838; --bg-glow2:#13243A;
+  --surface:#231D3F; --surface2:#2C2550; --line:#3A3266;
+  --ink:#F4F0FF; --muted:#ABA3D1;
+  --accent:#FF7298; --accent-soft:#4A2440; --on-accent:#FFFFFF;
+  --gold:#FFC24D; --gold-soft:#4A3A1A; --mint:#38D9A2; --sky:#69A6FF; --violet:#B08CFF; --orange:#FF9A55;
+  --shadow:0 8px 24px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.3);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#16122A; --bg-glow1:#2B1838; --bg-glow2:#13243A;
+  --surface:#231D3F; --surface2:#2C2550; --line:#3A3266;
+  --ink:#F4F0FF; --muted:#ABA3D1;
+  --accent:#FF7298; --accent-soft:#4A2440; --on-accent:#FFFFFF;
+  --gold:#FFC24D; --gold-soft:#4A3A1A; --mint:#38D9A2; --sky:#69A6FF; --violet:#B08CFF; --orange:#FF9A55;
+  --shadow:0 8px 24px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.3);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{min-height:100%}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(60vmax 50vmax at 0% 0%, var(--bg-glow1), transparent 60%),radial-gradient(60vmax 50vmax at 100% 30%, var(--bg-glow2), transparent 60%);
+  background-attachment:fixed;
+  color:var(--ink); font-family:var(--font-body); font-size:15px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface2);border:2px solid var(--line);border-radius:14px;padding:10px 12px;width:100%}
+textarea{min-height:110px;resize:vertical;font-size:12px;font-family:ui-monospace,monospace}
+h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:balance}
+.app{max-width:560px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:10px calc(96px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.top{display:flex;align-items:center;gap:10px;padding-top:6px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:24px;letter-spacing:-.5px;flex:1;display:flex;align-items:center;gap:6px}
+.brand svg{width:30px;height:30px}
+.top h1{flex:1;font-size:22px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pills{display:flex;gap:5px}
+.pill{display:inline-flex;align-items:center;gap:4px;background:var(--surface);box-shadow:var(--shadow);border-radius:999px;padding:5px 9px 5px 7px;font-weight:800;font-variant-numeric:tabular-nums}
+.pill svg{width:18px;height:18px}
+.pill.streak.off{opacity:.55}
+.icon-btn{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--surface);box-shadow:var(--shadow);flex:none}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn.flat{box-shadow:none;background:transparent;width:34px;height:34px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:16px;padding:12px 18px;font-weight:800;background:var(--surface2);border:2px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:transparent;box-shadow:0 4px 0 color-mix(in srgb, var(--accent) 70%, #000)}
+.btn.primary:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb, var(--accent) 70%, #000)}
+.btn.danger{color:#fff;background:#E5484D;border-color:transparent}
+.btn.block{width:100%}
+.btn svg{width:18px;height:18px}
+.muted{color:var(--muted)}
+.tiny{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gc,var(--accent)),color-mix(in srgb,var(--gc,var(--accent)) 60%, #fff));transition:width .6s cubic-bezier(.2,.9,.3,1.2)}
+.bar.small{height:7px}
+.section-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.section-h h2{font-size:20px;flex:1}
+.section-h .tiny{flex:none}
+
+/* Quête du jour */
+.quest{background:linear-gradient(135deg,var(--surface),var(--gold-soft))}
+.qrow{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:5px 0}
+.qrow .chk{width:22px;height:22px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;background:var(--surface)}
+.qrow.done .chk{background:var(--mint);border-color:var(--mint);color:#fff}
+.qrow.done .qtxt{text-decoration:line-through;color:var(--muted)}
+.qrow .chk svg{width:14px;height:14px}
+.qtxt{font-weight:700;min-width:0}
+.quest-body{display:flex;gap:12px;align-items:center}
+.quest-list{flex:1;min-width:0}
+.chest-btn{width:86px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:12px;border-radius:16px;padding:6px 4px}
+.chest-btn svg{width:70px;height:58px}
+.chest-btn.ready{animation:chestReady 1.1s ease-in-out infinite;background:var(--gold-soft)}
+.chest-btn.ready .chest-lbl{color:var(--orange)}
+.chest-btn:disabled{cursor:default}
+.chest-btn.locked svg{filter:grayscale(.7);opacity:.7}
+@keyframes chestReady{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-6deg) scale(1.06)}40%{transform:rotate(6deg) scale(1.06)}60%{transform:rotate(0) scale(1)}}
+
+/* Cartes objectifs */
+.gcard{--gc:var(--accent);background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.gcard::before{content:"";position:absolute;inset:0 0 auto 0;height:96px;background:radial-gradient(120px 90px at 56px 50px, color-mix(in srgb,var(--gc) 26%, transparent), transparent 70%);pointer-events:none}
+.gtop{display:flex;gap:12px;align-items:center;position:relative}
+.ginfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer}
+.ginfo h3{font-size:18px}
+.sub{font-size:13px;font-weight:700;color:var(--muted)}
+.stage-badge{display:inline-block;padding:1px 8px;border-radius:99px;background:color-mix(in srgb,var(--gc) 18%, transparent);color:color-mix(in srgb,var(--gc) 70%, var(--ink));font-weight:800;font-size:12px}
+.mood{font-size:12.5px;font-weight:700;color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;border-radius:14px;padding:9px 12px;font-weight:800;font-size:14px;color:#fff;background:var(--dc);box-shadow:0 3px 0 color-mix(in srgb,var(--dc) 65%, #000);transition:transform .08s;max-width:100%;text-align:left}
+.chip span{min-width:0;overflow-wrap:anywhere}
+.chip b{background:rgba(255,255,255,.25);border-radius:8px;padding:1px 6px;font-size:12px;flex:none;font-variant-numeric:tabular-nums}
+.chip:active{transform:translateY(3px);box-shadow:0 0 0 transparent}
+.chip.locked{background:var(--surface2);color:var(--muted);box-shadow:none;border:2px dashed var(--line)}
+.chip.locked svg{width:14px;height:14px}
+.d-facile{--dc:var(--mint)} .d-moyen{--dc:var(--sky)} .d-difficile{--dc:var(--orange)} .d-epique{--dc:var(--violet)}
+.add-goal{border:3px dashed var(--line);border-radius:var(--r);padding:18px;font-weight:800;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px;background:color-mix(in srgb,var(--surface) 50%, transparent)}
+.add-goal svg{width:20px;height:20px}
+.empty{text-align:center;padding:14px;color:var(--muted)}
+
+/* Créatures */
+.cr-wrap{position:relative;flex:none;cursor:pointer;touch-action:manipulation}
+.cr-wrap.sm{width:92px;height:92px}
+.cr-wrap.md{width:120px;height:120px}
+.cr-wrap.lg{width:min(250px,64vw);height:min(250px,64vw);margin:0 auto}
+.cr{width:100%;height:100%;display:block;overflow:visible}
+.cr-root{transform-box:fill-box;transform-origin:50% 100%}
+.cr-root.tap{animation:crTap .65s cubic-bezier(.3,.7,.4,1.4)}
+@keyframes crTap{0%{transform:none}18%{transform:scale(1.12,.84)}45%{transform:translateY(-16px) scale(.94,1.08)}72%{transform:scale(1.05,.95)}100%{transform:none}}
+.cr-breathe{transform-box:fill-box;transform-origin:50% 100%;animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(.985,1.035)}}
+.cr-eyes{transform-box:fill-box;transform-origin:50% 50%;animation:blink 4.8s infinite}
+@keyframes blink{0%,91%,97%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+.cr-sway{transform-box:view-box;animation:sway 2.6s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+.cr-wobble{transform-box:fill-box;transform-origin:50% 100%;animation:wobble 3.4s ease-in-out infinite}
+.cr-wobble.fast{animation-duration:1.6s}
+@keyframes wobble{0%,55%,100%{transform:rotate(0)}65%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}85%{transform:rotate(-3deg)}}
+.cr-aura{transform-box:fill-box;transform-origin:50% 50%;animation:aura 2.8s ease-in-out infinite}
+@keyframes aura{0%,100%{opacity:.75;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+.cr-rays{transform-box:view-box;animation:spin 18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cr-twinkle{transform-box:fill-box;transform-origin:50% 50%;animation:twinkle 1.8s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(.2);opacity:.2}50%{transform:scale(1);opacity:1}}
+.cr-wing{transform-box:view-box;animation:flap 1.4s ease-in-out infinite}
+@keyframes flap{0%,100%{transform:rotate(0)}50%{transform:rotate(var(--fl,10deg))}}
+.cr-tear{animation:tear 2.2s ease-in infinite}
+@keyframes tear{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(14px);opacity:0}}
+.cr-z{animation:zz 2.6s ease-out infinite;font-family:var(--font-display);font-weight:800}
+@keyframes zz{0%{transform:translate(0,0);opacity:0}20%{opacity:1}100%{transform:translate(10px,-22px);opacity:0}}
+.cr.sad{filter:saturate(.6)}
+.cr.sleep{filter:saturate(.35) brightness(.95)}
+/* Personnalité de chaque espèce : façon de bouger au repos */
+.cr-move{transform-box:fill-box;transform-origin:50% 100%}
+.m-braise{animation:mBraise 3.4s ease-in-out infinite}
+@keyframes mBraise{0%,60%,100%{transform:none}66%{transform:scale(1.07,.9)}75%{transform:translateY(-13px) scale(.95,1.06)}83%{transform:none}87%{transform:scale(1.05,.95)}92%{transform:none}}
+.m-nuage{animation:mNuage 4.2s ease-in-out infinite}
+@keyframes mNuage{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+.m-pousse{animation:mPousse 2.6s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes mPousse{0%,100%{transform:rotate(-5deg)}25%{transform:rotate(0) translateY(-3px)}50%{transform:rotate(5deg)}75%{transform:rotate(0) translateY(-3px)}}
+.m-goutte{animation:mGoutte 1.9s ease-in-out infinite}
+@keyframes mGoutte{0%,100%{transform:scale(1,1)}30%{transform:scale(1.07,.93)}60%{transform:scale(.95,1.06)}}
+.m-cristal{animation:mCristal 4.8s ease-in-out infinite}
+@keyframes mCristal{0%,68%,100%{transform:none}75%{transform:translateY(-7px) rotate(-2deg)}81%{transform:translateY(0) scale(1.06,.94)}86%{transform:none}}
+.cr.sad .cr-move{animation:mSad 5s ease-in-out infinite}
+@keyframes mSad{0%,100%{transform:rotate(-2deg) scale(1,.98)}50%{transform:rotate(2deg) scale(1,.96)}}
+.cr.sleep .cr-move{animation:none}
+.cr.sleep .cr-breathe{animation-duration:5s}
+.cr-look{transition:transform .3s ease-out}
+/* Expressions : yeux rieurs et bouche qui parle */
+.cr-eyes-happy,.cr-mouth-o{opacity:0}
+.cr-root.joy .cr-eyes{opacity:0}
+.cr-root.joy .cr-eyes-happy{opacity:1}
+.cr-root.talk .cr-mouth{opacity:0}
+.cr-root.talk .cr-mouth-o{opacity:1;transform-box:fill-box;transform-origin:50% 20%;animation:yap .13s ease-in-out infinite alternate}
+@keyframes yap{from{transform:scaleY(.35)}to{transform:scaleY(1.15)}}
+/* Danse sur le rythme pendant une chorale */
+.cr-root.bop{animation:bop .3s ease-out}
+@keyframes bop{0%{transform:none}35%{transform:scale(1.06,.92)}70%{transform:translateY(-4px) scale(.98,1.03)}100%{transform:none}}
+/* Réactions au toucher, propres à chaque espèce */
+.cr-root.tap-braise{transform-origin:50% 62%;animation:tBraise .85s cubic-bezier(.3,.7,.4,1.1)}
+@keyframes tBraise{0%{transform:none}15%{transform:scale(1.15,.82)}55%{transform:translateY(-30px) rotate(360deg)}75%{transform:rotate(360deg) scale(1.1,.9)}100%{transform:rotate(360deg)}}
+.cr-root.tap-nuage{animation:tNuage .9s ease-out}
+@keyframes tNuage{0%{transform:none}22%{transform:scale(1.28,.78)}55%{transform:translateY(-24px) scale(.94,1.1)}80%{transform:translateY(-6px)}100%{transform:none}}
+.cr-root.tap-pousse{animation:tPousse .85s ease-out}
+@keyframes tPousse{0%{transform:none}18%{transform:rotate(-16deg)}38%{transform:rotate(16deg) translateY(-12px)}58%{transform:rotate(-10deg)}78%{transform:rotate(6deg)}100%{transform:none}}
+.cr-root.tap-goutte{animation:tGoutte .9s cubic-bezier(.3,.7,.4,1.4)}
+@keyframes tGoutte{0%{transform:none}15%{transform:scale(1.32,.68)}35%{transform:translateY(-14px) scale(.78,1.28)}55%{transform:scale(1.14,.86)}75%{transform:scale(.95,1.05)}100%{transform:none}}
+.cr-root.tap-cristal{animation:tCristal .9s ease-in}
+@keyframes tCristal{0%{transform:none}30%{transform:translateY(-20px) scale(.96,1.05)}42%{transform:translateY(0) scale(1.14,.85)}52%{transform:translateX(-3px)}62%{transform:translateX(3px)}72%{transform:translateX(-2px)}100%{transform:none}}
+.cr-root.idle-hop{animation:crTap .6s cubic-bezier(.3,.7,.4,1.4)}
+.heart{position:absolute;pointer-events:none;font-size:18px;color:var(--accent);animation:heart 1s ease-out forwards}
+.heart svg{width:18px;height:18px;display:block}
+@keyframes heart{0%{transform:translate(0,0) scale(.4);opacity:0}20%{opacity:1;transform:translate(var(--hx),-14px) scale(1.1)}100%{transform:translate(calc(var(--hx)*2),-60px) scale(.8);opacity:0}}
+.bubble{position:absolute;left:50%;bottom:92%;transform:translateX(-50%);background:var(--surface);color:var(--ink);border-radius:14px;padding:6px 10px;font-weight:800;font-size:13px;white-space:nowrap;box-shadow:var(--shadow);animation:bubble 1.9s ease forwards;pointer-events:none;z-index:3}
+.bubble::after{content:"";position:absolute;left:50%;top:100%;border:7px solid transparent;border-top-color:var(--surface);transform:translateX(-50%)}
+@keyframes bubble{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}12%{opacity:1;transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-6px)}}
+
+/* Détail objectif */
+.hero{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;--gc:var(--accent);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(260px 200px at 50% 38%, color-mix(in srgb,var(--gc) 30%, transparent), transparent 70%);pointer-events:none}
+.hero>*{position:relative}
+.hero h2{font-size:26px}
+.hero .bar{width:100%;max-width:340px}
+.evo-path{display:flex;justify-content:center;gap:4px;width:100%;margin-top:6px;flex-wrap:wrap}
+.evo-step{display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:800;color:var(--muted);width:60px}
+.evo-step .mini{width:48px;height:48px}
+.evo-step.locked .mini{filter:brightness(0);opacity:.18}
+.evo-step.current{color:var(--ink)}
+.evo-step.current .mini{background:color-mix(in srgb,var(--gc) 18%, transparent);border-radius:14px}
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:8px;align-items:center}
+.do-btn{flex:1;min-width:0;display:flex;align-items:center;gap:10px;justify-content:space-between;text-align:left;border-radius:14px;padding:12px 14px;font-weight:800;color:#fff;background:var(--dc);box-shadow:0 3px 0 color-mix(in srgb,var(--dc) 65%, #000)}
+.do-btn span{min-width:0;overflow-wrap:anywhere}
+.do-btn small{display:block;font-weight:700;opacity:.85;font-size:11.5px}
+.do-btn b{background:rgba(255,255,255,.25);border-radius:8px;padding:2px 8px;font-size:13px;flex:none}
+.do-btn:active{transform:translateY(3px);box-shadow:none}
+.do-btn.locked{background:var(--surface2);color:var(--muted);box-shadow:none;border:2px dashed var(--line)}
+.ms-btn{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;border-radius:14px;padding:11px 12px;background:var(--surface2);border:2px solid var(--line);font-weight:700}
+.ms-btn .box{width:24px;height:24px;border-radius:8px;border:2.5px solid var(--line);flex:none;display:grid;place-items:center;background:var(--surface)}
+.ms-btn .box svg{width:15px;height:15px}
+.ms-btn .mtxt{flex:1;min-width:0;overflow-wrap:anywhere}
+.ms-btn b{color:var(--orange);font-size:13px;flex:none}
+.ms-btn.done{opacity:.7}
+.ms-btn.done .box{background:var(--mint);border-color:var(--mint);color:#fff}
+.ms-btn.done .mtxt{text-decoration:line-through}
+.ms-btn.final{border-color:var(--gold);background:linear-gradient(135deg,var(--gold-soft),var(--surface2))}
+.ms-btn.final b{color:var(--gold)}
+.skill{border-radius:16px;background:var(--surface2);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.sk-head{display:flex;align-items:center;gap:8px}
+.sk-head b{flex:1;min-width:0;overflow-wrap:anywhere}
+.lvl{background:var(--gc,var(--accent));color:#fff;border-radius:10px;padding:2px 8px;font-weight:800;font-size:12.5px;font-family:var(--font-display);flex:none}
+.perks{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.perks li{font-size:12px;font-weight:700;border-radius:99px;padding:3px 9px;background:var(--surface);border:1.5px solid var(--line);color:var(--muted);display:inline-flex;gap:4px;align-items:center}
+.perks li svg{width:12px;height:12px}
+.perks li.on{background:var(--gold-soft);border-color:var(--gold);color:var(--ink)}
+.sk-children{display:flex;flex-direction:column;gap:6px;margin-left:10px;padding-left:10px;border-left:3px solid var(--line)}
+.skill.locked{opacity:.65}
+.skill.locked .lvl{background:var(--muted)}
+.add-row{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:14px;padding:10px;border:2px dashed var(--line);color:var(--muted);font-weight:800}
+.add-row svg{width:16px;height:16px}
+
+/* Succès */
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ach{border-radius:16px;padding:10px;background:var(--surface2);display:flex;gap:8px;align-items:center;min-width:0}
+.ach .medal{width:38px;height:38px;flex:none}
+.ach b{display:block;font-size:13.5px;line-height:1.15}
+.ach span{font-size:11.5px;color:var(--muted);display:block;line-height:1.2}
+.ach.off .medal{filter:grayscale(1);opacity:.35}
+.ach.off b{color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--surface2);border-radius:14px;padding:10px;text-align:center}
+.stat b{display:block;font-family:var(--font-display);font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--muted);font-weight:700}
+.log{display:flex;flex-direction:column;gap:2px;font-size:13px}
+.log div{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}
+.log div span:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.log b{color:var(--mint);font-variant-numeric:tabular-nums}
+
+/* Barre d'onglets */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:8px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));background:color-mix(in srgb,var(--surface) 88%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.nav-in{max-width:560px;margin:0 auto;display:flex;gap:6px}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:800;color:var(--muted);padding:4px;border-radius:12px}
+.nav button svg{width:24px;height:24px}
+.nav button.on{color:var(--accent);background:var(--accent-soft)}
+
+/* Feuilles modales */
+.sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(20,10,40,.45);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:18px max(18px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));animation:up .28s cubic-bezier(.2,.9,.3,1.1);display:flex;flex-direction:column;gap:14px}
+.sheet h2{font-size:22px}
+@keyframes up{from{transform:translateY(100%)}}
+@keyframes fade{from{opacity:0}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label,.field>.lbl{font-weight:800;font-size:13.5px}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px}
+.seg button{border-radius:12px;padding:8px 6px;border:2px solid var(--line);background:var(--surface2);font-weight:800;font-size:13px;line-height:1.2}
+.seg button small{display:block;font-weight:700;color:var(--muted);font-size:11.5px}
+.seg button.on{border-color:var(--dc,var(--accent));background:color-mix(in srgb,var(--dc,var(--accent)) 16%, var(--surface))}
+.species{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.species button{border-radius:14px;border:2px solid var(--line);padding:4px 2px 6px;background:var(--surface2);font-size:11px;font-weight:800;display:flex;flex-direction:column;align-items:center}
+.species button .mini{width:52px;height:52px}
+.species button.on{border-color:var(--accent);background:var(--accent-soft)}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatches button{width:36px;height:36px;border-radius:50%;background:var(--sw);border:3px solid var(--surface);box-shadow:0 0 0 2px var(--line)}
+.swatches button.on{box-shadow:0 0 0 3px var(--ink)}
+.perk-row{display:grid;grid-template-columns:80px 1fr 34px;gap:6px;align-items:center}
+.sheet-actions{display:flex;gap:8px;flex-wrap:wrap}
+.sheet-actions .btn{flex:1}
+.confirm-box{border:2px solid #E5484D;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+
+/* Toasts */
+.toasts{position:fixed;top:calc(10px + env(safe-area-inset-top, 0px));left:0;right:0;z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px}
+.toast{pointer-events:auto;background:var(--surface);color:var(--ink);border-radius:16px;box-shadow:var(--shadow);padding:10px 14px;display:flex;align-items:center;gap:10px;font-weight:700;max-width:440px;width:100%;animation:toastIn .35s cubic-bezier(.2,.9,.3,1.3);border-left:6px solid var(--tc,var(--accent))}
+.toast .ti{width:30px;height:30px;flex:none}
+.toast .tt{flex:1;min-width:0;line-height:1.25}
+.toast .tt small{display:block;font-weight:600;color:var(--muted)}
+.toast button{font-weight:800;color:var(--accent);padding:4px 8px}
+.toast.out{animation:toastOut .3s forwards}
+@keyframes toastIn{from{transform:translateY(-30px) scale(.9);opacity:0}}
+@keyframes toastOut{to{transform:translateY(-20px);opacity:0}}
+
+/* Effets */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:70}
+.float{position:fixed;z-index:71;pointer-events:none;font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--mint);text-shadow:0 2px 0 rgba(0,0,0,.15);animation:floatUp 1.25s ease-out forwards;transform:translate(-50%,-50%);white-space:nowrap}
+.float.crit{color:var(--gold);font-size:30px}
+.float.mega{color:var(--accent);font-size:36px}
+.float small{display:block;font-size:13px;text-align:center}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-30%) scale(.5)}15%{opacity:1;transform:translate(-50%,-80%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-260%) scale(1)}}
+
+/* Grands moments (évolution, coffre) */
+.big{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));background:radial-gradient(circle at 50% 42%, #3B2A7A, #120B2B 70%);color:#fff;text-align:center;animation:fade .3s;overflow:hidden}
+.big h2{font-size:28px;max-width:420px}
+.big p{max-width:380px;margin:0;color:#D9D0FF}
+.big .rays{position:absolute;left:50%;top:42%;width:900px;height:900px;margin:-450px 0 0 -450px;background:repeating-conic-gradient(from 0deg, rgba(255,215,120,.16) 0deg 9deg, transparent 9deg 22deg);animation:spin 14s linear infinite;opacity:0;transition:opacity .6s;pointer-events:none}
+.big.shine .rays{opacity:1}
+.big .stage{width:min(260px,68vw);height:min(260px,68vw);position:relative}
+.big .stage>div{position:absolute;inset:0}
+.big .stage .white{filter:brightness(0) invert(1) drop-shadow(0 0 18px #fff)}
+.big .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.big .flash.go{animation:flash 0.9s ease-out}
+@keyframes flash{0%{opacity:0}10%{opacity:1}100%{opacity:0}}
+.big .pop{animation:pop .7s cubic-bezier(.2,.9,.3,1.5)}
+@keyframes pop{0%{transform:scale(.3)}100%{transform:scale(1)}}
+.big .btn.primary{min-width:180px;font-size:17px}
+.big .chest-big{width:min(220px,60vw);cursor:pointer}
+.big .chest-big.shake{animation:shake .5s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+.big .chest-big .lid{transform-box:fill-box;transform-origin:0% 100%;transition:transform .5s cubic-bezier(.3,1.6,.5,1)}
+.big .chest-big.open .lid{transform:rotate(-38deg) translate(-6px,-10px)}
+.reward{font-family:var(--font-display);font-size:34px;font-weight:800;color:#FFD66B}
+
+/* Accueil (premier lancement) */
+.welcome{text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;padding-top:16px}
+.welcome h1{font-size:40px;letter-spacing:-1px}
+.welcome .eggs{display:flex;justify-content:center;gap:4px}
+.welcome .eggs .cr-wrap{width:100px;height:100px}
+.welcome p{max-width:420px;margin:0}
+.welcome ul{text-align:left;max-width:420px;margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.sync{display:flex;gap:10px;align-items:center}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--muted)}
+.dot.cloud{background:var(--mint)} .dot.local{background:var(--gold)} .dot.error{background:#E5484D}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700}
+.switch button{width:54px;height:30px;border-radius:99px;background:var(--line);position:relative;flex:none}
+.switch button::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch button.on{background:var(--mint)}
+.switch button.on::after{left:27px}
+.help{font-size:13.5px;line-height:1.5}
+.help p{margin:0 0 8px}
+/* Boutique d'accessoires */
+.coin-pill{cursor:pointer}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.shop-item{display:flex;flex-direction:column;align-items:center;gap:5px;border-radius:16px;border:2px solid var(--line);background:var(--surface2);padding:8px 6px;font-size:12.5px;line-height:1.15;text-align:center}
+.shop-item .mini{width:74px;height:74px}
+.shop-item.on{border-color:var(--mint);background:color-mix(in srgb,var(--mint) 12%,var(--surface2))}
+.shop-btn{border-radius:99px;padding:3px 10px;font-weight:800;font-size:12px;background:var(--surface);border:1.5px solid var(--line);display:inline-flex;align-items:center;gap:4px}
+.shop-btn svg{width:14px;height:14px}
+.shop-btn.buy{background:var(--gold-soft);border-color:var(--gold)}
+.shop-btn.poor{opacity:.5}
+.shop-btn.on{background:var(--mint);color:#fff;border-color:transparent}
+.who{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.who button{flex:none;width:76px;border-radius:14px;border:2px solid var(--line);padding:4px 2px 6px;background:var(--surface2);font-size:11px;font-weight:800;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.who button .mini{width:52px;height:52px}
+.who button.on{border-color:var(--accent);background:var(--accent-soft)}
+.dress-btn{padding:6px 14px;font-size:13px;border-radius:99px}
+.dress-btn svg{width:15px;height:15px}
+/* Niveau de joueur */
+.player{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
+.player .plvl{background:var(--ink);color:var(--bg);border-radius:10px;padding:2px 9px;font-family:var(--font-display);flex:none}
+.player .bar{flex:1;--gc:var(--gold)}
+.player .tiny{flex:none}
+/* Le jardin : toutes les créatures ensemble, ciel selon l'heure */
+.garden{position:relative;height:200px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:linear-gradient(var(--sky1),var(--sky2));--sky1:#8FD3FF;--sky2:#E3F6FF;--hill1:#7BD88F;--hill2:#4FC37A;--orb:#FFE07A}
+.garden.t-dawn{--sky1:#FFB7A1;--sky2:#FFE9C7;--hill1:#8CD69A;--hill2:#58BE80;--orb:#FFD27A}
+.garden.t-dusk{--sky1:#7A5BC9;--sky2:#FFAE8A;--hill1:#5FAF86;--hill2:#3F8F70;--orb:#FFB36B}
+.garden.t-night{--sky1:#17173F;--sky2:#3B2F7A;--hill1:#2F6E66;--hill2:#235650;--orb:#F4F1D0}
+.garden .orb{position:absolute;top:16px;right:30px;width:42px;height:42px;border-radius:50%;background:var(--orb);box-shadow:0 0 40px 10px color-mix(in srgb,var(--orb) 55%,transparent)}
+.garden.t-night .orb{box-shadow:inset -11px -3px 0 0 #C9C4A6, 0 0 26px 4px rgba(244,241,208,.35)}
+.garden.t-dusk .orb,.garden.t-dawn .orb{top:64px}
+.garden .cloud{position:absolute;left:0;width:70px;height:20px;border-radius:99px;background:rgba(255,255,255,.8);animation:drift 60s linear infinite}
+.garden .cloud::before{content:"";position:absolute;left:14px;top:-10px;width:28px;height:24px;border-radius:50%;background:inherit}
+.garden .cloud::after{content:"";position:absolute;left:34px;top:-6px;width:22px;height:18px;border-radius:50%;background:inherit}
+.garden.t-night .cloud{background:rgba(255,255,255,.18)}
+@keyframes drift{from{transform:translateX(-90px)}to{transform:translateX(600px)}}
+.garden .gstar{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;animation:twinkle 2.6s ease-in-out infinite}
+.garden .hills{position:absolute;left:0;bottom:0;width:100%;height:112px;display:block}
+.garden .cr-wrap{position:absolute}
+.garden .gtag{position:absolute;left:12px;top:10px;background:rgba(255,255,255,.85);color:#2B2350;border-radius:99px;padding:3px 10px;font-weight:800;font-size:12px}
+/* Compteurs sur les actions */
+.chip .cnt,.do-btn .cnt{font-style:normal;font-size:11.5px;background:rgba(0,0,0,.2);border-radius:8px;padding:1px 6px;flex:none;font-variant-numeric:tabular-nums}
+.chip .cnt.ok,.do-btn .cnt.ok{background:rgba(255,255,255,.9);color:#1B7F5C}
+/* Calendrier d'activité */
+.heat{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:3px}
+.heat i{aspect-ratio:1;border-radius:4px;background:var(--surface2);border:1px solid var(--line)}
+.heat i.h1{background:color-mix(in srgb,var(--mint) 35%,var(--surface2));border-color:transparent}
+.heat i.h2{background:color-mix(in srgb,var(--mint) 65%,var(--surface2));border-color:transparent}
+.heat i.h3{background:var(--mint);border-color:transparent}
+.heat i.hf{opacity:.25}
+.heat i.today{outline:2px solid var(--ink);outline-offset:1px}
+.heat-legend{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:8px}
+.heat-legend i{width:12px;height:12px;border-radius:3px;background:var(--surface2);border:1px solid var(--line)}
+.heat-legend i.h1{background:color-mix(in srgb,var(--mint) 35%,var(--surface2))}.heat-legend i.h2{background:color-mix(in srgb,var(--mint) 65%,var(--surface2))}.heat-legend i.h3{background:var(--mint)}
+/* Effets visuels */
+#amb{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.bar>i{position:relative;overflow:hidden}
+.bar>i::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);transform:translateX(-100%);animation:shimmer 3s ease-in-out infinite}
+@keyframes shimmer{0%,45%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.bar.pulse{animation:barPulse .7s ease-out}
+@keyframes barPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gc,var(--accent)) 80%,transparent);transform:scaleY(1.5)}40%{transform:scaleY(1)}100%{box-shadow:0 0 0 12px transparent}}
+.shake{animation:shakeS .35s}
+.shake-big{animation:shakeB .6s}
+@keyframes shakeS{0%,100%{transform:none}25%{transform:translate(-4px,2px)}50%{transform:translate(4px,-2px)}75%{transform:translate(-2px,1px)}}
+@keyframes shakeB{0%,100%{transform:none}10%{transform:translate(-9px,4px) rotate(-.6deg)}25%{transform:translate(8px,-5px) rotate(.6deg)}40%{transform:translate(-7px,3px)}55%{transform:translate(6px,-3px)}70%{transform:translate(-3px,2px)}85%{transform:translate(2px,-1px)}}
+.vflash{position:fixed;inset:0;pointer-events:none;z-index:69;background:radial-gradient(circle at 50% 50%, transparent 35%, var(--vc,#FFC233) 130%);opacity:0;animation:vflash .6s ease-out forwards}
+@keyframes vflash{0%{opacity:0}18%{opacity:.95}100%{opacity:0}}
+.music-btn{cursor:pointer}
+.music-btn.off{opacity:.5}
+.music-btn svg{color:var(--violet)}
+input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--accent);height:28px}
+@media (prefers-reduced-motion: reduce){
+  .cr *,.cr-root,.chest-btn.ready,.big .rays,.bar>i::after,.shake,.shake-big,.bar.pulse,.garden .cloud,.garden .gstar{animation:none !important}
+}
+</style>
+
+</head>
+<body>
+<canvas id="amb" aria-hidden="true"></canvas>
+<div class="app" id="app"></div>
+<nav class="nav" id="nav" hidden></nav>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<canvas id="fx"></canvas>
+
+<script>
+(function(){
+"use strict";
+
+/* ===================== Réglages du jeu ===================== */
+const DIFF = {
+  facile:   {label:'Facile',    xp:10},
+  moyen:    {label:'Moyen',     xp:25},
+  difficile:{label:'Difficile', xp:50},
+  epique:   {label:'Épique',    xp:100},
+};
+const MSIZE = {
+  petite:  {label:'Petite étape',  xp:150},
+  moyenne: {label:'Étape moyenne', xp:300},
+  grande:  {label:'Grande étape',  xp:600},
+  finale:  {label:'Étape finale',  xp:1000},
+};
+const STAGES = [
+  {name:'Œuf',        xp:0},
+  {name:'Bébé',       xp:100},
+  {name:'Jeune',      xp:800},
+  {name:'Adulte',     xp:3000},
+  {name:'Légendaire', xp:Infinity},
+];
+const SPECIES = {
+  braise: {name:'Flammèche',  desc:'renard de braise'},
+  nuage:  {name:'Nuvelin',    desc:'chat-nuage'},
+  pousse: {name:'Pousseron',  desc:'esprit des feuilles'},
+  goutte: {name:'Gouttelune', desc:'phoque des marées'},
+  cristal:{name:'Cristallou', desc:'golem de cristal'},
+};
+const COLORS = ['#FF8A5B','#FF5D86','#FFC233','#2FC98C','#2EC4D6','#3F8CFF','#9B6BFF','#E06AD3'];
+
+const ACH = [
+  ['first','Premier pas','Valider ta première action', s=>s.stats.actions>=1],
+  ['a10','Sur la lancée','10 actions validées', s=>s.stats.actions>=10],
+  ['a50','Habitude en marche','50 actions validées', s=>s.stats.actions>=50],
+  ['a100','Centurion','100 actions validées', s=>s.stats.actions>=100],
+  ['a500','Inarrêtable','500 actions validées', s=>s.stats.actions>=500],
+  ['crit1','Coup de chance','Premier coup critique', s=>s.stats.crits>=1],
+  ['crit25','Main chanceuse','25 coups critiques', s=>s.stats.crits>=25],
+  ['mega','MÉGA !','Obtenir un méga critique ×5', s=>s.stats.megas>=1],
+  ['ms1','Cap franchi','Valider ta première étape', s=>s.stats.milestones>=1],
+  ['ms10','Bâtisseur','10 étapes validées', s=>s.stats.milestones>=10],
+  ['hatch','Éclosion','Faire éclore un œuf', s=>s.goals.some(g=>stageOf(g)>=1)],
+  ['young','Ça pousse !','Une créature devient Jeune', s=>s.goals.some(g=>stageOf(g)>=2)],
+  ['adult','Tout grandit','Une créature devient Adulte', s=>s.goals.some(g=>stageOf(g)>=3)],
+  ['legend','Légende vivante','Une créature devient Légendaire', s=>s.goals.some(g=>g.legendary)],
+  ['s3','Ça chauffe','Série de 3 jours', s=>s.streak.best>=3],
+  ['s7','Semaine parfaite','Série de 7 jours', s=>s.streak.best>=7],
+  ['s30','Volonté de fer','Série de 30 jours', s=>s.streak.best>=30],
+  ['chest1','Trésor !','Ouvrir ton premier coffre', s=>s.stats.chests>=1],
+  ['chest10','Chasseur de trésors','Ouvrir 10 coffres', s=>s.stats.chests>=10],
+  ['lvl5','Spécialiste','Une compétence au niveau 5', s=>s.goals.some(g=>g.skills.some(k=>skillLevel(k.xp).lvl>=5))],
+  ['lvl10','Maître','Une compétence au niveau 10', s=>s.goals.some(g=>g.skills.some(k=>skillLevel(k.xp).lvl>=10))],
+  ['perk','Nouvelle branche','Débloquer une capacité ou sous-compétence', s=>s.stats.perks>=1],
+  ['pet','Câlin','Câliner une créature', s=>s.stats.pets>=1],
+  ['pet50','Meilleurs amis','50 câlins', s=>s.stats.pets>=50],
+  ['night','Oiseau de nuit','Valider une action après 23 h', s=>!!s.stats.night],
+  ['early','Lève-tôt','Valider une action avant 7 h', s=>!!s.stats.early],
+  ['xp5k','Cinq mille','Cumuler 5 000 XP', s=>s.stats.xp>=5000],
+  ['duo','Duo !','Une créature répond à ta mélodie', s=>(s.stats.duets||0)>=1],
+  ['maestro','Maestro','Enchaîner une chorale de 12 notes', s=>(s.stats.chorusBest||0)>=12],
+];
+
+const QUESTS = [
+  {id:'act3', text:'Valider 3 actions', target:3, key:'actions'},
+  {id:'act5', text:'Valider 5 actions', target:5, key:'actions'},
+  {id:'xp150',text:'Gagner 150 XP', target:150, key:'xp'},
+  {id:'xp300',text:'Gagner 300 XP', target:300, key:'xp'},
+  {id:'hard', text:'Réussir une action difficile ou épique', target:1, key:'hard'},
+  {id:'multi',text:'Progresser sur 2 objectifs', target:2, key:'goals', need:s=>s.goals.length>=2},
+  {id:'pet',  text:'Câliner une créature', target:1, key:'pets'},
+  {id:'ms',   text:'Valider une étape', target:1, key:'milestones', need:s=>s.goals.some(g=>g.milestones.some(m=>!m.done))},
+  {id:'crit', text:'Obtenir un coup critique', target:1, key:'crits'},
+];
+
+/* ===================== Petits outils ===================== */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = ()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4);
+const pick = a=>a[Math.floor(Math.random()*a.length)];
+const pad = n=>String(n).padStart(2,'0');
+function dayKey(d){d=d||new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function parseDay(k){const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d);}
+function daysBetween(a,b){return Math.round((parseDay(b)-parseDay(a))/864e5);}
+function addDays(k,n){const d=parseDay(k);d.setDate(d.getDate()+n);return dayKey(d);}
+function weekKey(){const d=new Date();const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return dayKey(d);}
+function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return function(){h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return (h>>>0)/4294967296;};}
+function mix(a,b,t){const pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);const r=Math.round(((pa>>16)&255)*(1-t)+((pb>>16)&255)*t),g=Math.round(((pa>>8)&255)*(1-t)+((pb>>8)&255)*t),bl=Math.round((pa&255)*(1-t)+(pb&255)*t);return '#'+((1<<24)|(r<<16)|(g<<8)|bl).toString(16).slice(1);}
+function fmtDate(t){const d=new Date(t);return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+pad(d.getHours())+'h'+pad(d.getMinutes());}
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ===================== Icônes ===================== */
+const IC = {
+  flame:'<svg viewBox="0 0 24 24"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2.6 1.3-4 2.4-5.2.3 1.5 1 2.4 2 2.7C11 7.8 11 5 12 2z" fill="#FF7A2F"/><path d="M12 12c.6 2 2.5 2.6 2.5 4.7a2.5 2.5 0 0 1-5 0c0-1.5.9-2.3 1.6-3 .2.6.5.9.9 1 0-1.1-.2-1.8 0-2.7z" fill="#FFD25E"/></svg>',
+  shield:'<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z" fill="#3F8CFF"/><path d="M8.5 12l2.5 2.5 4.5-5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 21h8M9 18h6"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  star:'<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6L2.5 9.3l6.6-.8z" fill="#FFB52E"/></svg>',
+  heart:'<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="currentColor"/></svg>',
+  note:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 17.5V6l11-2.5v11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><ellipse cx="6.5" cy="17.5" rx="3" ry="2.4"/><ellipse cx="17.5" cy="14.5" rx="3" ry="2.4"/></svg>',
+  coin:'<svg viewBox="0 0 24 24"><path d="M12 2l8 8-8 12L4 10z" fill="#2CC5BD"/><path d="M12 2l8 8H4z" fill="#9AF3EA"/><path d="M12 2l3.5 8h-7z" fill="#D9FFFA"/><path d="M8.5 10L12 22l3.5-12z" fill="#5FE0D6"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  up:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C38E"/><path d="M7 13l5-5 5 5M12 8v9" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  spark:'<svg viewBox="0 0 24 24"><path d="M12 1l2.4 7.6L22 11l-7.6 2.4L12 21l-2.4-7.6L2 11l7.6-2.4z" fill="#9B6BFF"/></svg>',
+  medal:'<svg viewBox="0 0 40 40"><path d="M12 2h6l3 10h-6zM28 2h-6l-3 10h6z" fill="#FF5D86"/><circle cx="20" cy="25" r="12" fill="#FFB52E"/><circle cx="20" cy="25" r="8.5" fill="#FFD66B"/><path d="M20 19.5l1.7 3.5 3.8.5-2.8 2.6.7 3.8L20 28l-3.4 1.9.7-3.8-2.8-2.6 3.8-.5z" fill="#E08A00"/></svg>',
+  egg:'<svg viewBox="0 0 24 24"><path d="M12 2c4 0 7 7 7 12a7 7 0 0 1-14 0c0-5 3-12 7-12z" fill="#FFF6F8" stroke="#FF5D86" stroke-width="1.6"/><circle cx="9.5" cy="12" r="2" fill="#FF5D86"/><circle cx="14.5" cy="8" r="1.4" fill="#9B6BFF"/><circle cx="14" cy="16" r="1.8" fill="#3F8CFF"/></svg>',
+};
+const CHEST = (cls)=>`<svg viewBox="0 0 120 100" class="${cls||''}" aria-hidden="true"><ellipse cx="60" cy="94" rx="48" ry="5" fill="#000" opacity=".15"/><rect x="12" y="46" width="96" height="44" rx="7" fill="#B3602A"/><rect x="12" y="46" width="96" height="10" fill="#8F4A1E"/><rect x="12" y="62" width="96" height="7" fill="#FFC233"/><rect x="22" y="46" width="8" height="44" fill="#FFC233"/><rect x="90" y="46" width="8" height="44" fill="#FFC233"/><g class="lid"><path d="M12 48 Q12 18 60 16 Q108 18 108 48Z" fill="#C9733A"/><path d="M22 47 Q22 22 30 19 L30 47Z M90 47 L90 19 Q98 22 98 47Z" fill="#FFC233"/><rect x="10" y="44" width="100" height="7" rx="3" fill="#FFC233"/></g><rect x="51" y="50" width="18" height="22" rx="4" fill="#FFE08A" stroke="#C98B00" stroke-width="2"/><circle cx="60" cy="59" r="3" fill="#8F4A1E"/></svg>`;
+
+/* ===================== Dessin des créatures ===================== */
+let svgUid = 0;
+function eggSVG(color, p, delay){
+  const id = 'e'+(++svgUid);
+  const L = mix(color,'#ffffff',.55), D = mix(color,'#1a1030',.2);
+  let cracks = '';
+  const C = 'stroke="#2B2350" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  if (p>=.34) cracks += `<path d="M66 112 l10 8 l8 -11 l11 9" ${C}/>`;
+  if (p>=.67) cracks += `<path d="M110 70 l9 10 l-7 9 l11 8" ${C}/>`;
+  if (p>=.9)  cracks += `<path d="M92 152 l8 -9 l8 7 l9 -9 l8 6" ${C}/>`;
+  return `<svg viewBox="0 0 200 200" class="cr" aria-hidden="true"><defs><radialGradient id="${id}" cx="80" cy="76" r="120" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="${mix(color,'#ffffff',.84)}"/><stop offset="1" stop-color="${L}"/></radialGradient></defs>
+  <ellipse cx="100" cy="182" rx="44" ry="8" fill="#000" opacity=".13"/>
+  <g class="cr-root"><g class="cr-wobble${p>=.67?' fast':''}" style="animation-delay:-${delay}s">
+  <path d="M100 36 C141 36 161 100 161 132 C161 165 134 181 100 181 C66 181 39 165 39 132 C39 100 59 36 100 36Z" fill="url(#${id})" stroke="${D}" stroke-opacity=".3" stroke-width="2"/>
+  <ellipse cx="74" cy="122" rx="12" ry="15" fill="${color}" opacity=".85"/><circle cx="124" cy="96" r="9" fill="${color}" opacity=".85"/><ellipse cx="121" cy="150" rx="14" ry="10" fill="${color}" opacity=".85"/><circle cx="92" cy="72" r="6" fill="${color}" opacity=".85"/><circle cx="104" cy="128" r="4" fill="${D}" opacity=".5"/>
+  <ellipse cx="76" cy="78" rx="9" ry="19" fill="#fff" opacity=".75" transform="rotate(25 76 78)"/>
+  ${cracks}</g></g></svg>`;
+}
+
+const ACC = {
+  paille:   {slot:'head', name:'Chapeau de paille',   price:40},
+  casquette:{slot:'head', name:'Casquette',           price:40},
+  noeud:    {slot:'head', name:'Petit nœud',          price:30},
+  fleurs:   {slot:'head', name:'Couronne de fleurs',  price:60},
+  casque:   {slot:'head', name:'Casque audio',        price:70},
+  magicien: {slot:'head', name:'Chapeau de magicien', price:90},
+  rondes:   {slot:'face', name:'Lunettes rondes',     price:35},
+  soleil:   {slot:'face', name:'Lunettes de soleil',  price:50},
+  papillon: {slot:'neck', name:'Nœud papillon',       price:30},
+  echarpe:  {slot:'neck', name:'Écharpe',             price:45},
+};
+function accSVG(A, P){
+  let s=''; const rx=P.rx, ey=P.ey, dx=P.dx, e=P.e, my=P.my, INK='#2B2350';
+  const y = P.sp==='goutte' ? P.top-8 : P.top+2, hw = P.sp==='goutte' ? rx*.6 : rx*.82;
+  if (A.neck==='echarpe'){ const ny=my+e*1.5; s+=`<path d="M${100-rx*.78} ${ny-4} Q100 ${ny+12} ${100+rx*.78} ${ny-4} L${100+rx*.8} ${ny+8} Q100 ${ny+25} ${100-rx*.8} ${ny+8}Z" fill="#E5484D"/><path d="M${100+rx*.3} ${ny+12} l10 26 l-14 2 l-6 -24z" fill="#C93A3F"/><path d="M${100-rx*.4} ${ny+7} l4 10 M100 ${ny+10} l0 10 M${100+rx*.4} ${ny+7} l-4 10" stroke="#FFD6D6" stroke-width="3" stroke-linecap="round"/>`; }
+  if (A.neck==='papillon'){ const ny=my+e*1.9; s+=`<path d="M100 ${ny} l-15 -8 v16z M100 ${ny} l15 -8 v16z" fill="#FF5D86" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/><circle cx="100" cy="${ny}" r="3.5" fill="#FFC233" stroke="${INK}" stroke-width="1.5"/>`; }
+  if (A.face==='soleil'){ const w=e*2.7, h=e*2.1; s+=`<rect x="${100-dx-w/2}" y="${ey-h/2}" width="${w}" height="${h}" rx="${h*.45}" fill="#1B1730"/><rect x="${100+dx-w/2}" y="${ey-h/2}" width="${w}" height="${h}" rx="${h*.45}" fill="#1B1730"/><path d="M${100-dx+w/2-1} ${ey-2} H${100+dx-w/2+1}" stroke="#1B1730" stroke-width="3"/><path d="M${100-dx-w*.25} ${ey-h*.18} h${w*.3} M${100+dx-w*.25} ${ey-h*.18} h${w*.3}" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>`; }
+  if (A.face==='rondes'){ const r=e*1.6; s+=`<circle cx="${100-dx}" cy="${ey}" r="${r}" fill="#fff" fill-opacity=".2" stroke="${INK}" stroke-width="2.5"/><circle cx="${100+dx}" cy="${ey}" r="${r}" fill="#fff" fill-opacity=".2" stroke="${INK}" stroke-width="2.5"/><path d="M${100-dx+r} ${ey} H${100+dx-r}" stroke="${INK}" stroke-width="2.5"/>`; }
+  if (A.head==='paille') s+=`<ellipse cx="100" cy="${y+6}" rx="${hw*1.25}" ry="8" fill="#F2D27A" stroke="#C9A24B" stroke-width="2"/><path d="M${100-hw*.62} ${y+5} Q${100-hw*.6} ${y-20} 100 ${y-21} Q${100+hw*.6} ${y-20} ${100+hw*.62} ${y+5}Z" fill="#F7DE94" stroke="#C9A24B" stroke-width="2"/><path d="M${100-hw*.62} ${y+1} Q100 ${y+7} ${100+hw*.62} ${y+1}" stroke="#E5484D" stroke-width="5" fill="none"/>`;
+  if (A.head==='casquette') s+=`<path d="M${100-hw*.7} ${y+6} Q${100-hw*.7} ${y-20} 100 ${y-20} Q${100+hw*.7} ${y-20} ${100+hw*.7} ${y+6}Z" fill="#3F8CFF" stroke="${INK}" stroke-width="2"/><path d="M${100+hw*.15} ${y+6} q ${hw*.75} -5 ${hw} 5 q ${-hw*.5} 5 ${-hw} -1z" fill="#2B6BD6" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><circle cx="100" cy="${y-20}" r="3" fill="#FFC233"/>`;
+  if (A.head==='noeud') s+=`<g transform="translate(${100+hw*.5} ${y+3}) rotate(20)"><path d="M0 0 l-13 -8 v16z M0 0 l13 -8 v16z" fill="#FF8FB8" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/><circle r="3.5" fill="#FF5D86" stroke="${INK}" stroke-width="1.5"/></g>`;
+  if (A.head==='fleurs'){ s+=`<path d="M${100-hw*.8} ${y+6} Q100 ${y-12} ${100+hw*.8} ${y+6}" stroke="#47C27A" stroke-width="4" fill="none" stroke-linecap="round"/>`; const cols=['#FF8FB8','#FFD54A','#FFFFFF','#B08CFF','#FF8FB8']; for(let i=0;i<5;i++){ const t=i/4, x=100+(t-.5)*hw*1.5, yy=y+5-Math.sin(t*Math.PI)*12; for(let k=0;k<5;k++){ const a=k*Math.PI*2/5; s+=`<circle cx="${x+Math.cos(a)*4.2}" cy="${yy+Math.sin(a)*4.2}" r="3.4" fill="${cols[i]}"/>`; } s+=`<circle cx="${x}" cy="${yy}" r="2.6" fill="${cols[i]==='#FFD54A'?'#FF8A3D':'#FFD54A'}"/>`; } }
+  if (A.head==='casque') s+=`<path d="M${100-rx*.94} ${ey} Q${100-rx*.98} ${y-20} 100 ${y-18} Q${100+rx*.98} ${y-20} ${100+rx*.94} ${ey}" stroke="${INK}" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="${100-rx-6}" y="${ey-12}" width="14" height="24" rx="6" fill="#FF5D86" stroke="${INK}" stroke-width="2"/><rect x="${100+rx-8}" y="${ey-12}" width="14" height="24" rx="6" fill="#FF5D86" stroke="${INK}" stroke-width="2"/>`;
+  if (A.head==='magicien') s+=`<path d="M${100-hw*.55} ${y+4} L104 ${y-46} L${100+hw*.55} ${y+4}Z" fill="#6B4BD6" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><ellipse cx="100" cy="${y+5}" rx="${hw*.98}" ry="6.5" fill="#5A3CC0" stroke="${INK}" stroke-width="2"/><path transform="translate(96 ${y-12}) scale(.55)" d="M0 -10 L2.5 -2.5 L10 0 L2.5 2.5 L0 10 L-2.5 2.5 L-10 0 L-2.5 -2.5Z" fill="#FFD54A"/><path transform="translate(106 ${y-27}) scale(.38)" d="M0 -10 L2.5 -2.5 L10 0 L2.5 2.5 L0 10 L-2.5 2.5 L-10 0 L-2.5 -2.5Z" fill="#FFD54A"/>`;
+  return s;
+}
+function creatureSVG(sp, color, stage, mood, p, acc){
+  mood = mood||'happy';
+  const delay = (Math.random()*4).toFixed(2);
+  if (stage===0) return eggSVG(color, p||0, delay);
+  const A = acc || {};
+  const id = 'c'+(++svgUid);
+  const L = mix(color,'#ffffff',.5), D = mix(color,'#1a1030',.3), INK='#2B2350';
+  const P = {1:[44,38,134],2:[50,47,124],3:[56,55,116],4:[56,55,116]}[stage];
+  const rx=P[0], ry=P[1], cy=P[2], top=cy-ry;
+  const k = [0,.8,.9,1,1][stage];
+  let back='', body='', front='', extra='';
+
+  // Aura + ailes (Légendaire)
+  if (stage===4){
+    let rays=''; for(let i=0;i<12;i++){rays+=`<path d="M100 ${cy} L${100+Math.cos(i*Math.PI/6-.06)*98} ${cy+Math.sin(i*Math.PI/6-.06)*98} L${100+Math.cos(i*Math.PI/6+.06)*98} ${cy+Math.sin(i*Math.PI/6+.06)*98}Z" fill="#FFD66B" opacity=".35"/>`;}
+    back += `<g class="cr-rays" style="transform-origin:100px ${cy}px">${rays}</g><circle class="cr-aura" cx="100" cy="${cy}" r="88" fill="url(#${id}a)"/>`;
+    back += `<g class="cr-wing" style="--fl:12deg;transform-origin:${100-rx*.6}px ${cy-ry*.2}px"><ellipse cx="${100-rx-14}" cy="${cy-ry*.45}" rx="34" ry="17" transform="rotate(-28 ${100-rx-14} ${cy-ry*.45})" fill="#fff" stroke="${L}" stroke-width="3"/><ellipse cx="${100-rx-6}" cy="${cy-ry*.15}" rx="26" ry="12" transform="rotate(-12 ${100-rx-6} ${cy-ry*.15})" fill="#fff" stroke="${L}" stroke-width="3"/></g>`;
+    back += `<g class="cr-wing" style="--fl:-12deg;transform-origin:${100+rx*.6}px ${cy-ry*.2}px"><ellipse cx="${100+rx+14}" cy="${cy-ry*.45}" rx="34" ry="17" transform="rotate(28 ${100+rx+14} ${cy-ry*.45})" fill="#fff" stroke="${L}" stroke-width="3"/><ellipse cx="${100+rx+6}" cy="${cy-ry*.15}" rx="26" ry="12" transform="rotate(12 ${100+rx+6} ${cy-ry*.15})" fill="#fff" stroke="${L}" stroke-width="3"/></g>`;
+  }
+  // Bras (Adulte+)
+  if (stage>=3 && sp!=='goutte'){
+    back += `<ellipse cx="${100-rx*.95}" cy="${cy+ry*.18}" rx="11" ry="17" transform="rotate(28 ${100-rx*.95} ${cy+ry*.18})" fill="${color}"/><ellipse cx="${100+rx*.95}" cy="${cy+ry*.18}" rx="11" ry="17" transform="rotate(-28 ${100+rx*.95} ${cy+ry*.18})" fill="${color}"/>`;
+  }
+  const bodyFill = `url(#${id}b)`;
+  const flame = (x,y,s,rot)=>`<path transform="translate(${x} ${y}) rotate(${rot||0}) scale(${s})" d="M0 0 C 30 -2 44 -38 26 -76 C 20 -54 8 -50 2 -62 C -6 -40 -14 -14 0 0Z" fill="url(#${id}f)"/>`;
+
+  if (sp==='braise'){
+    back += `<g class="cr-sway" style="transform-origin:${100+rx-12}px ${cy+ry*.55}px">${flame(100+rx-14, cy+ry*.6, k*(stage>=3?1.15:.95), 8)}</g>`;
+    const ear=(s)=>`<path d="M${100+s*rx*.82} ${top+ry*.55} L${100+s*rx*.66} ${top-ry*.42} L${100+s*rx*.1} ${top+ry*.14}Z" fill="${color}" stroke="${D}" stroke-width="2" stroke-linejoin="round"/><path d="M${100+s*rx*.7} ${top+ry*.38} L${100+s*rx*.62} ${top-ry*.18} L${100+s*rx*.3} ${top+ry*.2}Z" fill="#FFB3C4"/>`;
+    back += ear(-1)+ear(1);
+    if (stage>=3) back += flame(100-6, top+14, .5, -8);
+    body = `<ellipse cx="100" cy="${cy}" rx="${rx}" ry="${ry}" fill="${bodyFill}"/>`;
+  } else if (sp==='nuage'){
+    const ear=(s)=>`<path d="M${100+s*rx*.72} ${top+ry*.4} L${100+s*rx*.6} ${top-ry*.25} L${100+s*rx*.2} ${top+ry*.18}Z" fill="${color}" stroke="${color}" stroke-width="8" stroke-linejoin="round"/>`;
+    back += ear(-1)+ear(1);
+    if (stage>=3) back += `<g class="cr-sway" style="transform-origin:${100+rx-6}px ${cy+ry*.5}px"><path d="M${100+rx-8} ${cy+ry*.5} l22 -10 l-8 -4 l20 -18 l-26 10 l8 4z" fill="#FFD54A" stroke="#E0A800" stroke-width="2" stroke-linejoin="round"/></g>`;
+    else back += `<g class="cr-sway" style="transform-origin:${100+rx-6}px ${cy+ry*.6}px"><circle cx="${100+rx+6}" cy="${cy+ry*.45}" r="${12*k}" fill="${L}"/><circle cx="${100+rx+16}" cy="${cy+ry*.3}" r="${8*k}" fill="${L}"/></g>`;
+    let bumps=''; [-.72,-.36,0,.36,.72].forEach(i=>{bumps+=`<circle cx="${100+rx*i}" cy="${top+ry*.42+Math.abs(i)*ry*.28}" r="${ry*.44}" fill="${bodyFill}"/>`;});
+    [-.8,.8].forEach(i=>{bumps+=`<circle cx="${100+rx*i}" cy="${cy+ry*.35}" r="${ry*.4}" fill="${bodyFill}"/>`;});
+    body = `<ellipse cx="100" cy="${cy+ry*.08}" rx="${rx*.98}" ry="${ry*.92}" fill="${bodyFill}"/>${bumps}`;
+  } else if (sp==='pousse'){
+    body = `<ellipse cx="100" cy="${cy}" rx="${rx}" ry="${ry}" fill="${bodyFill}"/>`;
+    const st = 18 + stage*5, lf = .7 + stage*.18;
+    const leaf=(x,y,rot,s,c)=>`<path d="M0 0 C 8 -11 24 -11 30 -2 C 22 7 8 7 0 0Z" fill="${c}" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"/>`;
+    let sprout = `<path d="M100 ${top+6} Q 96 ${top-st*.5} 102 ${top-st}" stroke="#3DAA62" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+    sprout += leaf(102, top-st, -30, lf, '#5BD48A') + `<g transform="translate(102 ${top-st}) scale(-1 1)">${leaf(0,0,-30,lf,'#47C27A')}</g>`;
+    if (stage>=2) sprout += leaf(99, top-st*.45, 20, lf*.7, '#5BD48A');
+    if (stage>=3){ let pet=''; for(let i=0;i<5;i++){const a=i*Math.PI*2/5;pet+=`<circle cx="${102+Math.cos(a)*7}" cy="${top-st-6+Math.sin(a)*7}" r="6" fill="#FF8FB8"/>`;} sprout += pet+`<circle cx="102" cy="${top-st-6}" r="4.5" fill="#FFD54A"/>`; }
+    front += `<g class="cr-sway" style="transform-origin:100px ${top+6}px">${sprout}</g>`;
+    front += leaf(100-rx*.9, cy+ry*.1, 150, .55, '#5BD48A');
+  } else if (sp==='goutte'){
+    back += `<g class="cr-sway" style="transform-origin:${100+rx*.7}px ${cy+ry*.8}px"><path d="M${100+rx*.6} ${cy+ry*.75} q 26 -2 34 -22 q -4 16 8 24 q -16 8 -40 6z" fill="${D}"/></g>`;
+    body = `<path d="M100 ${top-16} C ${100+rx*.5} ${top+ry*.3}, ${100+rx} ${cy+ry*.05}, ${100+rx} ${cy+ry*.38} C ${100+rx} ${cy+ry+3}, ${100-rx} ${cy+ry+3}, ${100-rx} ${cy+ry*.38} C ${100-rx} ${cy+ry*.05}, ${100-rx*.5} ${top+ry*.3}, 100 ${top-16}Z" fill="${bodyFill}"/>`;
+    if (stage>=2) front += `<path transform="translate(100 ${top+ry*.28}) scale(${k})" d="M-3 -9 A 9 9 0 1 0 8 5 A 7 7 0 1 1 -3 -9Z" fill="#FFF3B0"/>`;
+    if (stage>=3) back += `<ellipse cx="${100-rx*.92}" cy="${cy+ry*.4}" rx="9" ry="18" transform="rotate(40 ${100-rx*.92} ${cy+ry*.4})" fill="${D}"/><ellipse cx="${100+rx*.92}" cy="${cy+ry*.4}" rx="9" ry="18" transform="rotate(-40 ${100+rx*.92} ${cy+ry*.4})" fill="${D}"/>`;
+  } else { // cristal
+    const n = stage+1; let shards='';
+    for(let i=0;i<n;i++){ const t=(i+.5)/n, a=Math.PI*(1.15+.7*t); const x=100+Math.cos(a)*rx*.8, y=cy+Math.sin(a)*ry*.8; const h=(24+ (i%2)*10)*k; const rot=(t-.5)*70;
+      shards += `<path transform="translate(${x} ${y}) rotate(${rot})" d="M-9 4 L-4 ${-h} L0 ${-h-6} L5 ${-h} L9 4Z" fill="url(#${id}c)" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/>`; }
+    back += shards;
+    body = `<ellipse cx="100" cy="${cy}" rx="${rx}" ry="${ry}" fill="${bodyFill}"/><path d="M${100-rx*.62} ${cy-ry*.35} L${100-rx*.2} ${cy-ry*.78} L${100-rx*.05} ${cy-ry*.3}Z" fill="#fff" opacity=".22"/>`;
+    if (stage>=3) front += `<path d="M94 ${top+6} L100 ${top-16} L106 ${top+6}Z" fill="url(#${id}c)" stroke="#fff" stroke-opacity=".7" stroke-width="1.5"/>`;
+  }
+  // Pieds (Jeune+)
+  let feet = '';
+  if (stage>=2 && sp!=='goutte') feet = `<ellipse cx="${100-rx*.45}" cy="${cy+ry*.94}" rx="${13*k}" ry="8" fill="${D}"/><ellipse cx="${100+rx*.45}" cy="${cy+ry*.94}" rx="${13*k}" ry="8" fill="${D}"/>`;
+  const belly = `<ellipse cx="100" cy="${cy+ry*.38}" rx="${rx*.58}" ry="${ry*.44}" fill="#fff" opacity=".5"/>`;
+
+  // Visage
+  const e = 6.2 + stage*.55, ey = cy - ry*.1, dx = rx*.38, lx=100-dx, rxp=100+dx, my = ey + e*1.75;
+  let face = '';
+  const cheeks = `<ellipse cx="${lx-e*.7}" cy="${ey+e*1.55}" rx="${e*.95}" ry="${e*.55}" fill="#FF8FA3" opacity=".6"/><ellipse cx="${rxp+e*.7}" cy="${ey+e*1.55}" rx="${e*.95}" ry="${e*.55}" fill="#FF8FA3" opacity=".6"/>`;
+  if (mood==='sleep'){
+    face = `<path d="M${lx-e} ${ey} Q${lx} ${ey+e*.8} ${lx+e} ${ey}" stroke="${INK}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M${rxp-e} ${ey} Q${rxp} ${ey+e*.8} ${rxp+e} ${ey}" stroke="${INK}" stroke-width="3" fill="none" stroke-linecap="round"/>${cheeks}<ellipse cx="100" cy="${my+2}" rx="3.5" ry="2.5" fill="${INK}"/>`;
+    extra += `<text class="cr-z" x="${100+rx*.55}" y="${top+4}" font-size="16" fill="${INK}">z</text><text class="cr-z" style="animation-delay:-1.3s" x="${100+rx*.75}" y="${top-8}" font-size="12" fill="${INK}">z</text>`;
+  } else {
+    const sad = mood==='sad';
+    const eyeRy = sad? e*.8 : e;
+    face = `<g class="cr-look"><g class="cr-eyes" style="animation-delay:-${delay}s"><ellipse cx="${lx}" cy="${ey}" rx="${e*.82}" ry="${eyeRy}" fill="${INK}"/><ellipse cx="${rxp}" cy="${ey}" rx="${e*.82}" ry="${eyeRy}" fill="${INK}"/><circle cx="${lx+e*.3}" cy="${ey-e*.38}" r="${e*.36}" fill="#fff"/><circle cx="${rxp+e*.3}" cy="${ey-e*.38}" r="${e*.36}" fill="#fff"/><circle cx="${lx-e*.3}" cy="${ey+e*.35}" r="${e*.16}" fill="#fff"/><circle cx="${rxp-e*.3}" cy="${ey+e*.35}" r="${e*.16}" fill="#fff"/></g></g><g class="cr-eyes-happy"><path d="M${lx-e} ${ey+e*.35} Q${lx} ${ey-e*1.1} ${lx+e} ${ey+e*.35}" stroke="${INK}" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M${rxp-e} ${ey+e*.35} Q${rxp} ${ey-e*1.1} ${rxp+e} ${ey+e*.35}" stroke="${INK}" stroke-width="3.2" fill="none" stroke-linecap="round"/></g>${cheeks}<ellipse class="cr-mouth-o" cx="100" cy="${my+2}" rx="${e*.62}" ry="${e*.7}" fill="#7A2E45" stroke="${INK}" stroke-width="2"/>`;
+    if (sad){
+      face += `<path d="M${lx-e} ${ey-e*1.3} L${lx+e*.8} ${ey-e*1.85}" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/><path d="M${rxp+e} ${ey-e*1.3} L${rxp-e*.8} ${ey-e*1.85}" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>`;
+      face += `<path class="cr-mouth" d="M${100-6} ${my+4} Q100 ${my-2} ${100+6} ${my+4}" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+      extra += `<path class="cr-tear" d="M${lx+2} ${ey+e*1.1} q -4 6 0 9 q 4 -3 0 -9z" fill="#7CC8FF"/>`;
+    } else if (mood==='ok'){
+      face += `<path class="cr-mouth" d="M${100-5} ${my} Q100 ${my+4} ${100+5} ${my}" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    } else {
+      face += `<path class="cr-mouth" d="M${100-8} ${my-1} Q${100-4} ${my+5} 100 ${my} Q${100+4} ${my+5} ${100+8} ${my-1}" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+  }
+  // Couronne + étincelles (Légendaire)
+  if (stage===4){
+    const cx=100+rx*.42, cyc=top+ry*.08;
+    if (!A.head) front += `<g transform="translate(${cx} ${cyc}) rotate(18)"><path d="M-16 6 L-18 -12 L-8 -3 L0 -16 L8 -3 L18 -12 L16 6Z" fill="#FFC233" stroke="#E08A00" stroke-width="2" stroke-linejoin="round"/><circle cx="0" cy="-1" r="3" fill="#FF5D86"/><circle cx="-9" cy="2" r="2" fill="#3F8CFF"/><circle cx="9" cy="2" r="2" fill="#2FC98C"/></g>`;
+    const star=(x,y,s,d)=>`<path class="cr-twinkle" style="animation-delay:${d}s" transform="translate(${x} ${y}) scale(${s})" d="M0 -10 L2.5 -2.5 L10 0 L2.5 2.5 L0 10 L-2.5 2.5 L-10 0 L-2.5 -2.5Z" fill="#FFF3B0"/>`;
+    extra += star(30,50,1,0)+star(172,62,1.2,-.6)+star(160,160,.8,-1.1)+star(36,150,.9,-.3);
+  }
+  const defs = `<defs><radialGradient id="${id}b" cx="${100-rx*.35}" cy="${cy-ry*.5}" r="${rx*1.7}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${L}"/><stop offset=".55" stop-color="${color}"/><stop offset="1" stop-color="${D}"/></radialGradient><linearGradient id="${id}f" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF5E3A"/><stop offset=".6" stop-color="#FF9F3A"/><stop offset="1" stop-color="#FFE07A"/></linearGradient><linearGradient id="${id}c" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E6F8FF"/><stop offset="1" stop-color="${L}"/></linearGradient><radialGradient id="${id}a"><stop offset="0" stop-color="#FFE9A8" stop-opacity=".9"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient></defs>`;
+  face += accSVG(A, {rx, ry, cy, top, ey, dx, e, my, sp});
+  const cls = mood==='sad'?' sad':mood==='sleep'?' sleep':'';
+  return `<svg viewBox="0 0 200 200" class="cr${cls}" aria-hidden="true">${defs}<ellipse cx="100" cy="${cy+ry+6}" rx="${rx*.85}" ry="7" fill="#000" opacity=".13"/><g class="cr-root"><g class="cr-move m-${sp}" style="animation-delay:-${(delay*1.3).toFixed(2)}s"><g class="cr-breathe" style="animation-delay:-${delay}s">${back}${body}${feet}${belly}${front}${face}</g></g>${extra}</g></svg>`;
+}
+
+/* ===================== Données & sauvegarde ===================== */
+const LS_KEY = 'eclosion.save.v1';
+function freshState(){
+  return {v:1, started:false, goals:[], streak:{count:0,best:0,lastDay:null,jokers:1,jokerWeek:null},
+    daily:null, achievements:{}, stats:{actions:0,crits:0,megas:0,milestones:0,evolutions:0,chests:0,pets:0,perks:0,xp:0,night:false,early:false},
+    log:[], days:{}, coins:40, owned:[], settings:{sound:true, music:true, musicVol:50}, updatedAt:0};
+}
+function migrate(s){
+  const f = freshState();
+  if (!s || typeof s!=='object') return f;
+  const o = Object.assign(f, s);
+  o.streak = Object.assign(freshState().streak, s.streak||{});
+  o.stats = Object.assign(freshState().stats, s.stats||{});
+  o.settings = Object.assign(freshState().settings, s.settings||{});
+  o.achievements = s.achievements||{};
+  o.log = Array.isArray(s.log)?s.log:[];
+  o.coins = typeof s.coins==='number' ? s.coins : 40;
+  o.owned = Array.isArray(s.owned) ? s.owned : [];
+  if (s.days && typeof s.days==='object') o.days = s.days;
+  else { o.days = {}; o.log.forEach(l=>{ const k=dayKey(new Date(l.t)); const d=o.days[k]||(o.days[k]={n:0,xp:0}); d.n++; d.xp+=l.xp||0; }); }
+  o.goals = (Array.isArray(s.goals)?s.goals:[]).map(g=>{
+    const G = Object.assign({id:uid(),name:'Objectif',creature:'',species:'braise',color:COLORS[0],xp:0,legendary:false,sadNeed:0,createdAt:Date.now(),lastActive:null,skills:[],actions:[],milestones:[]}, g);
+    if (!G.acc || typeof G.acc!=='object') G.acc = {};
+    G.skills = (G.skills||[]).map(k=>Object.assign({id:uid(),name:'Compétence',xp:0,parentId:null,unlockLevel:1,perks:[]},k));
+    G.actions = (G.actions||[]).map(a=>Object.assign({id:uid(),name:'Action',diff:'moyen',skillId:null},a));
+    G.milestones = (G.milestones||[]).map(m=>Object.assign({id:uid(),name:'Étape',size:'moyenne',skillId:null,done:false},m));
+    return G;
+  });
+  return o;
+}
+function loadLocal(){ try{ const raw = localStorage.getItem(LS_KEY); return raw? migrate(JSON.parse(raw)) : null; }catch(e){ return null; } }
+function persistLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+
+let state = loadLocal() || freshState();
+
+// Synchronisation entre appareils (base de données liée à ton compte Claude)
+let docRef = null, syncStatus = 'pending', saveTimer = null, writing = false, writeAgain = false;
+function setSync(s){ syncStatus = s; if (view==='settings') render(); }
+function commit(){
+  state.updatedAt = Date.now();
+  persistLocal();
+  scheduleRemote();
+}
+function scheduleRemote(){
+  if (!docRef) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushRemote, 900);
+}
+async function pushRemote(){
+  if (!docRef) return;
+  if (writing){ writeAgain = true; return; }
+  writing = true;
+  try{
+    await docRef.set({json: JSON.stringify(state), updatedAt: state.updatedAt});
+    if (syncStatus!=='cloud') setSync('cloud');
+  }catch(e){
+    if (e && e.code==='unavailable'){ setTimeout(scheduleRemote, 1500+Math.random()*1500); }
+    else setSync('error');
+  }
+  writing = false;
+  if (writeAgain){ writeAgain = false; scheduleRemote(); }
+}
+async function initSync(){
+  try{
+    if (!window.claude || typeof window.claude.use!=='function'){ setSync('local'); return; }
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user){ setSync('local'); return; }
+    const id = await user.id();
+    if (!id){ setSync('local'); return; }
+    docRef = db.doc('data/users/'+id+'/save');
+    const t = setTimeout(()=>{ if (syncStatus==='pending') setSync('local'); }, 10000);
+    docRef.onSnapshot(snap=>{
+      clearTimeout(t);
+      if (snap.metadata && snap.metadata.fromCache && !snap.exists) return;
+      if (syncStatus!=='cloud') setSync('cloud');
+      if (!snap.exists){ if (state.started) scheduleRemote(); return; }
+      const b = snap.data();
+      if (!b || typeof b.json!=='string') return;
+      if ((b.updatedAt||0) > (state.updatedAt||0)){
+        try{ state = migrate(JSON.parse(b.json)); persistLocal(); ensureDay(); render(); }catch(e){}
+      } else if ((b.updatedAt||0) < (state.updatedAt||0)){
+        scheduleRemote();
+      }
+    }, err=>{ clearTimeout(t); setSync('error'); });
+  }catch(e){ setSync('local'); }
+}
+
+/* ===================== Règles du jeu ===================== */
+function stageOf(g){ if (g.legendary) return 4; let s=0; for(let i=1;i<4;i++) if (g.xp>=STAGES[i].xp) s=i; return s; }
+function skillLevel(xp){ let lvl=1, need=40; xp=xp||0; while(xp>=need){ xp-=need; lvl++; need=40+20*(lvl-1);} return {lvl, cur:xp, need}; }
+function getGoal(id){ return state.goals.find(g=>g.id===id); }
+function getSkill(g,id){ return id? g.skills.find(s=>s.id===id) : null; }
+function isLocked(g,sk){ if(!sk||!sk.parentId) return false; const p=getSkill(g,sk.parentId); if(!p) return false; return (sk.unlockLevel||1) > skillLevel(p.xp).lvl || isLocked(g,p); }
+function daysInactive(g){ const last = g.lastActive || dayKey(new Date(g.createdAt||Date.now())); return Math.max(0, daysBetween(last, dayKey())); }
+function moodOf(g){ if (stageOf(g)===0) return 'happy'; if (g.sadNeed>0) return 'sad'; const d=daysInactive(g); if (d>=7) return 'sleep'; if (d>=3) return 'sad'; if (d===2) return 'ok'; return 'happy'; }
+function moodText(g){
+  const m = moodOf(g), n = g.sadNeed>0 ? g.sadNeed : (daysInactive(g)>=7?5:3);
+  if (m==='sleep') return `S'est endormi·e de tristesse. Gains −20 % jusqu'à ${n} actions.`;
+  if (m==='sad') return `Triste, tu lui manques. Gains −20 % encore ${n} action${n>1?'s':''}.`;
+  if (m==='ok') return `Se demande où tu es passé·e…`;
+  return '';
+}
+function stageProgress(g){
+  const s = stageOf(g);
+  if (s===4) return {pct:100, text:'Forme légendaire atteinte'};
+  if (s===3) return {pct:100, text:`${g.xp} XP · valide l'étape finale pour la forme ultime`};
+  const a=STAGES[s].xp, b=STAGES[s+1].xp;
+  return {pct: Math.min(100, (g.xp-a)/(b-a)*100), text:`${g.xp} / ${b} XP vers ${STAGES[s+1].name}`};
+}
+function creatureName(g){ return g.creature || SPECIES[g.species].name; }
+// Niveau de joueur : toute l'XP gagnée, tous objectifs confondus
+const TITLES = [[1,'Novice'],[3,'Apprenti'],[5,'Aventurier'],[8,'Éleveur'],[12,'Expert'],[16,'Champion'],[20,'Maître'],[30,'Légende']];
+function playerLevel(){ let xp=state.stats.xp||0, lvl=1, need=150; while(xp>=need){ xp-=need; lvl++; need=150+75*(lvl-1); } let title='Novice'; TITLES.forEach(([l,t])=>{ if(lvl>=l) title=t; }); return {lvl, cur:xp, need, title}; }
+function addCoins(n){
+  state.coins = (state.coins||0) + n;
+  setTimeout(()=>{ const el=document.querySelector('.coin-pill'); if (!el) return; el.innerHTML = IC.coin + state.coins; const r=el.getBoundingClientRect(); floatText(r.left+r.width/2, r.bottom+16, '+'+n, 'crit'); }, 500);
+}
+function checkPlayerLevel(before){
+  const p=playerLevel(); if (p.lvl<=before) return;
+  addCoins(20*(p.lvl-before));
+  setTimeout(()=>{ sfx.level(); stars(innerWidth/2,90,24,null,1.6); ring(innerWidth/2,90,'#FFC233',140,8); toast({icon:IC.star, title:`Niveau ${p.lvl} ! Tu es ${p.title}`, sub:'Ton niveau de joueur augmente. +20 éclats', color:'var(--gold)', ms:4500}); }, 650);
+}
+// Suivi par jour (calendrier d'activité) et compteurs par action
+function trackDay(xp, n){
+  const k=dayKey(), d=state.days[k]||(state.days[k]={n:0,xp:0}); d.n+=n; d.xp+=xp;
+  const keys=Object.keys(state.days); if (keys.length>130) keys.sort().slice(0,keys.length-130).forEach(x=>delete state.days[x]);
+}
+function todayCount(a){ return a.today && a.today.d===dayKey() ? a.today.n : 0; }
+function weekCount(a){ return a.week && a.week.k===weekKey() ? a.week.n : 0; }
+function timeOfDay(){ const h=new Date().getHours(); return h<6?'night':h<9?'dawn':h<18?'day':h<21?'dusk':'night'; }
+
+function ensureDay(){
+  const today = dayKey(); let changed=false;
+  const S = state.streak;
+  const wk = weekKey();
+  if (S.jokerWeek!==wk){ if (S.jokerWeek) S.jokers = Math.min(2, (S.jokers||0)+1); S.jokerWeek = wk; changed=true; }
+  if (S.lastDay && S.count>0){
+    const gap = daysBetween(S.lastDay, today);
+    if (gap>=2){
+      const missed = gap-1;
+      if (missed <= S.jokers){ S.jokers -= missed; S.lastDay = addDays(today,-1); toast({icon:IC.shield, title:`Joker utilisé`, sub:`Ta série de ${S.count} jours est protégée.`, color:'var(--sky)'}); }
+      else { toast({icon:IC.flame, title:`Série perdue (${S.count} jours)`, sub:'Une action aujourd’hui pour repartir !', color:'var(--orange)'}); S.count = 0; }
+      changed = true;
+    }
+  }
+  if (!state.daily || state.daily.day!==today){ state.daily = makeDaily(today); changed=true; }
+  if (changed) commit();
+}
+function makeDaily(day){
+  const rnd = seeded(day+'q');
+  const pool = QUESTS.filter(q=>!q.need || q.need(state));
+  const chosen=[], keys=new Set();
+  let guard=0;
+  while(chosen.length<3 && guard++<100){ const q = pool[Math.floor(rnd()*pool.length)]; if (keys.has(q.key)) continue; keys.add(q.key); chosen.push({id:q.id,text:q.text,target:q.target,key:q.key}); }
+  return {day, quests:chosen, c:{actions:0,xp:0,hard:0,goals:[],pets:0,milestones:0,crits:0}, claimed:false};
+}
+function qProgress(q){ const c=state.daily.c; return q.key==='goals'? c.goals.length : (c[q.key]||0); }
+function questsDone(){ return state.daily && state.daily.quests.every(q=>qProgress(q)>=q.target); }
+function touchStreak(){
+  const S=state.streak, today=dayKey();
+  if (S.lastDay===today) return false;
+  if (S.lastDay && daysBetween(S.lastDay,today)===1 && S.count>0) S.count++; else S.count=1;
+  S.lastDay = today; S.best = Math.max(S.best, S.count);
+  return true;
+}
+function addSkillXp(g, sk, amt, ev){
+  const before = skillLevel(sk.xp).lvl;
+  sk.xp = (sk.xp||0) + amt;
+  const after = skillLevel(sk.xp).lvl;
+  if (after>before){
+    ev.push({type:'level', sk, lvl:after});
+    (sk.perks||[]).filter(p=>p.level>before && p.level<=after).forEach(p=>{ ev.push({type:'perk', sk, perk:p}); state.stats.perks++; });
+    g.skills.filter(c=>c.parentId===sk.id && (c.unlockLevel||1)>before && (c.unlockLevel||1)<=after).forEach(c=>{ ev.push({type:'unlock', sk:c, parent:sk}); state.stats.perks++; });
+  }
+}
+function grant(g, sk, base, opts){
+  let mult=1, crit=0;
+  if (opts.crit){ const r=Math.random(); if (r<0.03){mult=5;crit=2;} else if (r<0.15){mult=2;crit=1;} }
+  const inactive = daysInactive(g);
+  if (!g.sadNeed && stageOf(g)>0 && inactive>=3) g.sadNeed = inactive>=7?5:3;
+  const sadPen = g.sadNeed>0;
+  const bonus = Math.min(0.3, (state.streak.count||0)*0.02);
+  const xp = Math.max(1, Math.round(base*mult*(1+bonus)*(sadPen?0.8:1)));
+  let comforted=false;
+  if (g.sadNeed>0){ g.sadNeed--; if (g.sadNeed===0) comforted=true; }
+  g.lastActive = dayKey();
+  const before = stageOf(g);
+  g.xp += xp; state.stats.xp += xp;
+  const ev=[];
+  let skXp = 0, parXp = 0, parentId = null;
+  if (sk){ addSkillXp(g, sk, xp, ev); skXp = xp; if (sk.parentId){ const p=getSkill(g,sk.parentId); if(p){ parXp=Math.round(xp*.5); parentId=p.id; addSkillXp(g,p,parXp,ev);} } }
+  if (opts.legendary) g.legendary = true;
+  const after = stageOf(g);
+  if (after>before){ ev.push({type:'evolve', g, from:before, to:after}); state.stats.evolutions++; }
+  return {xp, crit, sadPen, comforted, ev, skXp, parXp, parentId};
+}
+
+/* ===================== Sons (générés, sans fichiers) ===================== */
+let actx=null;
+function ctxGet(){ try{ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); if (actx.state!=='running') actx.resume().catch(()=>{}); return actx; }catch(e){ return null; } }
+// Déblocage du son : nécessaire sur iPhone (bouton silencieux) et dans certains navigateurs
+let audioUnlocked=false, silentEl=null;
+function silentWavUrl(){
+  const n=4000, buf=new Uint8Array(44+n), dv=new DataView(buf.buffer);
+  const w=(o,s)=>{ for(let i=0;i<s.length;i++) buf[o+i]=s.charCodeAt(i); };
+  w(0,'RIFF'); dv.setUint32(4,36+n,true); w(8,'WAVE'); w(12,'fmt '); dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
+  dv.setUint32(24,8000,true); dv.setUint32(28,8000,true); dv.setUint16(32,1,true); dv.setUint16(34,8,true); w(36,'data'); dv.setUint32(40,n,true); buf.fill(128,44);
+  return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
+}
+function unlockAudio(){
+  try{ if (navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  const c = ctxGet(); if (!c) return;
+  if (!audioUnlocked){
+    audioUnlocked = true;
+    try{ const b=c.createBuffer(1,1,22050), s=c.createBufferSource(); s.buffer=b; s.connect(c.destination); s.start(0); }catch(e){}
+    try{ silentEl=document.createElement('audio'); silentEl.src=silentWavUrl(); silentEl.loop=true; silentEl.setAttribute('playsinline',''); silentEl.setAttribute('webkit-playsinline',''); }catch(e){ silentEl=null; }
+  }
+  if (silentEl && silentEl.paused) silentEl.play().catch(()=>{});
+}
+function ac(){ return state.settings.sound ? ctxGet() : null; }
+function tone(f, d, o){ o=o||{}; const c=o.force?ctxGet():ac(); if(!c) return; const t=c.currentTime+(o.at||0); const osc=c.createOscillator(), g=c.createGain(); osc.type=o.type||'sine'; osc.frequency.setValueAtTime(f,t); if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to,t+d); const v=o.vol||.18; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+.012); g.gain.exponentialRampToValueAtTime(0.0001,t+d); osc.connect(g); g.connect(c.destination); osc.start(t); osc.stop(t+d+.05); }
+const sfx = {
+  pop(){ tone(520,.12,{to:980,type:'triangle',vol:.22}); tone(1300,.08,{at:.06,vol:.08}); },
+  crit(){ [523,659,784,1047,1319].forEach((f,i)=>tone(f,.16,{at:i*.055,type:'square',vol:.07})); tone(2093,.4,{at:.3,vol:.06}); },
+  mega(){ [392,523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.2,{at:i*.06,type:'sawtooth',vol:.06})); tone(80,.5,{to:40,type:'sine',vol:.3}); },
+  level(){ [659,784,988,1319].forEach((f,i)=>tone(f,.2,{at:i*.09,type:'triangle',vol:.16})); },
+  evolve(){ tone(220,1.6,{to:880,type:'sawtooth',vol:.05}); [523,659,784].forEach(f=>tone(f,1.2,{at:1.6,type:'triangle',vol:.12})); [1047,1319,1568,2093].forEach((f,i)=>tone(f,.3,{at:1.6+i*.08,vol:.08})); },
+  flicker(){ tone(880,.05,{type:'square',vol:.04}); },
+  chest(){ [784,988,1175,1568,1976,2349].forEach((f,i)=>tone(f,.25,{at:i*.07,vol:.09})); },
+  boop(){ tone(460,.14,{to:320,type:'sine',vol:.22}); tone(700,.08,{at:.09,to:900,vol:.08}); },
+  achv(){ tone(880,.18,{type:'triangle',vol:.14}); tone(1320,.35,{at:.12,type:'triangle',vol:.14}); },
+  undo(){ tone(600,.18,{to:300,type:'triangle',vol:.14}); },
+  tick(k){ tone(880+k*70,.07,{type:'sine',vol:.07}); },
+  whoosh(){ tone(300,.35,{to:1200,type:'sine',vol:.06}); },
+};
+
+/* ===================== Voix des créatures ===================== */
+// Chaque espèce a sa voix. Plus la créature grandit, plus sa voix est grave. Triste, elle descend.
+let vNoiseBuf=null;
+function noiseBuf(c){ if(!vNoiseBuf){ vNoiseBuf=c.createBuffer(1,Math.floor(c.sampleRate*.6),c.sampleRate); const d=vNoiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; } return vNoiseBuf; }
+function vOsc(c, type, t, d, path, vol, o){
+  o=o||{}; const osc=c.createOscillator(), g=c.createGain();
+  osc.type=type; osc.frequency.setValueAtTime(path[0][1], t);
+  for(let i=1;i<path.length;i++) osc.frequency.exponentialRampToValueAtTime(Math.max(20,path[i][1]), t+path[i][0]);
+  g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol, t+(o.a||.012)); g.gain.exponentialRampToValueAtTime(.0001, t+d);
+  if (o.vib){ const l=c.createOscillator(), lg=c.createGain(); l.frequency.value=o.vib[0]; lg.gain.value=o.vib[1]; l.connect(lg); lg.connect(osc.frequency); l.start(t); l.stop(t+d+.05); }
+  if (o.lp){ const f=c.createBiquadFilter(); f.type='lowpass'; f.frequency.value=o.lp; osc.connect(f); f.connect(g); } else osc.connect(g);
+  g.connect(c.destination); osc.start(t); osc.stop(t+d+.05);
+}
+function vNoise(c, t, d, vol, type, freq, q){ const n=c.createBufferSource(); n.buffer=noiseBuf(c); const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; if(q) f.Q.value=q; const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+.005); g.gain.exponentialRampToValueAtTime(.0001,t+d); n.connect(f); f.connect(g); g.connect(c.destination); n.start(t, Math.random()*.3); n.stop(t+d+.02); }
+const VOICES = {
+  // Renard de braise : petits jappements vifs « kyu-kyu ! » et crépitements de feu
+  braise(c,t,k,v,sad){
+    if (sad){ vOsc(c,'triangle',t,.38,[[0,950*k],[.36,480*k]],.16*v); return .4; }
+    const n=2+(Math.random()<.4?1:0);
+    for(let i=0;i<n;i++){ const ti=t+i*.11, j=1+(Math.random()-.5)*.12; vOsc(c,'triangle',ti,.1,[[0,640*k*j],[.07,1180*k*j]],.17*v); vOsc(c,'square',ti,.07,[[0,1280*k*j],[.06,2300*k*j]],.025*v); }
+    for(let i=0;i<4;i++) vNoise(c,t+Math.random()*.3,.03,.05*v,'highpass',3500);
+    return n*.11+.05; },
+  // Chat-nuage : miaulement doux qui ondule, suivi d'un ronronnement
+  nuage(c,t,k,v,sad){
+    if (sad){ vOsc(c,'sine',t,.8,[[0,700*k],[.75,400*k]],.18*v,{vib:[5,14],a:.08}); return .8; }
+    vOsc(c,'sine',t,.6,[[0,600*k],[.2,900*k],[.55,520*k]],.2*v,{vib:[7,16*k],a:.05});
+    vOsc(c,'triangle',t,.6,[[0,1200*k],[.2,1800*k],[.55,1040*k]],.03*v,{a:.05});
+    vOsc(c,'sawtooth',t+.15,.7,[[0,52],[.7,48]],.07*v,{lp:260,vib:[24,6]});
+    return .6; },
+  // Esprit des feuilles : notes boisées de marimba « pip-pop ! »
+  pousse(c,t,k,v,sad){
+    const notes = sad? [1320,1047,880] : (Math.random()<.5?[880,1175,1568]:[988,1319,1760]);
+    notes.forEach((f,i)=>{ const ti=t+i*(sad?.16:.09); vOsc(c,'sine',ti,.2,[[0,f*k],[.2,f*k*.985]],.2*v,{a:.003}); vOsc(c,'triangle',ti,.05,[[0,f*k*3]],.025*v,{a:.002}); vNoise(c,ti,.015,.04*v,'highpass',6000); });
+    return notes.length*(sad?.16:.09)+.1; },
+  // Phoque des marées : « bloup-bloup » de bulles
+  goutte(c,t,k,v,sad){
+    const n=sad?1:2;
+    for(let i=0;i<n;i++){ const ti=t+i*.17; vOsc(c,'sine',ti,sad?.4:.17,sad?[[0,700*k],[.38,260*k]]:[[0,280*k],[.07,950*k],[.16,620*k]],.22*v); vNoise(c,ti+.02,.08,.025*v,'bandpass',1300,6); }
+    return n*.17+.05; },
+  // Golem de cristal : tintement de cloche cristalline et pas lourd
+  cristal(c,t,k,v,sad){
+    const f0 = 520*k*(sad?.84:1);
+    const bell=(ti,f,vv)=>{ [[1,.15,1.3],[2.76,.06,.7],[5.4,.03,.35]].forEach(([m,vol,d])=>vOsc(c,'sine',ti,d,[[0,f*m]],vol*vv*v,{a:.003})); };
+    bell(t,f0,1); if(!sad) bell(t+.16,f0*1.5,.7);
+    vOsc(c,'sine',t,.22,[[0,120],[.2,42]],.22*v);
+    return .45; },
+};
+function voice(sp, stage, mood){
+  const c = ac(); if(!c) return 0;
+  const t = c.currentTime+.02;
+  if (stage===0){ [0,.16].forEach(d=>{ vNoise(c,t+d,.05,.12,'bandpass',900,2); vOsc(c,'sine',t+d,.07,[[0,320],[.06,150]],.18); }); return 0; }
+  if (mood==='sleep'){ vNoise(c,t,.7,.06,'lowpass',380); vOsc(c,'sine',t,.7,[[0,85],[.7,70]],.08,{a:.3}); return 0; }
+  const k = [1,1.45,1.22,1,.94][stage];
+  const fn = VOICES[sp]||VOICES.braise;
+  const d = fn(c,t,k,1,mood==='sad');
+  if (stage===4) fn(c,t+.22,k*2,.28,false); // écho féerique de la forme légendaire
+  return d + (stage===4?.2:0);
+}
+
+/* ===================== Musique d'ambiance (générée en direct) ===================== */
+// Une petite boucle douce : nappe d'accords, basse, arpège, percussions légères et une mélodie qui revient.
+const music = {on:false, timer:null, next:0, step:0, gain:null, noise:null, phr:null, resume:false};
+const mtof = m=>440*Math.pow(2,(m-69)/12);
+const CHORDS = [[48,55,64,71],[45,52,60,67],[41,48,57,64],[43,50,59,62]]; // Do maj7, La m7, Fa maj7, Sol
+const PENTA = [60,62,64,67,69,72,74,76,79];
+const BEAT = 60/86/2; // croches à 86 BPM
+function mVol(){ const v = state.settings.musicVol==null?50:state.settings.musicVol; return v/100*.6; }
+function startMusic(){
+  if (music.on || !state.settings.music || document.hidden) return;
+  const c = ctxGet(); if (!c) return;
+  if (!music.gain){
+    music.gain = c.createGain(); music.gain.gain.value = 0;
+    const comp = c.createDynamicsCompressor(); music.gain.connect(comp); comp.connect(c.destination);
+    const b = c.createBuffer(1, Math.floor(c.sampleRate*.5), c.sampleRate); const d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; music.noise=b;
+    const rnd = seeded('eclosion-melodie');
+    music.phr = Array.from({length:4},()=>Array.from({length:8},(_,i)=> (rnd()<(i%2?.55:.25)) ? null : Math.floor(rnd()*PENTA.length)));
+  }
+  const g = music.gain.gain; g.cancelScheduledValues(c.currentTime); g.setTargetAtTime(mVol(), c.currentTime, .9);
+  music.on = true; music.next = c.currentTime + .1; music.t0 = music.next - music.step*BEAT; music.timer = setInterval(schedMusic, 25);
+}
+function stopMusic(){ if (!music.on) return; music.on=false; clearInterval(music.timer); if (actx && music.gain){ const g=music.gain.gain; g.cancelScheduledValues(actx.currentTime); g.setTargetAtTime(0, actx.currentTime, .15); } }
+function duckMusic(sec){ if (!music.on || !actx) return; const t=actx.currentTime, g=music.gain.gain; g.cancelScheduledValues(t); g.setTargetAtTime(mVol()*.18, t, .08); g.setTargetAtTime(mVol(), t+sec, .7); }
+function mNote(f, t, d, type, vol, dest, attack){
+  const o=actx.createOscillator(), g=actx.createGain(); o.type=type; o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(vol, t+(attack||.01)); g.gain.exponentialRampToValueAtTime(0.0001, t+d);
+  o.connect(g); g.connect(dest||music.gain); o.start(t); o.stop(t+d+.05);
+}
+function mNoise(t, d, vol, type, freq){ const n=actx.createBufferSource(); n.buffer=music.noise; const f=actx.createBiquadFilter(); f.type=type; f.frequency.value=freq; const g=actx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+d); n.connect(f); f.connect(g); g.connect(music.gain); n.start(t); n.stop(t+d+.02); }
+function schedMusic(){ if (!actx || !music.on) return; while (music.next < actx.currentTime + .15){ playStep(music.step, music.next); music.next += BEAT; music.step++; } }
+function playStep(s, t){
+  const bar=Math.floor(s/8), st=s%8, ch=CHORDS[bar%4];
+  if (st===0){ const f=actx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=950; f.connect(music.gain); ch.forEach(m=>{ mNote(mtof(m),t,BEAT*8+.5,'triangle',.032,f,.4); mNote(mtof(m)*1.004,t,BEAT*8+.5,'sine',.02,f,.5); }); }
+  if (st===0||st===3||st===4||st===6) mNote(mtof((st===3||st===6? ch[1] : ch[0])-12), t, BEAT*1.7, 'sine', .15);
+  mNote(mtof(ch[[0,1,2,3,2,1,2,3][st]]+12), t, BEAT*1.9, 'triangle', .02);
+  if (st===0||st===4){ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.setValueAtTime(115,t); o.frequency.exponentialRampToValueAtTime(42,t+.14); g.gain.setValueAtTime(.2,t); g.gain.exponentialRampToValueAtTime(.0001,t+.2); o.connect(g); g.connect(music.gain); o.start(t); o.stop(t+.22); }
+  if (st===2||st===6) mNoise(t, .12, .035, 'bandpass', 1800);
+  if (st%2===1) mNoise(t, .04, .016, 'highpass', 7500);
+  const sec=Math.floor(bar/4)%4;
+  if (sec===1||sec===3){ const idx = music.phr[(bar + (sec===3?2:0))%4][st]; if (idx!=null) mNote(mtof(PENTA[idx]+12), t, BEAT*2.4, 'sine', .05, null, .02); }
+  if (sec===2 && st===7 && bar%2===1) mNote(mtof(PENTA[(bar*3)%PENTA.length]+24), t, .8, 'sine', .018);
+  if (st%2===0 && Date.now()-chorus.last < 5000) setTimeout(beatBop, Math.max(0,(t-actx.currentTime)*1000));
+}
+
+/* ===================== Chorale des créatures ===================== */
+// Chaque toucher fait chanter une note. Les notes viennent d'une gamme qui sonne toujours juste,
+// se calent sur le rythme de la musique, et les autres créatures harmonisent puis te répondent.
+const SCALE = [0,2,4,7,9];
+const REG = {cristal:5, braise:3, pousse:2, goutte:0, nuage:-2}; // registre de chaque espèce
+const chorus = {deg:2, count:0, last:0, phrase:[], answerTimer:null};
+function degToMidi(d){ const o=Math.floor(d/5), i=((d%5)+5)%5; return 60+o*12+SCALE[i]; }
+function chordNow(t){ if (!music.on) return null; const s=Math.floor((t-music.t0)/BEAT); return CHORDS[Math.floor(s/8)%4]; }
+function quantize(now){ if (!music.on) return now+.01; const g=BEAT/2; return music.t0 + Math.ceil((now+.03-music.t0)/g)*g; }
+function snapToChord(midi, ch){ if (!ch) return midi; const pcs=ch.map(m=>m%12); for (const d of [0,-1,1,-2,2,-3,3]){ if (pcs.includes((((midi+d)%12)+12)%12)) return midi+d; } return midi; }
+function nearestTonic(m){ const b=m-(((m%12)+12)%12); return [b-12,b,b+12].reduce((a,c)=>Math.abs(c-m)<Math.abs(a-m)?c:a); }
+// Le timbre de chaque espèce, chanté sur une note
+function singNote(sp, midi, t, vol){
+  const c=ac(); if(!c) return; const f=mtof(midi); vol=vol||1;
+  if (sp==='braise'){ vOsc(c,'triangle',t,.35,[[0,f*1.5],[.04,f]],.16*vol,{a:.005}); vOsc(c,'square',t,.12,[[0,f*2]],.025*vol); vNoise(c,t,.02,.03*vol,'highpass',4000); }
+  else if (sp==='nuage'){ vOsc(c,'sine',t,.7,[[0,f*.94],[.08,f]],.18*vol,{vib:[6,f*.012],a:.06}); vOsc(c,'triangle',t,.7,[[0,f*2]],.025*vol,{a:.08}); }
+  else if (sp==='pousse'){ vOsc(c,'sine',t,.45,[[0,f]],.2*vol,{a:.003}); vOsc(c,'sine',t,.12,[[0,f*4]],.04*vol,{a:.002}); vNoise(c,t,.012,.04*vol,'highpass',6000); }
+  else if (sp==='goutte'){ vOsc(c,'sine',t,.32,[[0,f*.5],[.05,f*1.03],[.12,f]],.22*vol); }
+  else { [[1,.13,1.2],[2.76,.05,.6],[5.4,.025,.3]].forEach(([m,v,d])=>vOsc(c,'sine',t,d,[[0,f*m]],v*vol,{a:.003})); }
+}
+function woodBlock(t){ const c=ac(); if(!c) return; vNoise(c,t,.04,.12,'bandpass',1100,4); vOsc(c,'sine',t,.06,[[0,700],[.05,500]],.14); }
+function pickSinger(excludeGid){ const ws=[...document.querySelectorAll('.cr-wrap[data-sp]')].filter(w=>w.dataset.g!==excludeGid && +w.dataset.st>0 && w.dataset.mood!=='sleep' && inView(w)); return ws.length? pick(ws) : null; }
+function creatureSings(w, g, big){
+  if (!w.isConnected) return;
+  animCreature(w, big?'tap-'+g.species:'idle-hop', big?900:600); animCreature(w,'talk',350);
+  if (moodOf(g)!=='sad') animCreature(w,'joy',600);
+  const r=w.getBoundingClientRect(); noteFx(r.left+r.width/2, r.top+r.height*.2, g.color, big?3:1);
+}
+function beatBop(){
+  document.querySelectorAll('.cr-wrap[data-sp]').forEach(w=>{
+    if (+w.dataset.st===0 || w.dataset.mood==='sleep' || !inView(w)) return;
+    const root=w.querySelector('.cr-root'); if (!root || /tap|idle/.test(root.getAttribute('class'))) return;
+    animCreature(w,'bop',300);
+  });
+}
+function chorusTap(g, m){
+  const c=ac(), nowMs=Date.now();
+  if (nowMs-chorus.last > 2500){ chorus.count=0; chorus.phrase=[]; chorus.deg=1+Math.floor(Math.random()*3); }
+  const first = chorus.count===0;
+  chorus.last=nowMs; chorus.count++;
+  const st=stageOf(g);
+  const now=c?c.currentTime:0, t=c?quantize(now):0, delay=c?Math.max(0,(t-now)*1000):0;
+  if (st===0){ woodBlock(t); return {delay, first}; }
+  if (m==='sleep'){ voice(g.species, st, 'sleep'); chorus.count--; return {delay:0, first}; }
+  if (!first) chorus.deg = Math.max(-2, Math.min(7, chorus.deg + pick([-2,-1,-1,1,1,2])));
+  const midi = snapToChord(degToMidi(Math.min(11, chorus.deg + (REG[g.species]||0))), chordNow(t));
+  singNote(g.species, midi, t, m==='sad'?.6:1);
+  chorus.phrase.push({midi, at:nowMs, gid:g.id}); if (chorus.phrase.length>8) chorus.phrase.shift();
+  // Une autre créature chante en harmonie avec toi
+  if (chorus.count>=3 && Math.random()<.55){
+    const w=pickSinger(g.id); const hg=w&&getGoal(w.dataset.g);
+    if (hg){ singNote(hg.species, snapToChord(midi+(Math.random()<.5?4:-5), chordNow(t)), t, .45); setTimeout(()=>creatureSings(w,hg,false), delay); }
+  }
+  state.stats.chorusBest = Math.max(state.stats.chorusBest||0, chorus.count);
+  clearTimeout(chorus.answerTimer);
+  if (chorus.phrase.length>=3) chorus.answerTimer = setTimeout(answerPhrase, 1200);
+  return {delay, first, combo: chorus.count>=4 && chorus.count%4===0};
+}
+// Quand tu t'arrêtes, une autre créature rejoue ta mélodie et la termine
+function answerPhrase(){
+  const ph = chorus.phrase.slice(-6); if (ph.length<3) return;
+  const w = pickSinger(ph[ph.length-1].gid); if (!w) return;
+  const g = getGoal(w.dataset.g); if (!g) return;
+  chorus.phrase=[]; chorus.count=0;
+  const c = ac(); const shift = g.species==='cristal'?12 : g.species==='nuage'?-12 : 0;
+  let t = c? quantize(c.currentTime+.08) : 0, off = 0;
+  ph.forEach((n,i)=>{
+    if (i>0){ const gap=Math.max(BEAT, Math.min(BEAT*2, Math.round(((n.at-ph[i-1].at)/1000)/BEAT)*BEAT)); t+=gap; off+=gap; }
+    const midi = i===ph.length-1 ? nearestTonic(n.midi+shift) : n.midi+shift;
+    singNote(g.species, midi, t, .9);
+    const dl = c? (t-c.currentTime)*1000 : off*1000;
+    setTimeout(()=>creatureSings(w, g, i===ph.length-1), Math.max(0,dl));
+  });
+  const endMs = c? (t-c.currentTime)*1000 : off*1000;
+  setTimeout(()=>{
+    if (!w.isConnected) return;
+    const r=w.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height*.3;
+    floatText(x, y, 'Duo !', 'crit'); stars(x, y, 14, null, 1.2); confetti(x, y, 30, null, .8);
+    state.stats.duets=(state.stats.duets||0)+1; checkAchievements(); commit();
+  }, endMs+300);
+}
+function buzz(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+
+/* ===================== Confettis & effets ===================== */
+const cv = $('#fx'), cx2 = cv.getContext('2d'); let parts=[], raf=0;
+const amb = $('#amb'), ax = amb.getContext('2d'); let motes=[];
+function sizeCanvas(){ const r=window.devicePixelRatio||1; [[cv,cx2],[amb,ax]].forEach(([c,x])=>{ c.width=innerWidth*r; c.height=innerHeight*r; c.style.width=innerWidth+'px'; c.style.height=innerHeight+'px'; x.setTransform(r,0,0,r,0,0); }); }
+sizeCanvas(); addEventListener('resize', ()=>{ sizeCanvas(); if (reduceMotion) drawAmb(); });
+function spawn(p){ parts.push(p); if (!raf) raf = requestAnimationFrame(tick); }
+function confetti(x, y, n, colors, power){
+  if (reduceMotion) n = Math.min(n, 12);
+  colors = colors || ['#FF5D86','#FFC233','#2FC98C','#3F8CFF','#9B6BFF','#FF8A5B'];
+  power = power || 1;
+  for(let i=0;i<n;i++){ const a = -Math.PI/2 + (Math.random()-.5)*Math.PI*1.3; const v=(4+Math.random()*7)*power;
+    spawn({k:'conf',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:.22+Math.random()*.1,s:4+Math.random()*5,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:pick(colors),life:90+Math.random()*50,shape:Math.random()<.3?'c':'r'}); }
+}
+// Onde de choc
+function ring(x, y, color, max, w){ if (reduceMotion) return; spawn({k:'ring',x,y,r:6,max:max||80,w:w||6,c:color||'#FFC233',life:1}); }
+// Étoiles scintillantes
+function stars(x, y, n, colors, power){
+  if (reduceMotion) n = Math.min(n, 4);
+  colors = colors || ['#FFF3B0','#FFD66B','#FFFFFF']; power = power||1;
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, v=(1.5+Math.random()*4.5)*power; spawn({k:'star',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,s:5+Math.random()*7,rot:Math.random()*3,vr:(Math.random()-.5)*.25,c:pick(colors),life:40+Math.random()*35}); }
+}
+// Pièces d'or qui tournent
+function coins(x, y, n){ if (reduceMotion) n=Math.min(n,8); for(let i=0;i<n;i++){ const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.1, v=6+Math.random()*8; spawn({k:'coin',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:.3,s:6+Math.random()*4,ph:Math.random()*6,life:120}); } }
+// Orbes d'XP qui volent vers une cible
+function orbs(x, y, tx, ty, n, color, onArrive){
+  if (reduceMotion) n = Math.min(n, 3);
+  for(let i=0;i<n;i++) spawn({k:'orb',sx:x,sy:y,mx:x+(Math.random()-.5)*280,my:Math.min(y,ty)-50-Math.random()*150,tx:tx+(Math.random()-.5)*16,ty:ty+(Math.random()-.5)*6,t:-i*.07,sp:.02+Math.random()*.012,c:color||'#6FF2C2',cb:onArrive});
+}
+function drawStar(s){ cx2.beginPath(); for(let j=0;j<8;j++){ const r=j%2?s*.38:s, a=j*Math.PI/4; cx2.lineTo(Math.cos(a)*r, Math.sin(a)*r); } cx2.closePath(); cx2.fill(); }
+function glow(ctx, x, y, r, c, a){ const g=ctx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,c); g.addColorStop(1,c+'00'); ctx.globalAlpha=Math.max(0,Math.min(1,a)); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); }
+const bez=(a,b,c,t)=>(1-t)*(1-t)*a+2*(1-t)*t*b+t*t*c;
+const ease=t=>t*t*(3-2*t);
+function tick(){
+  cx2.clearRect(0,0,innerWidth,innerHeight);
+  const alive=[];
+  for(const p of parts){
+    cx2.save();
+    if (p.k==='conf'){
+      p.vy+=p.g; p.vx*=.985; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.life--;
+      cx2.globalAlpha=Math.min(1,p.life/30); cx2.translate(p.x,p.y); cx2.rotate(p.r); cx2.fillStyle=p.c;
+      if(p.shape==='c'){cx2.beginPath();cx2.arc(0,0,p.s/2,0,7);cx2.fill();} else cx2.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);
+      if (p.life>0 && p.y<innerHeight+40) alive.push(p);
+    } else if (p.k==='ring'){
+      p.r += (p.max-p.r)*.13+.8; p.life -= .04;
+      cx2.globalAlpha=Math.max(0,p.life); cx2.strokeStyle=p.c; cx2.lineWidth=p.w*p.life+1; cx2.shadowColor=p.c; cx2.shadowBlur=14;
+      cx2.beginPath(); cx2.arc(p.x,p.y,p.r,0,7); cx2.stroke();
+      if (p.life>0) alive.push(p);
+    } else if (p.k==='star'){
+      p.x+=p.vx; p.y+=p.vy; p.vx*=.94; p.vy*=.94; p.vy+=.035; p.rot+=p.vr; p.life--;
+      const a=Math.min(1,p.life/25); cx2.globalCompositeOperation='lighter'; glow(cx2,p.x,p.y,p.s*2.4,p.c,a*.55);
+      cx2.globalAlpha=a; cx2.fillStyle=p.c; cx2.translate(p.x,p.y); cx2.rotate(p.rot); drawStar(p.s*(.5+.5*a));
+      if (p.life>0) alive.push(p);
+    } else if (p.k==='coin'){
+      p.vy+=p.g; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.ph+=.28; p.life--;
+      cx2.globalAlpha=Math.min(1,p.life/30); cx2.translate(p.x,p.y); cx2.scale(Math.max(.15,Math.abs(Math.cos(p.ph))),1);
+      cx2.fillStyle='#E09A00'; cx2.beginPath(); cx2.arc(0,0,p.s,0,7); cx2.fill(); cx2.fillStyle='#FFD54A'; cx2.beginPath(); cx2.arc(0,0,p.s*.72,0,7); cx2.fill(); cx2.fillStyle='#FFF3B0'; cx2.fillRect(-p.s*.15,-p.s*.45,p.s*.3,p.s*.9);
+      if (p.life>0 && p.y<innerHeight+30) alive.push(p);
+    } else if (p.k==='orb'){
+      p.t += p.sp;
+      if (p.t>=1){ if (p.cb) p.cb(); }
+      else {
+        if (p.t>0){
+          cx2.globalCompositeOperation='lighter';
+          for(let j=4;j>=0;j--){ const tt=ease(Math.max(0,p.t-j*.03)); glow(cx2, bez(p.sx,p.mx,p.tx,tt), bez(p.sy,p.my,p.ty,tt), 12-j*2, p.c, 1-j*.18); }
+          const tt=ease(p.t); cx2.globalAlpha=1; cx2.fillStyle='#fff'; cx2.beginPath(); cx2.arc(bez(p.sx,p.mx,p.tx,tt), bez(p.sy,p.my,p.ty,tt), 2.8, 0, 7); cx2.fill();
+        }
+        alive.push(p);
+      }
+    } else if (p.k==='ember'){
+      p.ph+=.2; p.x+=p.vx+Math.sin(p.ph)*.4; p.y+=p.vy; p.vy*=.985; p.life--;
+      const a=Math.min(1,p.life/30)*(.7+.3*Math.sin(p.ph*3)); cx2.globalCompositeOperation='lighter'; glow(cx2,p.x,p.y,p.s*4,p.c,a*.6); cx2.globalAlpha=a; cx2.fillStyle='#FFF3B0'; cx2.beginPath(); cx2.arc(p.x,p.y,p.s*.6,0,7); cx2.fill();
+      if (p.life>0) alive.push(p);
+    } else if (p.k==='puff'){
+      p.r+=p.vr; p.vr*=.97; p.x+=p.vx; p.y+=p.vy; p.life-=.022;
+      glow(cx2,p.x,p.y,p.r*1.6,p.c,p.life*.9); cx2.globalAlpha=Math.max(0,p.life*.8); cx2.fillStyle=p.c; cx2.beginPath(); cx2.arc(p.x,p.y,p.r*.8,0,7); cx2.fill();
+      if (p.life>0) alive.push(p);
+    } else if (p.k==='leaf'){
+      p.ph+=.08; p.vy=Math.min(1.4,p.vy+.08); p.vx*=.96; p.x+=p.vx+Math.sin(p.ph)*1.1; p.y+=p.vy; p.rot+=p.vr+Math.cos(p.ph)*.04; p.life--;
+      cx2.globalAlpha=Math.min(1,p.life/30); cx2.translate(p.x,p.y); cx2.rotate(p.rot); cx2.fillStyle=p.c; cx2.beginPath(); cx2.ellipse(0,0,p.s,p.s*.45,0,0,7); cx2.fill(); cx2.strokeStyle='rgba(0,0,0,.18)'; cx2.lineWidth=1; cx2.beginPath(); cx2.moveTo(-p.s,0); cx2.lineTo(p.s,0); cx2.stroke();
+      if (p.life>0 && p.y<innerHeight+20) alive.push(p);
+    } else if (p.k==='bubble'){
+      p.ph+=.1; p.x+=Math.sin(p.ph)*.7; p.y+=p.vy; p.life--;
+      const a=Math.min(1,p.life/25); cx2.globalAlpha=a*.9; cx2.strokeStyle='#5AB4FF'; cx2.lineWidth=1.8; cx2.fillStyle='rgba(124,200,255,.18)'; cx2.beginPath(); cx2.arc(p.x,p.y,p.r,0,7); cx2.fill(); cx2.stroke(); cx2.fillStyle='#FFFFFF'; cx2.beginPath(); cx2.arc(p.x-p.r*.35,p.y-p.r*.35,p.r*.25,0,7); cx2.fill();
+      if (p.life>0) alive.push(p);
+    } else if (p.k==='note'){
+      p.ph+=.08; p.x+=p.vx+Math.sin(p.ph)*.6; p.y+=p.vy; p.vy*=.99; p.life--;
+      cx2.globalAlpha=Math.min(1,p.life/25); cx2.font=`800 ${p.s}px "Baloo 2", sans-serif`; cx2.textAlign='center'; cx2.textBaseline='middle';
+      cx2.translate(p.x,p.y); cx2.rotate(Math.sin(p.ph)*.25); cx2.lineWidth=4; cx2.strokeStyle='rgba(255,255,255,.95)'; cx2.strokeText(p.ch,0,0); cx2.fillStyle=p.c; cx2.fillText(p.ch,0,0);
+      if (p.life>0) alive.push(p);
+    } else if (p.k==='drop'){
+      p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.life--;
+      cx2.globalAlpha=Math.min(1,p.life/20); cx2.fillStyle='#5AB4FF'; cx2.beginPath(); cx2.arc(p.x,p.y,2.6,0,7); cx2.fill();
+      if (p.life>0) alive.push(p);
+    }
+    cx2.restore();
+  }
+  parts = alive;
+  raf = parts.length? requestAnimationFrame(tick) : 0;
+}
+// Petites lucioles qui flottent en fond
+function initMotes(){ const n = innerWidth<600? 18 : 28; motes = Array.from({length:n},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:3+Math.random()*11,vy:-(.1+Math.random()*.3),vx:(Math.random()-.5)*.2,ph:Math.random()*6,c:pick(['#FF5D86','#FFC233','#3F8CFF','#9B6BFF','#2FC98C'])})); }
+function drawAmb(){ ax.clearRect(0,0,innerWidth,innerHeight); for(const m of motes){ glow(ax, m.x, m.y, m.r*2.2, m.c, .2+.14*Math.sin(m.ph)); ax.globalAlpha=.35+.25*Math.sin(m.ph); ax.fillStyle='#ffffff'; ax.beginPath(); ax.arc(m.x,m.y,Math.max(1,m.r*.18),0,7); ax.fill(); } }
+let ambF=0;
+function ambTick(){ ambF++; if (ambF%2===0){ for(const m of motes){ m.x+=m.vx*2+Math.sin(m.ph*.7)*.3; m.y+=m.vy*2; m.ph+=.04; if (m.y<-30){ m.y=innerHeight+30; m.x=Math.random()*innerWidth; } } drawAmb(); } requestAnimationFrame(ambTick); }
+initMotes(); if (reduceMotion) drawAmb(); else requestAnimationFrame(ambTick);
+function shake(big){ const a=$('#app'); a.classList.remove('shake','shake-big'); void a.offsetWidth; a.classList.add(big?'shake-big':'shake'); setTimeout(()=>a.classList.remove('shake','shake-big'), 650); }
+function vflash(color){ const d=document.createElement('div'); d.className='vflash'; if(color) d.style.setProperty('--vc',color); document.body.appendChild(d); setTimeout(()=>d.remove(), 650); }
+// Particules propres à chaque espèce
+function speciesFx(sp, x, y, n, color, mood){
+  if (reduceMotion) n=Math.min(n,3);
+  const L = mix(color||'#FFFFFF','#ffffff',.55), rnd=Math.random;
+  for(let i=0;i<n;i++){
+    if (sp==='braise') spawn({k:'ember',x:x+(rnd()-.5)*30,y:y+(rnd()-.5)*20,vx:(rnd()-.5)*1.6,vy:-(1.2+rnd()*2.4),s:2+rnd()*3,life:50+rnd()*40,ph:rnd()*6,c:pick(['#FF7A2F','#FFC233','#FF5E3A','#FFE07A'])});
+    else if (sp==='nuage') spawn({k:'puff',x:x+(rnd()-.5)*70,y:y+(rnd()-.2)*40,r:6+rnd()*8,vr:.5+rnd()*.7,vx:(rnd()-.5)*1.2,vy:-(rnd()*.6),life:1,c:L});
+    else if (sp==='pousse') spawn({k:'leaf',x:x+(rnd()-.5)*30,y:y-10,vx:(rnd()-.5)*5,vy:-(2+rnd()*3),rot:rnd()*6,vr:(rnd()-.5)*.3,s:5+rnd()*4,life:90+rnd()*40,ph:rnd()*6,c:rnd()<.25?'#FF8FB8':pick(['#5BD48A','#47C27A','#8BE07A'])});
+    else if (sp==='goutte') spawn({k:'bubble',x:x+(rnd()-.5)*50,y:y+(rnd()-.5)*20,vy:-(.7+rnd()*1.4),r:3+rnd()*6,ph:rnd()*6,life:70+rnd()*40});
+    else spawn({k:'star',x,y,vx:(rnd()-.5)*7,vy:(rnd()-.5)*7,s:4+rnd()*6,rot:rnd()*3,vr:(rnd()-.5)*.3,c:pick(['#BDF3FF','#FFFFFF','#9FE3FF','#E0D4FF']),life:35+rnd()*30});
+  }
+  if (sp==='goutte' && n>2) for(let i=0;i<Math.ceil(n/2);i++){ const a=-Math.PI/2+(rnd()-.5)*2; spawn({k:'drop',x,y,vx:Math.cos(a)*4,vy:Math.sin(a)*5,g:.25,life:60}); }
+  if (sp==='nuage' && mood==='sad') for(let i=0;i<6;i++) spawn({k:'drop',x:x+(rnd()-.5)*60,y:y+10,vx:0,vy:2+rnd()*2,g:.15,life:40});
+  if (sp==='cristal' && n>2) ring(x,y,'#9FE3FF',70,4);
+}
+// Petites particules que chaque créature émet tranquillement au repos
+function ambientFx(w){
+  const r=w.getBoundingClientRect(), sp=w.dataset.sp, col=w.dataset.col||'#FFFFFF', rnd=Math.random;
+  const at=(ax,ay)=>[r.left+r.width*ax, r.top+r.height*ay];
+  if (sp==='braise'){ const [x,y]=at(.8,.42); spawn({k:'ember',x,y,vx:(rnd()-.5)*.6,vy:-(.6+rnd()),s:1.5+rnd()*2,life:50+rnd()*30,ph:rnd()*6,c:pick(['#FF7A2F','#FFC233','#FFE07A'])}); }
+  else if (sp==='nuage'){ const [x,y]=at(.5+(rnd()-.5)*.6,.82); spawn({k:'puff',x,y,r:2+rnd()*3,vr:.25,vx:(rnd()-.5)*.4,vy:-.2,life:.7,c:mix(col,'#ffffff',.6)}); }
+  else if (sp==='pousse'){ const [x,y]=at(.5,.12); spawn({k:'leaf',x,y,vx:(rnd()-.5)*1.5,vy:-.5,rot:rnd()*6,vr:(rnd()-.5)*.1,s:3+rnd()*2,life:80,ph:rnd()*6,c:pick(['#5BD48A','#8BE07A'])}); }
+  else if (sp==='goutte'){ const [x,y]=at(.5+(rnd()-.5)*.4,.3); spawn({k:'bubble',x,y,vy:-(.4+rnd()*.6),r:1.5+rnd()*3,ph:rnd()*6,life:60}); }
+  else { const [x,y]=at(.3+rnd()*.4,.35+rnd()*.4); spawn({k:'star',x,y,vx:0,vy:-.3,s:2.5+rnd()*3,rot:0,vr:.05,c:pick(['#FFFFFF','#BDF3FF']),life:30}); }
+}
+// Notes de musique qui s'envolent
+function noteFx(x, y, color, n){ if (reduceMotion) n=Math.min(n,1); for(let i=0;i<n;i++) spawn({k:'note',x:x+(Math.random()-.5)*24,y,vx:(Math.random()-.5)*1.4,vy:-(1+Math.random()*1.2),ch:pick(['♪','♫','♩','♬']),s:16+Math.random()*9,c:color||'#9B6BFF',ph:Math.random()*6,life:70+Math.random()*20}); }
+function animCreature(wrap, cls, ms){ const root=wrap && wrap.querySelector('.cr-root'); if(!root) return; root.classList.remove(cls); root.getBoundingClientRect(); root.classList.add(cls); setTimeout(()=>root.classList.remove(cls), ms||850); }
+const DIFF_COLOR = {facile:'#22C38E', moyen:'#3F8CFF', difficile:'#FF8A3D', epique:'#9B6BFF'};
+// Les orbes d'XP volent jusqu'à la barre de progression, qui se remplit à leur arrivée
+function flyXp(g, x, y, oldPct, evolved, n, color){
+  const bar = document.querySelector(`[data-bar="${g.id}"]`); if (!bar) return;
+  const i = bar.querySelector('i'); const fin = i.style.width;
+  if (!evolved){ i.style.transition='none'; i.style.width=oldPct+'%'; i.getBoundingClientRect(); }
+  const r = bar.getBoundingClientRect();
+  const tx = r.left + Math.min(r.width-6, Math.max(6, r.width*(parseFloat(fin)||0)/100)), ty = r.top + r.height/2;
+  let count = 0;
+  orbs(x, y, tx, ty, n, color, ()=>{
+    count++; sfx.tick(count);
+    if (count===1){ i.style.transition=''; i.style.width=fin; }
+    if (count===Math.min(n, reduceMotion?3:n)){ bar.classList.remove('pulse'); void bar.offsetWidth; bar.classList.add('pulse'); stars(tx, ty, 7, null, .8); }
+  });
+}
+function floatText(x, y, html, cls){ const d=document.createElement('div'); d.className='float '+(cls||''); d.innerHTML=html; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(), 1300); }
+function pointOf(e, el){ if (e && e.clientX){ return [e.clientX, e.clientY]; } const r=(el||document.body).getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2]; }
+
+/* ===================== Toasts ===================== */
+function toast(o){
+  const box = $('#toasts');
+  const t = document.createElement('div'); t.className='toast'; if (o.color) t.style.setProperty('--tc', o.color);
+  t.innerHTML = `${o.icon?`<div class="ti">${o.icon}</div>`:''}<div class="tt">${esc(o.title)}${o.sub?`<small>${esc(o.sub)}</small>`:''}</div>${o.action?`<button type="button">${esc(o.action)}</button>`:''}`;
+  if (o.action) t.querySelector('button').onclick = ()=>{ o.onAction(); close(); };
+  box.appendChild(t);
+  while (box.children.length>3) box.firstChild.remove();
+  let gone=false; function close(){ if(gone) return; gone=true; t.classList.add('out'); setTimeout(()=>t.remove(),300); }
+  setTimeout(close, o.ms||3200);
+  return close;
+}
+
+/* ===================== Annuler ===================== */
+let undoSnap=null, undoClose=null;
+function offerUndo(snap, label){
+  undoSnap = snap; if (undoClose) undoClose();
+  undoClose = toast({title:label, sub:'Validé', icon:IC.check.replace('currentColor','#22C38E'), color:'var(--mint)', action:'Annuler', ms:5000, onAction:()=>{ if(!undoSnap) return; state = migrate(JSON.parse(undoSnap)); undoSnap=null; sfx.undo(); commit(); render(); toast({title:'Action annulée', color:'var(--muted)'}); }});
+}
+
+/* ===================== Grands moments (file d'attente) ===================== */
+let bigQ = Promise.resolve();
+function queueBig(fn){ bigQ = bigQ.then(()=>new Promise(res=>fn(res))).catch(()=>{}); }
+function evolveScene(g, from, to){
+  queueBig(done=>{
+    const el = document.createElement('div'); el.className='big';
+    const oldS = creatureSVG(g.species, g.color, from, 'happy', 1), newS = creatureSVG(g.species, g.color, to, 'happy', 0, g.acc);
+    el.innerHTML = `<div class="rays"></div><div class="flash"></div><h2>Quoi ? ${esc(creatureName(g))} ${from===0?'va éclore':'évolue'} !</h2><div class="stage"><div class="o">${oldS}</div><div class="n" hidden>${newS}</div></div><p class="desc">&nbsp;</p><button class="btn primary" type="button" hidden>Génial !</button>`;
+    document.body.appendChild(el);
+    const o=el.querySelector('.o'), n=el.querySelector('.n'), h=el.querySelector('h2'), p=el.querySelector('.desc'), b=el.querySelector('button'), fl=el.querySelector('.flash');
+    let showNew=false, t=0, interval=reduceMotion?400:320;
+    duckMusic(7);
+    const sr = ()=>el.querySelector('.stage').getBoundingClientRect();
+    function flip(){ showNew=!showNew; o.hidden=showNew; n.hidden=!showNew; o.classList.add('white'); n.classList.add('white'); sfx.flicker();
+      const r=sr(), cxs=r.left+r.width/2, cys=r.top+r.height/2;
+      for(let q=0;q<2;q++){ const a=Math.random()*Math.PI*2, d=Math.max(innerWidth,innerHeight)*.6; orbs(cxs+Math.cos(a)*d, cys+Math.sin(a)*d, cxs, cys, 1, pick(['#FFE9A8','#B9A6FF','#9FF5D3'])); }
+      t+=interval; interval=Math.max(55, interval*.86); if (t<(reduceMotion?1200:2600)) setTimeout(flip, interval); else finish(); }
+    function finish(){
+      o.hidden=true; n.hidden=false; n.classList.remove('white'); n.classList.add('pop'); fl.classList.add('go'); el.classList.add('shine');
+      sfx.evolve(); buzz([60,40,120]);
+      const r = el.querySelector('.stage').getBoundingClientRect();
+      confetti(r.left+r.width/2, r.top+r.height/2, 160, null, 1.4);
+      setTimeout(()=>confetti(r.left+r.width/2, r.top+r.height/3, 90, ['#FFD66B','#FFFFFF','#FFC233'], 1.2), 500);
+      const ex=r.left+r.width/2, ey=r.top+r.height/2;
+      shake(true); ring(ex,ey,'#FFFFFF',200,12); setTimeout(()=>ring(ex,ey,'#FFD66B',280,9),140); setTimeout(()=>ring(ex,ey,'#B9A6FF',360,7),300);
+      stars(ex,ey,40,['#FFF3B0','#FFFFFF','#FFD66B','#C9B8FF'],2);
+      setTimeout(()=>{ const d=voice(g.species,to,'happy'); const rt=n.querySelector('.cr-root'); if(rt){ rt.classList.add('talk','joy'); setTimeout(()=>rt.classList.remove('talk','joy'), (d||.6)*1000+300); } speciesFx(g.species, ex, ey, 18, g.color, 'happy'); }, 1000);
+      h.textContent = to===1 ? `${creatureName(g)} est né·e !` : `${creatureName(g)} est devenu·e ${STAGES[to].name} !`;
+      p.textContent = to===4 ? `Objectif « ${g.name} » accompli. Forme ultime débloquée !` : `Objectif « ${g.name} » : continue comme ça pour la prochaine forme.`;
+      b.hidden=false; b.focus();
+    }
+    setTimeout(flip, 900);
+    b.onclick = ()=>{ el.remove(); done(); };
+  });
+}
+
+/* ===================== Actions de jeu ===================== */
+function handleEvents(res, g){
+  res.ev.forEach(e=>{
+    if (e.type==='level'){ sfx.level(); stars(innerWidth/2, 50, 14, ['#7CF0C0','#FFFFFF','#FFF3B0'], 1.2); toast({icon:IC.up, title:`${e.sk.name} passe niveau ${e.lvl} !`, color:'var(--mint)'}); }
+    if (e.type==='perk'){ toast({icon:IC.spark, title:`Capacité débloquée : ${e.perk.name}`, sub:`${e.sk.name} niv. ${e.perk.level}`, color:'var(--violet)', ms:4500}); }
+    if (e.type==='unlock'){ toast({icon:IC.spark, title:`Nouvelle branche : ${e.sk.name}`, sub:`Débloquée grâce à ${e.parent.name}`, color:'var(--violet)', ms:4500}); }
+    if (e.type==='evolve'){ evolveScene(g, e.from, e.to); }
+  });
+  if (res.comforted) toast({icon:IC.heart.replace('currentColor','#FF5D86'), title:`${creatureName(g)} est consolé·e !`, sub:'Gains normaux rétablis.', color:'var(--accent)'});
+}
+function checkAchievements(){
+  ACH.forEach(([id,name,desc,test])=>{
+    if (!state.achievements[id] && test(state)){
+      state.achievements[id] = Date.now();
+      addCoins(5);
+      setTimeout(()=>{ sfx.achv(); toast({icon:IC.medal, title:`Succès : ${name}`, sub:desc+' · +5 éclats', color:'var(--gold)', ms:4200}); }, 450);
+    }
+  });
+}
+function logIt(g, label, xp, crit){ state.log.unshift({t:Date.now(), g:g?g.name:'', label, xp, crit}); if (state.log.length>150) state.log.length=150; }
+
+function doAction(gid, aid, e, el){
+  ensureDay();
+  const g=getGoal(gid); if(!g) return; const a=g.actions.find(x=>x.id===aid); if(!a) return;
+  const sk = getSkill(g, a.skillId);
+  if (sk && isLocked(g, sk)){ const p=getSkill(g,sk.parentId); toast({icon:IC.lock, title:'Compétence verrouillée', sub:`${sk.name} se débloque au niveau ${sk.unlockLevel} de ${p?p.name:'sa compétence parente'}.`, color:'var(--muted)'}); return; }
+  const snap = JSON.stringify(state);
+  const pl0 = playerLevel().lvl;
+  const newDay = touchStreak();
+  const oldPct = stageProgress(g).pct;
+  const res = grant(g, sk, DIFF[a.diff].xp, {crit:true});
+  const st=state.stats, c=state.daily.c;
+  st.actions++; c.actions++; c.xp+=res.xp;
+  // Compteurs du jour et de la semaine, bonus si l'objectif hebdo est atteint
+  const tk=dayKey(), wk=weekKey();
+  if (!a.today || a.today.d!==tk) a.today={d:tk,n:0}; a.today.n++;
+  if (!a.week || a.week.k!==wk) a.week={k:wk,n:0,done:false}; a.week.n++;
+  let weekBonus = 0;
+  if (a.target>0 && !a.week.done && a.week.n>=a.target){ a.week.done=true; addCoins(10); const b=grant(g, sk, 60, {crit:false}); weekBonus=b.xp; res.ev.push(...b.ev); c.xp+=b.xp; }
+  trackDay(res.xp+weekBonus, 1);
+  if (a.diff==='difficile'||a.diff==='epique') c.hard++;
+  if (!c.goals.includes(g.id)) c.goals.push(g.id);
+  if (res.crit){ st.crits++; c.crits++; if (res.crit===2) st.megas++; }
+  const h = new Date().getHours(); if (h>=23) st.night=true; if (h<7) st.early=true;
+  logIt(g, a.name, res.xp, res.crit);
+  const [x,y] = pointOf(e, el);
+  const dc = DIFF_COLOR[a.diff];
+  ring(x, y, dc, 60, 6);
+  if (res.crit===2){ sfx.mega(); buzz([40,30,40,30,120]); floatText(x,y,`+${res.xp} XP<small>MÉGA CRITIQUE ×5</small>`,'mega'); confetti(x,y,140,null,1.5); vflash('#FF5D86'); shake(true); ring(x,y,'#FF5D86',160,10); setTimeout(()=>ring(x,y,'#FFC233',220,8),120); stars(x,y,26,['#FFF3B0','#FF9BB8','#FFFFFF'],1.6); }
+  else if (res.crit===1){ sfx.crit(); buzz([30,30,60]); floatText(x,y,`+${res.xp} XP<small>CRITIQUE ×2</small>`,'crit'); confetti(x,y,70,['#FFC233','#FFD66B','#FF8A5B','#FFFFFF'],1.1); vflash('#FFC233'); shake(false); ring(x,y,'#FFC233',120,8); stars(x,y,16,null,1.2); }
+  else { sfx.pop(); buzz(20); floatText(x,y,`+${res.xp} XP${res.sadPen?'<small>−20 % (créature triste)</small>':''}`); confetti(x,y,14,null,.7); stars(x,y,6,null,.8); }
+  if (newDay && state.streak.count>1) setTimeout(()=>toast({icon:IC.flame, title:`Série : ${state.streak.count} jours d'affilée !`, sub:`Bonus XP +${Math.round(Math.min(.3,state.streak.count*.02)*100)} %`, color:'var(--orange)'}), 300);
+  if (weekBonus) setTimeout(()=>{ sfx.crit(); confetti(innerWidth/2, innerHeight*.35, 60, null, 1.1); toast({icon:IC.star, title:`Objectif de la semaine atteint !`, sub:`${a.name} : ${a.target} fois cette semaine. Bonus +${weekBonus} XP et +10 éclats`, color:'var(--gold)', ms:4500}); }, 500);
+  handleEvents(res, g);
+  const wasDone = questsDone.__last;
+  checkAchievements();
+  checkPlayerLevel(pl0);
+  commit();
+  render();
+  const nOrbs = ({facile:5,moyen:7,difficile:9,epique:12})[a.diff] + (res.crit?5:0);
+  flyXp(g, x, y, oldPct, res.ev.some(e=>e.type==='evolve'), nOrbs, res.crit===2?'#FF7BA0':res.crit?'#FFD66B':'#6FF2C2');
+  // La créature réagit quand tu progresses
+  if (!res.ev.some(e=>e.type==='evolve')){
+    const st2 = stageOf(g), critDur = (res.crit && st2>0) ? voice(g.species, st2, moodOf(g)) : 0;
+    document.querySelectorAll(`.cr-wrap[data-g="${g.id}"]`).forEach(cw=>{
+      if (st2===0){ animCreature(cw,'tap',700); return; }
+      animCreature(cw, res.crit?'tap-'+g.species:'idle-hop', 900); animCreature(cw,'joy',800);
+      if (res.crit){ if (critDur) animCreature(cw,'talk',critDur*1000+120); const rr=cw.getBoundingClientRect(); speciesFx(g.species, rr.left+rr.width/2, rr.top+rr.height/2, 8, g.color, 'happy'); }
+    });
+  }
+  offerUndo(snap, a.name);
+  if (questsDone() && !state.daily.claimed && !wasDone){ setTimeout(()=>{ sfx.chest(); toast({icon:CHEST(), title:'Quête du jour terminée !', sub:'Ton coffre t’attend sur l’accueil.', color:'var(--gold)', ms:4500}); }, 700); }
+  questsDone.__last = questsDone();
+}
+function doMilestone(gid, mid){
+  const g=getGoal(gid); if(!g) return; const m=g.milestones.find(x=>x.id===mid); if(!m) return;
+  if (m.done){ openMilestoneEditor(g, m); return; }
+  const final = m.size==='finale';
+  openSheet(`<h2>${final?'Étape finale':'Valider cette étape ?'}</h2>
+    <p style="margin:0">« <b>${esc(m.name)}</b> »${final?`<br><span class="muted">C'est l'objectif accompli : ${esc(creatureName(g))} prendra sa forme légendaire.</span>`:''}</p>
+    <p class="tiny" style="margin:0">+${MSIZE[m.size].xp} XP</p>
+    <div class="sheet-actions"><button class="btn" data-x="close" type="button">Pas encore</button><button class="btn primary" id="msOk" type="button">Oui, c'est fait !</button></div>`, sh=>{
+    sh.querySelector('#msOk').onclick = (e)=>{
+      closeSheet(); ensureDay();
+      const snap = JSON.stringify(state);
+      const pl0 = playerLevel().lvl;
+      touchStreak();
+      const sk = getSkill(g, m.skillId);
+      const res = grant(g, sk && !isLocked(g,sk) ? sk : null, MSIZE[m.size].xp, {crit:false, legendary: final});
+      m.done = true; m.doneAt = Date.now(); m.gained = {xp:res.xp, skillId: sk?sk.id:null, skXp:res.skXp, parentId:res.parentId, parXp:res.parXp, wasLegendary:false};
+      state.stats.milestones++; state.daily.c.milestones++; state.daily.c.xp += res.xp;
+      const mCoins = ({petite:15,moyenne:30,grande:50,finale:100})[m.size]; addCoins(mCoins);
+      if (!state.daily.c.goals.includes(g.id)) state.daily.c.goals.push(g.id);
+      logIt(g, 'Étape : '+m.name, res.xp, 0);
+      const [x,y] = [innerWidth/2, innerHeight/2];
+      sfx.level(); setTimeout(()=>sfx.crit(),200); buzz([50,40,90]);
+      floatText(x,y,`+${res.xp} XP<small>Étape franchie ! +${mCoins} éclats</small>`,'crit'); confetti(x,y,120,null,1.3);
+      vflash('#FFC233'); shake(true); ring(x,y,'#FFC233',180,10); setTimeout(()=>ring(x,y,'#FF8A3D',240,7),150); stars(x,y,24,null,1.5); coins(x,y,24);
+      trackDay(res.xp, 1);
+      handleEvents(res, g); checkAchievements(); checkPlayerLevel(pl0); commit(); render(); offerUndo(snap, 'Étape : '+m.name);
+    };
+  });
+}
+function undoMilestone(g, m){
+  const G = m.gained || {xp:0};
+  g.xp = Math.max(0, g.xp - (G.xp||0)); state.stats.xp = Math.max(0, state.stats.xp-(G.xp||0));
+  const sk=getSkill(g,G.skillId); if (sk) sk.xp=Math.max(0,sk.xp-(G.skXp||0));
+  const p=getSkill(g,G.parentId); if (p) p.xp=Math.max(0,p.xp-(G.parXp||0));
+  if (m.size==='finale' && !g.milestones.some(x=>x!==m && x.done && x.size==='finale')) g.legendary=false;
+  m.done=false; delete m.doneAt; delete m.gained;
+  state.stats.milestones = Math.max(0, state.stats.milestones-1);
+}
+const PHRASES = {
+  happy:['Hihi !','On continue ?','Je crois en toi !','Encore une action ?','Tu gères !','Prrr…','On va y arriver !','Câlin !'],
+  ok:['Tu étais où ?','On s’y remet ?','Coucou…'],
+  sad:['Tu m’as manqué…','Snif…','Reviens jouer…'],
+  sleep:['Zzz…','…mmh ?'],
+  egg:['*toc toc*','…crr…','*bouge*','(chaud…)'],
+};
+function pet(gid, wrap){
+  const g=getGoal(gid); if(!g) return;
+  const st = stageOf(g), m = st===0?'egg':moodOf(g);
+  const r=wrap.getBoundingClientRect(), px=r.left+r.width/2, py=r.top+r.height*.5;
+  const ch = chorusTap(g, m);
+  setTimeout(()=>{
+    if (st===0){ animCreature(wrap,'tap',700); ring(px,py+r.height*.1,g.color,r.width*.5,4); noteFx(px, r.top+r.height*.2, g.color, 1); }
+    else {
+      animCreature(wrap,'tap-'+g.species,900);
+      if (m!=='sleep') animCreature(wrap,'talk',380);
+      if (m==='happy'||m==='ok') animCreature(wrap,'joy',900);
+      ring(px,py,g.color,r.width*.6,5);
+      speciesFx(g.species, px, py, wrap.classList.contains('lg')?10:5, g.color, m);
+      if (m!=='sleep') noteFx(px, r.top+r.height*.2, g.color, 2);
+      if (g.species==='cristal') setTimeout(()=>shake(false),340);
+    }
+    if (ch.combo){ floatText(px, r.top, `Chorale ×${chorus.count}`, 'crit'); stars(px, r.top+10, 10, null, 1); }
+  }, ch.delay);
+  buzz(15);
+  if (ch.first){
+    const old = wrap.querySelector('.bubble'); if (old) old.remove();
+    const b = document.createElement('div'); b.className='bubble'; b.textContent = pick(PHRASES[m]); wrap.appendChild(b); setTimeout(()=>b.remove(),1900);
+  }
+  for(let i=0;i<(st===0?1:3);i++){ const h=document.createElement('span'); h.className='heart'; h.innerHTML=IC.heart; h.style.left=(35+Math.random()*30)+'%'; h.style.top=(20+Math.random()*20)+'%'; h.style.setProperty('--hx',((Math.random()-.5)*30)+'px'); h.style.animationDelay=(i*.12)+'s'; wrap.appendChild(h); setTimeout(()=>h.remove(),1300); }
+  ensureDay();
+  state.stats.pets++; state.daily.c.pets++;
+  checkAchievements(); commit();
+  const qb = $('#questBox'); if (qb) qb.outerHTML = questBox();
+}
+function openChest(){
+  ensureDay();
+  if (!questsDone() || state.daily.claimed) return;
+  const snapGoals = state.goals.filter(g=>!g.legendary);
+  const g = snapGoals.length? pick(snapGoals) : (state.goals.length? pick(state.goals): null);
+  const xp = 50 + Math.round(Math.random()*30)*5;
+  const joker = Math.random()<.35 && state.streak.jokers<3;
+  queueBig(done=>{
+    const el = document.createElement('div'); el.className='big';
+    el.innerHTML = `<div class="rays"></div><div class="flash"></div><h2>Coffre du jour</h2><p>Touche le coffre pour l'ouvrir</p><div class="chest-big shake">${CHEST()}</div><div class="reward" hidden></div><p class="rdesc" hidden></p><button class="btn primary" type="button" hidden>Récupérer</button>`;
+    document.body.appendChild(el);
+    const ch=el.querySelector('.chest-big'), rw=el.querySelector('.reward'), rd=el.querySelector('.rdesc'), b=el.querySelector('button');
+    let opened=false;
+    ch.onclick = ()=>{
+      if (opened) return; opened=true;
+      ch.classList.remove('shake'); ch.classList.add('open'); el.classList.add('shine'); el.querySelector('.flash').classList.add('go');
+      el.querySelector('p').hidden = true;
+      sfx.chest(); buzz([40,30,100]);
+      const r=ch.getBoundingClientRect(); confetti(r.left+r.width/2, r.top+r.height*.4, 110, ['#FFC233','#FFD66B','#FFF3B0','#FF8A5B','#FFFFFF'], 1.4);
+      const kx=r.left+r.width/2, ky=r.top+r.height*.45;
+      duckMusic(3); coins(kx,ky,45); stars(kx,ky,30,null,1.8); ring(kx,ky,'#FFD66B',220,10); setTimeout(()=>ring(kx,ky,'#FFFFFF',300,7),160); shake(true);
+      let res=null;
+      state.daily.claimed = true; state.stats.chests++;
+      const pl0 = playerLevel().lvl;
+      const gems = 10 + Math.floor(Math.random()*16); addCoins(gems);
+      if (g){ trackDay(xp, 0); setTimeout(()=>{ checkPlayerLevel(pl0); commit(); }, 0); }
+      if (g){ const before=stageOf(g); g.xp+=xp; state.stats.xp+=xp; const after=stageOf(g); res={ev: after>before?[{type:'evolve',g,from:before,to:after}]:[]}; if(after>before) state.stats.evolutions++; logIt(g,'Coffre du jour',xp,0); }
+      if (joker) state.streak.jokers++;
+      rw.hidden=false; rw.textContent = g? `+${xp} XP` : 'Joker !';
+      rd.hidden=false; rd.textContent = (g? `pour ${creatureName(g)} (${g.name})` : '') + (joker? (g?' · ':'')+'+1 joker de série' : '') + ` · +${gems} éclats`;
+      b.hidden=false; b.focus();
+      checkAchievements(); commit();
+      b.onclick = ()=>{ el.remove(); render(); if (res && g) handleEvents(Object.assign({comforted:false},res), g); done(); };
+    };
+  });
+}
+
+/* ===================== Feuilles modales ===================== */
+function openSheet(html, mount){
+  closeSheet();
+  const bg = document.createElement('div'); bg.className='sheet-bg'; bg.id='sheetBg';
+  bg.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  bg.addEventListener('click', e=>{ if (e.target===bg || e.target.closest('[data-x="close"]')) closeSheet(); });
+  document.body.appendChild(bg);
+  if (mount) mount(bg.querySelector('.sheet'));
+  const f = bg.querySelector('input,button'); if (f && f.tagName==='INPUT') setTimeout(()=>f.focus(),300);
+}
+function closeSheet(){ const b=$('#sheetBg'); if (b) b.remove(); }
+function deleteConfirm(sh, label, onYes){
+  const zone = sh.querySelector('.del-zone');
+  zone.innerHTML = `<div class="confirm-box"><b>Supprimer ${esc(label)} ?</b><span class="tiny">C'est définitif.</span><div class="sheet-actions"><button class="btn" type="button" data-no>Non</button><button class="btn danger" type="button" data-yes>Oui, supprimer</button></div></div>`;
+  zone.querySelector('[data-no]').onclick = ()=>{ zone.innerHTML = `<button class="btn block" type="button" data-del style="color:#E5484D">Supprimer</button>`; zone.querySelector('[data-del]').onclick=()=>deleteConfirm(sh,label,onYes); };
+  zone.querySelector('[data-yes]').onclick = onYes;
+}
+function skillOptions(g, selected, excludeId){
+  const excluded = new Set();
+  if (excludeId){ const walk=id=>{ excluded.add(id); g.skills.filter(s=>s.parentId===id).forEach(s=>walk(s.id)); }; walk(excludeId); }
+  return `<option value="">Aucune</option>` + g.skills.filter(s=>!excluded.has(s.id)).map(s=>`<option value="${s.id}" ${s.id===selected?'selected':''}>${esc(skillPath(g,s))}</option>`).join('');
+}
+function skillPath(g,s){ const p=getSkill(g,s.parentId); return p? skillPath(g,p)+' › '+s.name : s.name; }
+
+function openGoalEditor(g){
+  const isNew = !g;
+  const d = g || {name:'', creature:'', species: pick(Object.keys(SPECIES)), color: pick(COLORS)};
+  let sp = d.species, col = d.color;
+  const speciesHtml = ()=>Object.keys(SPECIES).map(k=>`<button type="button" data-sp="${k}" class="${k===sp?'on':''}"><div class="mini">${creatureSVG(k,col,1,'happy')}</div>${SPECIES[k].name}</button>`).join('');
+  openSheet(`<h2>${isNew?'Nouvel objectif':'Modifier l’objectif'}</h2>
+    <div class="field"><label for="gName">Ton objectif</label><input id="gName" maxlength="80" placeholder="Ex. Courir un semi-marathon" value="${esc(d.name)}"></div>
+    <div class="field"><span class="lbl">Sa créature</span><div class="species" id="spBox">${speciesHtml()}</div><span class="tiny" id="spDesc">${SPECIES[sp].name} : ${SPECIES[sp].desc}</span></div>
+    <div class="field"><span class="lbl">Couleur</span><div class="swatches" id="swBox">${COLORS.map(c=>`<button type="button" aria-label="Couleur ${c}" data-c="${c}" style="--sw:${c}" class="${c===col?'on':''}"></button>`).join('')}</div></div>
+    <div class="field"><label for="gCre">Nom de la créature (facultatif)</label><input id="gCre" maxlength="24" placeholder="${SPECIES[sp].name}" value="${esc(d.creature)}"></div>
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="gSave">${isNew?'Faire naître l’œuf':'Enregistrer'}</button></div>
+    ${isNew?'':'<div class="del-zone"><button class="btn block" type="button" data-del style="color:#E5484D">Supprimer cet objectif</button></div>'}`, sh=>{
+    const refresh=()=>{ sh.querySelector('#spBox').innerHTML=speciesHtml(); sh.querySelector('#spDesc').textContent=`${SPECIES[sp].name} : ${SPECIES[sp].desc}`; sh.querySelector('#gCre').placeholder=SPECIES[sp].name; sh.querySelectorAll('#swBox button').forEach(b=>b.classList.toggle('on', b.dataset.c===col)); };
+    sh.querySelector('#spBox').onclick = e=>{ const b=e.target.closest('[data-sp]'); if(b){ sp=b.dataset.sp; refresh(); sfx.boop(); } };
+    sh.querySelector('#swBox').onclick = e=>{ const b=e.target.closest('[data-c]'); if(b){ col=b.dataset.c; refresh(); } };
+    sh.querySelector('#gSave').onclick = ()=>{
+      const name = sh.querySelector('#gName').value.trim(); if(!name){ sh.querySelector('#gName').focus(); return; }
+      const cre = sh.querySelector('#gCre').value.trim();
+      if (isNew){ const ng = migrate({goals:[{id:uid(),name,creature:cre,species:sp,color:col,createdAt:Date.now()}]}).goals[0]; state.goals.push(ng); state.started=true; commit(); closeSheet(); go('goal:'+ng.id); toast({icon:IC.egg, title:'Un nouvel œuf !', sub:'Ajoute des actions pour le faire éclore.', color:'var(--accent)'}); }
+      else { g.name=name; g.creature=cre; g.species=sp; g.color=col; commit(); closeSheet(); render(); }
+    };
+    const del = sh.querySelector('[data-del]');
+    if (del) del.onclick = ()=>deleteConfirm(sh, 'cet objectif et sa créature', ()=>{ state.goals = state.goals.filter(x=>x.id!==g.id); commit(); closeSheet(); go('home'); });
+  });
+}
+function openSkillEditor(g, s){
+  const isNew=!s; const d = s || {name:'', parentId:null, unlockLevel:1, perks:[]};
+  let perks = (d.perks||[]).map(p=>({...p}));
+  const perkRows = ()=> perks.map((p,i)=>`<div class="perk-row"><input type="number" min="1" max="99" aria-label="Niveau" data-pl="${i}" value="${p.level}"><input maxlength="60" aria-label="Capacité" data-pn="${i}" value="${esc(p.name)}" placeholder="Ex. Candidature éclair"><button type="button" class="icon-btn flat" aria-label="Retirer" data-pr="${i}">${IC.x}</button></div>`).join('') || '<span class="tiny">Aucune capacité pour l’instant.</span>';
+  openSheet(`<h2>${isNew?'Nouvelle compétence':'Modifier la compétence'}</h2>
+    <div class="field"><label for="sName">Nom</label><input id="sName" maxlength="50" placeholder="Ex. Entretiens" value="${esc(d.name)}"></div>
+    <div class="field"><label for="sPar">Branche de… (sous-compétence)</label><select id="sPar">${skillOptions(g, d.parentId, s&&s.id)}</select></div>
+    <div class="field" id="unlockF"><label for="sUnl">Se débloque quand la compétence parente atteint le niveau</label><input id="sUnl" type="number" min="1" max="99" value="${d.unlockLevel||1}"></div>
+    <div class="field"><span class="lbl">Capacités débloquées à certains niveaux</span><div id="perks" class="rows">${perkRows()}</div><button type="button" class="add-row" id="pAdd">${IC.plus} Ajouter une capacité</button></div>
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="sSave">Enregistrer</button></div>
+    ${isNew?'':'<div class="del-zone"><button class="btn block" type="button" data-del style="color:#E5484D">Supprimer cette compétence</button></div>'}`, sh=>{
+    const par=sh.querySelector('#sPar'), uf=sh.querySelector('#unlockF');
+    const upd=()=>{ uf.hidden = !par.value; }; upd(); par.onchange=upd;
+    const readPerks=()=>{ sh.querySelectorAll('[data-pl]').forEach(i=>perks[+i.dataset.pl].level=Math.max(1,parseInt(i.value)||1)); sh.querySelectorAll('[data-pn]').forEach(i=>perks[+i.dataset.pn].name=i.value); };
+    const box=sh.querySelector('#perks');
+    sh.querySelector('#pAdd').onclick=()=>{ readPerks(); const last = perks.length? perks[perks.length-1].level : 1; perks.push({level:last+2,name:''}); box.innerHTML=perkRows(); };
+    box.onclick=e=>{ const b=e.target.closest('[data-pr]'); if(b){ readPerks(); perks.splice(+b.dataset.pr,1); box.innerHTML=perkRows(); } };
+    sh.querySelector('#sSave').onclick=()=>{
+      const name=sh.querySelector('#sName').value.trim(); if(!name){ sh.querySelector('#sName').focus(); return; }
+      readPerks();
+      const cleanPerks = perks.filter(p=>p.name.trim()).map(p=>({level:p.level,name:p.name.trim()})).sort((a,b)=>a.level-b.level);
+      const parentId = par.value||null, unlockLevel = parentId? Math.max(1,parseInt(sh.querySelector('#sUnl').value)||1) : 1;
+      if (isNew) g.skills.push({id:uid(),name,xp:0,parentId,unlockLevel,perks:cleanPerks});
+      else Object.assign(s,{name,parentId,unlockLevel,perks:cleanPerks});
+      commit(); closeSheet(); render();
+    };
+    const del=sh.querySelector('[data-del]');
+    if (del) del.onclick=()=>deleteConfirm(sh,'cette compétence',()=>{
+      g.skills.forEach(c=>{ if(c.parentId===s.id){ c.parentId=s.parentId; if(!c.parentId) c.unlockLevel=1; } });
+      g.actions.forEach(a=>{ if(a.skillId===s.id) a.skillId=null; }); g.milestones.forEach(m=>{ if(m.skillId===s.id) m.skillId=null; });
+      g.skills = g.skills.filter(x=>x.id!==s.id); commit(); closeSheet(); render();
+    });
+  });
+}
+function openActionEditor(g, a){
+  const isNew=!a; const d=a||{name:'',diff:'moyen',skillId:null}; let diff=d.diff;
+  const segs=()=>Object.keys(DIFF).map(k=>`<button type="button" data-d="${k}" class="d-${k} ${k===diff?'on':''}">${DIFF[k].label}<small>+${DIFF[k].xp} XP</small></button>`).join('');
+  openSheet(`<h2>${isNew?'Nouvelle action':'Modifier l’action'}</h2>
+    <p class="tiny" style="margin:0">Une action est un geste que tu refais souvent. Tu la valides en une touche.</p>
+    <div class="field"><label for="aName">Nom</label><input id="aName" maxlength="60" placeholder="Ex. Envoyer une candidature" value="${esc(d.name)}"></div>
+    <div class="field"><span class="lbl">Difficulté</span><div class="seg" id="dBox">${segs()}</div></div>
+    <div class="field"><label for="aSk">Compétence entraînée</label><select id="aSk">${skillOptions(g,d.skillId)}</select></div>
+    <div class="field"><label for="aTarget">Objectif par semaine (facultatif)</label><input id="aTarget" type="number" min="0" max="50" inputmode="numeric" placeholder="Ex. 3" value="${d.target>0?d.target:''}"><span class="tiny">Nombre de fois par semaine. Quand tu l'atteins, tu gagnes un bonus d'XP. Laisse vide pour ne pas en avoir.</span></div>
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="aSave">Enregistrer</button></div>
+    ${isNew?'':'<div class="del-zone"><button class="btn block" type="button" data-del style="color:#E5484D">Supprimer cette action</button></div>'}`, sh=>{
+    sh.querySelector('#dBox').onclick=e=>{ const b=e.target.closest('[data-d]'); if(b){ diff=b.dataset.d; sh.querySelector('#dBox').innerHTML=segs(); } };
+    sh.querySelector('#aSave').onclick=()=>{
+      const name=sh.querySelector('#aName').value.trim(); if(!name){ sh.querySelector('#aName').focus(); return; }
+      const skillId=sh.querySelector('#aSk').value||null;
+      const target = Math.max(0, Math.min(50, parseInt(sh.querySelector('#aTarget').value)||0));
+      if (isNew) g.actions.push({id:uid(),name,diff,skillId,target}); else Object.assign(a,{name,diff,skillId,target});
+      commit(); closeSheet(); render();
+    };
+    const del=sh.querySelector('[data-del]');
+    if (del) del.onclick=()=>deleteConfirm(sh,'cette action',()=>{ g.actions=g.actions.filter(x=>x.id!==a.id); commit(); closeSheet(); render(); });
+  });
+}
+function openMilestoneEditor(g, m){
+  const isNew=!m; const d=m||{name:'',size:'moyenne',skillId:null}; let size=d.size;
+  const segs=()=>Object.keys(MSIZE).map(k=>`<button type="button" data-s="${k}" class="${k===size?'on':''}" style="--dc:${k==='finale'?'var(--gold)':'var(--orange)'}">${MSIZE[k].label}<small>+${MSIZE[k].xp} XP</small></button>`).join('');
+  openSheet(`<h2>${isNew?'Nouvelle étape':'Modifier l’étape'}</h2>
+    <p class="tiny" style="margin:0">Une étape est un résultat concret, validé une seule fois. L'étape finale fait passer la créature à sa forme légendaire.</p>
+    <div class="field"><label for="mName">Nom</label><input id="mName" maxlength="80" placeholder="Ex. Premier entretien décroché" value="${esc(d.name)}"></div>
+    <div class="field"><span class="lbl">Importance</span><div class="seg" id="mBox">${segs()}</div></div>
+    <div class="field"><label for="mSk">Compétence liée</label><select id="mSk">${skillOptions(g,d.skillId)}</select></div>
+    ${m&&m.done?`<button class="btn block" type="button" id="mUndo">Marquer comme non faite (retire l'XP gagnée)</button>`:''}
+    <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="mSave">Enregistrer</button></div>
+    ${isNew?'':'<div class="del-zone"><button class="btn block" type="button" data-del style="color:#E5484D">Supprimer cette étape</button></div>'}`, sh=>{
+    sh.querySelector('#mBox').onclick=e=>{ const b=e.target.closest('[data-s]'); if(b){ size=b.dataset.s; sh.querySelector('#mBox').innerHTML=segs(); } };
+    sh.querySelector('#mSave').onclick=()=>{
+      const name=sh.querySelector('#mName').value.trim(); if(!name){ sh.querySelector('#mName').focus(); return; }
+      const skillId=sh.querySelector('#mSk').value||null;
+      if (isNew) g.milestones.push({id:uid(),name,size,skillId,done:false}); else Object.assign(m,{name,size,skillId});
+      commit(); closeSheet(); render();
+    };
+    const u=sh.querySelector('#mUndo'); if(u) u.onclick=()=>{ undoMilestone(g,m); sfx.undo(); commit(); closeSheet(); render(); };
+    const del=sh.querySelector('[data-del]');
+    if (del) del.onclick=()=>deleteConfirm(sh,'cette étape',()=>{ g.milestones=g.milestones.filter(x=>x.id!==m.id); commit(); closeSheet(); render(); });
+  });
+}
+
+/* ===================== Modèle de départ ===================== */
+function starterGoals(){
+  const mk=(name,creature,species,color,skills,actions,ms)=>{
+    const ids={}; const S=skills.map(s=>{ const id=uid(); ids[s.n]=id; return {id,name:s.n,xp:0,parentId:null,unlockLevel:s.u||1,perks:(s.p||[]).map(([level,n])=>({level,name:n})),_par:s.par}; });
+    S.forEach(s=>{ if(s._par){ s.parentId=ids[s._par]; } delete s._par; });
+    return {id:uid(),name,creature,species,color,createdAt:Date.now(),xp:0,skills:S,
+      actions:actions.map(([n,d,s,t])=>({id:uid(),name:n,diff:d,skillId:ids[s]||null,target:t||0})),
+      milestones:ms.map(([n,z,s])=>({id:uid(),name:n,size:z,skillId:ids[s]||null,done:false}))};
+  };
+  return [
+    mk('Trouver un CDI en France','Braisou','braise','#FF8A5B',
+      [{n:'Candidatures',p:[[3,'Lettre de motivation modèle'],[6,'Candidature éclair']]},{n:'Réseau',p:[[4,'Carnet d’adresses']]},{n:'LinkedIn',par:'Réseau',u:3},{n:'Entretiens',p:[[5,'Pitch de 2 minutes']]},{n:'Négociation',par:'Entretiens',u:4}],
+      [['Envoyer une candidature','moyen','Candidatures'],['Relancer un recruteur','facile','Réseau'],['Contacter quelqu’un de mon réseau','moyen','Réseau'],['Préparer un entretien','difficile','Entretiens']],
+      [['Premier entretien décroché','moyenne','Entretiens'],['3 entretiens passés','grande','Entretiens'],['Signer un CDI','finale',null]]),
+    mk('Être très musclé','Rocaillon','cristal','#3F8CFF',
+      [{n:'Force',p:[[5,'Programme avancé'],[10,'Charges lourdes']]},{n:'Nutrition',p:[[4,'Menus de la semaine']]},{n:'Récupération'}],
+      [['Séance complète','difficile','Force',3],['Manger assez de protéines','facile','Nutrition'],['Dormir 8 heures','facile','Récupération']],
+      [['+2 kg de muscle','moyenne','Force'],['+5 kg de muscle','grande','Force'],['Atteindre mon physique idéal','finale',null]]),
+    mk('Mieux parler, m’imposer et convaincre','Nuvelin','nuage','#9B6BFF',
+      [{n:'Éloquence',p:[[4,'Voix posée']]},{n:'Assurance',p:[[5,'Regard franc']]},{n:'Persuasion',p:[[3,'Structure d’argument']]},{n:'Improvisation',par:'Éloquence',u:4}],
+      [['M’entraîner à parler 10 min','moyen','Éloquence'],['Donner mon avis dans un groupe','difficile','Assurance'],['Lire ou écouter un contenu sur la persuasion','facile','Persuasion']],
+      [['Prendre la parole devant un groupe','moyenne','Assurance'],['Convaincre quelqu’un d’une idée importante','grande','Persuasion'],['Parler avec aisance en toutes circonstances','finale',null]]),
+  ];
+}
+
+/* ===================== Vues ===================== */
+let view = 'home';
+function go(v){ view=v; render(); window.scrollTo({top:0}); }
+
+function questBox(){
+  const d = state.daily; if (!d) return '<section class="card quest" id="questBox"></section>';
+  const done = questsDone();
+  const now=new Date(), mid=new Date(now); mid.setHours(24,0,0,0); const hrs=Math.ceil((mid-now)/36e5);
+  const rows = d.quests.map(q=>{ const v=Math.min(q.target,qProgress(q)), ok=v>=q.target; return `<div class="qrow ${ok?'done':''}"><span class="chk">${ok?IC.check:''}</span><span class="qtxt">${esc(q.text)}</span><span class="tiny">${v}/${q.target}</span></div>`; }).join('');
+  const cls = d.claimed? 'opened' : done? 'ready' : 'locked';
+  const lbl = d.claimed? 'Ouvert' : done? 'Ouvrir !' : 'Verrouillé';
+  return `<section class="card quest" id="questBox"><div class="section-h"><h2>Quête du jour</h2><span class="tiny">Nouvelles dans ${hrs} h</span></div>
+    <div class="quest-body"><div class="quest-list">${rows}</div><button type="button" class="chest-btn ${cls}" data-act="chest" ${done&&!d.claimed?'':'disabled'} aria-label="Coffre du jour">${CHEST()}<span class="chest-lbl">${lbl}</span></button></div></section>`;
+}
+function chipFor(g,a){
+  const sk=getSkill(g,a.skillId), locked = sk && isLocked(g,sk);
+  return `<button type="button" class="chip d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}">${locked?IC.lock:''}<span>${esc(a.name)}</span><b>+${DIFF[a.diff].xp}</b>${countBadge(a)}</button>`;
+}
+// Petit compteur : « 2/3 » si l'action a un objectif hebdo, sinon « ×2 » pour aujourd'hui
+function countBadge(a){
+  if (a.target>0){ const w=weekCount(a); return `<i class="cnt ${w>=a.target?'ok':''}">${w>=a.target?'✓ ':''}${w}/${a.target}</i>`; }
+  const t=todayCount(a); return t? `<i class="cnt">×${t}</i>` : '';
+}
+function garden(){
+  const n = state.goals.length; if (!n) return '';
+  const tod = timeOfDay(), s = Math.round(Math.max(54, Math.min(96, 340/n)));
+  const rnd = seeded('jardin');
+  let sky = '';
+  if (tod==='night') for(let i=0;i<16;i++) sky += `<span class="gstar" style="left:${(rnd()*96+2).toFixed(1)}%;top:${(rnd()*45+4).toFixed(1)}%;animation-delay:-${(rnd()*2.6).toFixed(2)}s"></span>`;
+  sky += `<span class="cloud" style="top:26px;animation-duration:70s;animation-delay:-20s"></span><span class="cloud" style="top:58px;animation-duration:95s;animation-delay:-60s;opacity:.7;scale:.8"></span>`;
+  const label = {dawn:'Le jardin au petit matin', day:'Le jardin', dusk:'Le jardin au coucher du soleil', night:'Le jardin, la nuit'}[tod];
+  const crs = state.goals.map((g,i)=>{ const st=stageOf(g);
+    return `<div class="cr-wrap" style="left:${((i+.5)/n*100).toFixed(1)}%;bottom:${6+(i%2)*14}px;width:${s}px;height:${s}px;margin-left:-${s/2}px" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Faire chanter ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>`; }).join('');
+  return `<section class="garden t-${tod}" aria-label="Jardin des créatures"><span class="orb"></span>${sky}
+    <svg class="hills" viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><path d="M0 46 Q 90 8 200 42 T 400 30 V112 H0Z" style="fill:var(--hill1)"/><path d="M0 76 Q 120 44 250 70 T 400 60 V112 H0Z" style="fill:var(--hill2)"/></svg>
+    <span class="gtag">${label}</span>${crs}</section>`;
+}
+function playerRow(){ const p=playerLevel(); return `<div class="player"><span class="plvl">Niv. ${p.lvl}</span><span>${p.title}</span><div class="bar small"><i style="width:${p.cur/p.need*100}%"></i></div><span class="tiny">${p.cur}/${p.need}</span></div>`; }
+function heatmap(){
+  const today=dayKey(), wd=(new Date().getDay()+6)%7, start=addDays(today, -(11*7+wd));
+  let cells='', active=0;
+  for(let i=0;i<84;i++){ const k=addDays(start,i), fut=k>today, d=state.days[k], n=d?d.n:0; if(n) active++;
+    cells += `<i class="${fut?'hf':n===0?'':n<3?'h1':n<6?'h2':'h3'}${k===today?' today':''}" title="${k} : ${n} action${n>1?'s':''}"></i>`; }
+  return {html:`<div class="heat">${cells}</div><div class="heat-legend tiny">moins <i></i><i class="h1"></i><i class="h2"></i><i class="h3"></i> plus</div>`, active};
+}
+function goalCard(g){
+  const st=stageOf(g), pr=stageProgress(g), mt=moodText(g);
+  return `<article class="gcard" style="--gc:${g.color}">
+    <div class="gtop">
+      <div class="cr-wrap sm" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>
+      <div class="ginfo" data-act="open" data-g="${g.id}" role="button" tabindex="0">
+        <h3>${esc(g.name)}</h3>
+        <div class="sub">${esc(creatureName(g))} <span class="stage-badge">${STAGES[st].name}</span></div>
+        <div class="bar" data-bar="${g.id}"><i style="width:${pr.pct}%"></i></div>
+        <div class="tiny">${pr.text}</div>
+        ${mt?`<div class="mood">${mt}</div>`:''}
+      </div>
+      <button type="button" class="icon-btn flat" data-act="open" data-g="${g.id}" aria-label="Ouvrir">${IC.chev}</button>
+    </div>
+    ${g.actions.length?`<div class="chips">${g.actions.map(a=>chipFor(g,a)).join('')}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
+  </article>`;
+}
+function topPills(){
+  const S=state.streak, today=dayKey(), on = S.lastDay===today;
+  const mOn = state.settings.music;
+  return `<div class="pills"><button type="button" class="pill music-btn ${mOn?'':'off'}" data-act="music" aria-pressed="${mOn}" aria-label="Musique ${mOn?'activée':'coupée'}">${IC.note}</button><button type="button" class="pill coin-pill" data-act="shop" aria-label="Boutique, ${state.coins||0} éclats">${IC.coin}${state.coins||0}</button><span class="pill streak ${on?'':'off'}" title="Jours consécutifs">${IC.flame}${S.count}</span><span class="pill" title="Jokers de série">${IC.shield}${S.jokers}</span></div>`;
+}
+function viewHome(){
+  return `<header class="top"><div class="brand">${IC.egg}Éclosion</div>${topPills()}</header>
+    ${playerRow()}
+    ${garden()}
+    ${questBox()}
+    ${state.goals.map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
+    <button type="button" class="add-goal" data-act="newGoal">${IC.plus} Nouvel objectif</button>`;
+}
+function skillTree(g, parentId){
+  const list = g.skills.filter(s=>(s.parentId||null)===(parentId||null) || (!parentId && s.parentId && !getSkill(g,s.parentId)));
+  return list.map(s=>{
+    const L=skillLevel(s.xp), locked=isLocked(g,s), par=getSkill(g,s.parentId);
+    const perks=(s.perks||[]).map(p=>{ const on=L.lvl>=p.level && !locked; return `<li class="${on?'on':''}">${on?IC.star:IC.lock}Niv. ${p.level} · ${esc(p.name)}</li>`; }).join('');
+    const kids = g.skills.some(c=>c.parentId===s.id) ? `<div class="sk-children">${skillTree(g,s.id)}</div>` : '';
+    return `<div class="skill ${locked?'locked':''}">
+      <div class="sk-head"><span class="lvl">${locked?'🔒':'Niv. '+L.lvl}</span><b>${esc(s.name)}</b><button type="button" class="icon-btn flat" data-act="editSkill" data-g="${g.id}" data-s="${s.id}" aria-label="Modifier">${IC.pen}</button></div>
+      ${locked?`<div class="tiny">Se débloque au niveau ${s.unlockLevel} de ${esc(par?par.name:'')}</div>`:`<div class="bar small"><i style="width:${L.cur/L.need*100}%"></i></div><div class="tiny">${L.cur} / ${L.need} XP vers niv. ${L.lvl+1}</div>`}
+      ${perks?`<ul class="perks">${perks}</ul>`:''}
+      ${kids}
+    </div>`;
+  }).join('');
+}
+function viewGoal(id){
+  const g=getGoal(id); if(!g){ view='home'; return viewHome(); }
+  const st=stageOf(g), pr=stageProgress(g), mt=moodText(g);
+  const path = STAGES.map((s,i)=>`<div class="evo-step ${i>st?'locked':''} ${i===st?'current':''}"><div class="mini">${creatureSVG(g.species,g.color,i,'happy',0)}</div>${i>st?'???':s.name}</div>`).join('');
+  const msSorted = [...g.milestones].sort((a,b)=>(a.size==='finale')-(b.size==='finale'));
+  return `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="Retour">${IC.back}</button><h1>${esc(g.name)}</h1><button type="button" class="icon-btn" data-act="editGoal" data-g="${g.id}" aria-label="Modifier l'objectif">${IC.pen}</button></header>
+    <section class="card hero" style="--gc:${g.color}">
+      <div class="cr-wrap lg" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>
+      <h2>${esc(creatureName(g))}</h2>
+      <button type="button" class="btn dress-btn" data-act="shop" data-g="${g.id}">${IC.coin} Habiller</button>
+      <span class="stage-badge">${STAGES[st].name} · ${SPECIES[g.species].desc}</span>
+      <div class="bar" data-bar="${g.id}"><i style="width:${pr.pct}%"></i></div>
+      <div class="tiny">${pr.text}</div>
+      ${mt?`<div class="mood">${mt}</div>`:''}
+      <div class="evo-path">${path}</div>
+    </section>
+    <section class="card"><div class="section-h"><h2>Actions</h2><span class="tiny">1 touche = XP</span></div><div class="rows">
+      ${g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
+      <button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action</button></div></section>
+    <section class="card"><div class="section-h"><h2>Étapes</h2><span class="tiny">${g.milestones.filter(m=>m.done).length}/${g.milestones.length} franchies</span></div><div class="rows">
+      ${msSorted.map(m=>`<div class="row"><button type="button" class="ms-btn ${m.done?'done':''} ${m.size==='finale'?'final':''}" data-act="ms" data-g="${g.id}" data-m="${m.id}"><span class="box">${m.done?IC.check:''}</span><span class="mtxt">${esc(m.name)}${m.done&&m.doneAt?`<br><span class="tiny">Fait le ${fmtDate(m.doneAt)}</span>`:''}</span><b>${m.size==='finale'?'FINALE':'+'+MSIZE[m.size].xp}</b></button><button type="button" class="icon-btn flat" data-act="editMs" data-g="${g.id}" data-m="${m.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}
+      <button type="button" class="add-row" data-act="addMs" data-g="${g.id}">${IC.plus} Ajouter une étape</button></div></section>
+    <section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Compétences</h2><span class="tiny">les sous-compétences reçoivent l’XP, leur parent la moitié</span></div><div class="rows">
+      ${skillTree(g,null)}
+      <button type="button" class="add-row" data-act="addSkill" data-g="${g.id}">${IC.plus} Ajouter une compétence</button></div></section>`;
+}
+function viewTrophies(){
+  const got = ACH.filter(a=>state.achievements[a[0]]).length;
+  const s = state.stats, hm = heatmap();
+  return `<header class="top"><h1>Succès</h1>${topPills()}</header>
+    ${playerRow()}
+    <section class="card"><div class="section-h"><h2>Tes chiffres</h2></div><div class="stats">
+      <div class="stat"><b>${s.actions}</b><span>actions</span></div><div class="stat"><b>${s.xp}</b><span>XP gagnée</span></div><div class="stat"><b>${state.streak.best}</b><span>meilleure série</span></div>
+      <div class="stat"><b>${s.crits}</b><span>critiques</span></div><div class="stat"><b>${s.milestones}</b><span>étapes</span></div><div class="stat"><b>${s.chests}</b><span>coffres</span></div>
+    </div></section>
+    <section class="card"><div class="section-h"><h2>Ton activité</h2><span class="tiny">${hm.active} jour${hm.active>1?'s':''} actif${hm.active>1?'s':''} sur 12 semaines</span></div>${hm.html}</section>
+    <section class="card"><div class="section-h"><h2>Succès</h2><span class="tiny">${got} / ${ACH.length}</span></div><div class="ach-grid">
+      ${ACH.map(([id,n,d])=>`<div class="ach ${state.achievements[id]?'':'off'}"><div class="medal">${IC.medal}</div><div style="min-width:0"><b>${esc(n)}</b><span>${esc(d)}</span></div></div>`).join('')}
+    </div></section>
+    <section class="card"><div class="section-h"><h2>Journal</h2></div><div class="log">
+      ${state.log.slice(0,40).map(l=>`<div><span>${esc(l.label)} <span class="tiny">· ${esc(l.g)} · ${fmtDate(l.t)}</span></span><b>+${l.xp}${l.crit?(l.crit===2?' ×5':' ×2'):''}</b></div>`).join('') || '<span class="tiny">Rien encore. Valide ta première action !</span>'}
+    </div></section>`;
+}
+function viewSettings(){
+  const S = {cloud:['cloud','Synchronisé avec ton compte Claude','Tes données sont enregistrées en ligne et suivent ton compte : ouvre le même lien sur ton téléphone et ton ordinateur.'],
+    pending:['','Connexion…','Recherche de ta sauvegarde en ligne.'],
+    local:['local','Sauvegarde sur cet appareil seulement', window.claude ? 'La synchronisation en ligne n’est pas disponible ici (connecte-toi à claude.ai). Pense à exporter une sauvegarde de temps en temps.' : 'Version autonome : tes données sont enregistrées dans ce navigateur, sur cet appareil. Exporte une sauvegarde de temps en temps, et garde ce fichier au même endroit.'],
+    error:['error','Problème de synchronisation','Tes données restent enregistrées sur cet appareil. Recharge la page pour réessayer.']}[syncStatus];
+  return `<header class="top"><h1>Réglages</h1></header>
+    <section class="card"><div class="sync"><span class="dot ${S[0]}"></span><div><b>${S[1]}</b><div class="tiny">${S[2]}</div></div></div></section>
+    <section class="card rows"><div class="switch">Effets sonores <button type="button" data-act="sound" class="${state.settings.sound?'on':''}" aria-label="Effets sonores" aria-pressed="${state.settings.sound}"></button></div>
+      <div class="switch">Musique d'ambiance <button type="button" data-act="music" class="${state.settings.music?'on':''}" aria-label="Musique" aria-pressed="${state.settings.music}"></button></div>
+      <div class="field"><label for="musVol">Volume de la musique</label><input type="range" id="musVol" min="0" max="100" value="${state.settings.musicVol==null?50:state.settings.musicVol}"></div>
+      <button type="button" class="btn" data-act="soundTest">Tester le son</button>
+      <div class="tiny" id="audioDiag"></div></section>
+    <section class="card rows"><div class="section-h"><h2>Sauvegarde de secours</h2></div>
+      <p class="tiny" style="margin:0">Télécharge un fichier avec toutes tes données. Tu pourras le réimporter si besoin.</p>
+      <button type="button" class="btn" data-act="export">Exporter mes données</button>
+      <div id="exportBox"></div>
+      <div class="field"><label for="impFile">Importer un fichier de sauvegarde</label><input type="file" id="impFile" accept=".json,application/json"></div>
+      <div class="field"><label for="impTxt">…ou colle le contenu ici</label><textarea id="impTxt" placeholder='{"v":1, ...}'></textarea></div>
+      <button type="button" class="btn" data-act="import">Importer</button>
+      <div id="impZone"></div>
+    </section>
+    <section class="card help"><div class="section-h"><h2>Comment ça marche</h2></div>
+      <p><b>Actions</b> : gestes répétés (Facile +10, Moyen +25, Difficile +50, Épique +100 XP). 12 % de chance de critique ×2, 3 % de méga critique ×5.</p>
+      <p><b>Étapes</b> : résultats concrets (+150 à +600 XP). L'étape finale rend la créature légendaire.</p>
+      <p><b>Évolutions</b> : Bébé à 100 XP, Jeune à 800, Adulte à 3 000, Légendaire avec l'étape finale.</p>
+      <p><b>Série</b> : +2 % d'XP par jour consécutif (max +30 %). Un joker gratuit par semaine (max 2) protège ta série si tu rates un jour.</p>
+      <p><b>Pénalité</b> : après 3 jours sans t'occuper d'un objectif, sa créature est triste, et après 7 jours elle s'endort. Tes gains sur cet objectif baissent de 20 % pendant 3 à 5 actions, le temps de la consoler.</p>
+      <p><b>Niveau de joueur</b> : toute l'XP que tu gagnes, tous objectifs confondus, fait monter ton niveau et ton titre (Novice, Apprenti, Aventurier… jusqu'à Légende).</p>
+      <p><b>Objectif par semaine</b> : sur une action (bouton crayon), tu peux fixer un nombre de fois par semaine. Quand tu l'atteins, bonus de 60 XP. Le compteur repart chaque lundi.</p>
+      <p><b>Boutique</b> : touche le compteur d'éclats en haut de l'accueil. Tu gagnes des éclats avec les coffres (10 à 25), les étapes (15 à 100), les succès (5), les objectifs de la semaine (10) et chaque niveau de joueur (20). Tu peux mettre à chaque créature un couvre-chef, des lunettes et un tour de cou.</p>
+      <p><b>Chorale</b> : touche tes créatures les unes après les autres, chacune chante une note avec sa voix, toujours en rythme et en harmonie. Les autres chantent avec toi, et si tu t'arrêtes après au moins 3 notes, l'une d'elles te répond en rejouant ta mélodie. Les œufs jouent les percussions.</p>
+      <p><b>Sur ton téléphone</b> : ouvre ce lien, puis menu du navigateur › « Ajouter à l'écran d'accueil ».</p>
+    </section>
+    <section class="card rows"><div class="section-h"><h2>Réinitialiser</h2></div>
+      <div id="resetProgZone"><button type="button" class="btn block" data-act="resetProg">Remettre ma progression à zéro</button></div>
+      <span class="tiny">Garde tes objectifs, compétences, actions et étapes. Efface l'XP, les évolutions, les niveaux, la série, les succès, les éclats et les accessoires. Tes créatures redeviennent des œufs.</span>
+      <div class="del-zone" id="resetZone"><button type="button" class="btn block" data-act="reset" style="color:#E5484D">Tout effacer et recommencer</button></div>
+      <span class="tiny">Efface absolument tout, objectifs compris.</span>
+    </section>`;
+}
+function viewWelcome(){
+  return `<div class="welcome">
+    <div class="eggs"><div class="cr-wrap" data-act="petEgg">${creatureSVG('braise','#FF8A5B',0,'happy',.2)}</div><div class="cr-wrap" data-act="petEgg">${creatureSVG('cristal','#3F8CFF',0,'happy',.5)}</div><div class="cr-wrap" data-act="petEgg">${creatureSVG('nuage','#9B6BFF',0,'happy',.8)}</div></div>
+    <h1>Éclosion</h1>
+    <p>Chaque objectif de ta vie devient un œuf. Chaque effort le fait éclore, grandir, puis évoluer jusqu'à sa forme légendaire.</p>
+    <ul><li>Valide tes actions en une touche et gagne de l'XP</li><li>Franchis des étapes concrètes pour de gros bonus</li><li>Fais monter tes compétences et débloque de nouvelles branches</li></ul>
+    <button type="button" class="btn primary block" data-act="starter">Commencer avec mes 3 objectifs</button>
+    <span class="tiny">CDI en France · Être très musclé · Mieux parler et convaincre. Tout est modifiable.</span>
+    <button type="button" class="btn block" data-act="blank">Partir de zéro</button>
+  </div>`;
+}
+function navHtml(){
+  const t = view.startsWith('goal')?'home':view;
+  return `<div class="nav-in"><button type="button" data-act="home" class="${t==='home'?'on':''}">${IC.home}Accueil</button><button type="button" data-act="trophies" class="${t==='trophies'?'on':''}">${IC.trophy}Succès</button><button type="button" data-act="settings" class="${t==='settings'?'on':''}">${IC.gear}Réglages</button></div>`;
+}
+function render(){
+  const app=$('#app'), nav=$('#nav');
+  if (!state.started){ app.innerHTML=viewWelcome(); nav.hidden=true; return; }
+  nav.hidden=false; nav.innerHTML=navHtml();
+  if (view==='home') app.innerHTML=viewHome();
+  else if (view.startsWith('goal:')) app.innerHTML=viewGoal(view.slice(5));
+  else if (view==='trophies') app.innerHTML=viewTrophies();
+  else if (view==='settings') app.innerHTML=viewSettings();
+  questsDone.__last = questsDone();
+}
+
+/* ===================== Clics ===================== */
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  const act=el.dataset.act, g = el.dataset.g? getGoal(el.dataset.g) : null;
+  switch(act){
+    case 'do': doAction(el.dataset.g, el.dataset.a, e, el); break;
+    case 'pet': pet(el.dataset.g, el); break;
+    case 'petEgg': { const r=el.querySelector('.cr-root'); if(r){ r.classList.remove('tap'); r.getBoundingClientRect(); r.classList.add('tap'); } sfx.boop(); break; }
+    case 'open': go('goal:'+el.dataset.g); break;
+    case 'home': go('home'); break;
+    case 'trophies': go('trophies'); break;
+    case 'settings': go('settings'); break;
+    case 'chest': openChest(); break;
+    case 'shop': openShop(el.dataset.g); break;
+    case 'resetProg': doResetProgress(); break;
+    case 'newGoal': openGoalEditor(null); break;
+    case 'editGoal': openGoalEditor(g); break;
+    case 'addAction': openActionEditor(g, null); break;
+    case 'editAction': openActionEditor(g, g.actions.find(a=>a.id===el.dataset.a)); break;
+    case 'addMs': openMilestoneEditor(g, null); break;
+    case 'editMs': openMilestoneEditor(g, g.milestones.find(m=>m.id===el.dataset.m)); break;
+    case 'ms': doMilestone(el.dataset.g, el.dataset.m); break;
+    case 'addSkill': openSkillEditor(g, null); break;
+    case 'editSkill': openSkillEditor(g, g.skills.find(s=>s.id===el.dataset.s)); break;
+    case 'starter': state.goals = starterGoals().map(x=>migrate({goals:[x]}).goals[0]); state.started=true; ensureDay(); commit(); sfx.level(); confetti(innerWidth/2, innerHeight/2, 120); go('home'); toast({icon:IC.egg, title:'Tes 3 œufs sont prêts !', sub:'Valide une action pour commencer.', color:'var(--accent)'}); break;
+    case 'blank': state.started=true; ensureDay(); commit(); render(); openGoalEditor(null); break;
+    case 'sound': state.settings.sound=!state.settings.sound; commit(); render(); if(state.settings.sound) sfx.pop(); break;
+    case 'soundTest': {
+      unlockAudio();
+      [523,659,784,1047].forEach((f,i)=>tone(f,.25,{at:i*.12,type:'triangle',vol:.25,force:true}));
+      const box=$('#audioDiag');
+      setTimeout(()=>{ if(!box) return; const s = actx? actx.state : 'none';
+        box.innerHTML = s==='running'
+          ? `<b>Moteur audio : actif.</b> Le son est bien envoyé. Si tu n'entends rien : monte le volume de l'appareil. Sur iPhone, vérifie aussi le bouton silencieux sur le côté (la page essaie de passer outre, mais pas toujours). Les sons sont ${state.settings.sound?'activés':'coupés'}, la musique est ${state.settings.music?'activée':'coupée'}${music.on?' et joue':''}.`
+          : s==='none' ? `<b>Moteur audio : indisponible.</b> Ce navigateur ou cette app ne permet pas le son. Essaie d'ouvrir le lien dans Chrome ou Safari.`
+          : `<b>Moteur audio : bloqué (${esc(s)}).</b> Touche encore une fois « Tester le son ». Si ça reste bloqué, ouvre le lien dans Chrome ou Safari plutôt que dans l'app Claude.`;
+      }, 400);
+      break;
+    }
+    case 'music': state.settings.music=!state.settings.music; commit(); if(state.settings.music) startMusic(); else stopMusic(); render(); break;
+    case 'export': doExport(); break;
+    case 'import': doImport(); break;
+    case 'reset': doReset(); break;
+  }
+});
+// La musique ne peut démarrer qu'après un premier geste (règle des navigateurs)
+function onGesture(){ unlockAudio(); if (state.settings.music && !music.on) startMusic(); }
+['touchend','click','keydown'].forEach(ev=>document.addEventListener(ev, onGesture, {passive:true}));
+let volT=null;
+document.addEventListener('input', e=>{
+  if (e.target.id!=='musVol') return;
+  state.settings.musicVol = +e.target.value;
+  if (music.on && actx) music.gain.gain.setTargetAtTime(mVol(), actx.currentTime, .1);
+  clearTimeout(volT); volT = setTimeout(commit, 600);
+});
+document.addEventListener('keydown', e=>{
+  if ((e.key==='Enter'||e.key===' ') && e.target.matches('[role="button"][data-act]')){ e.preventDefault(); e.target.click(); }
+  if (e.key==='Escape') closeSheet();
+});
+
+async function doExport(){
+  const json = JSON.stringify(state, null, 1);
+  const name = 'eclosion-sauvegarde-'+dayKey()+'.json';
+  try{
+    const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    if (dl){ await dl.save({filename:name, data:json}); toast({title:'Sauvegarde exportée', color:'var(--mint)'}); return; }
+  }catch(err){ if (err && err.code==='declined') return; }
+  // Version autonome (fichier ouvert directement) : téléchargement classique
+  if (!window.claude){ try{ const u=URL.createObjectURL(new Blob([json],{type:'application/json'})); const l=document.createElement('a'); l.href=u; l.download=name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(()=>URL.revokeObjectURL(u),2000); toast({title:'Sauvegarde téléchargée', color:'var(--mint)'}); return; }catch(e){} }
+  const box = $('#exportBox'); if(!box) return;
+  box.innerHTML = `<div class="field"><span class="lbl">Copie ce texte et garde-le précieusement</span><textarea id="expTxt" readonly></textarea><button type="button" class="btn" id="cpy">Copier</button></div>`;
+  const ta=$('#expTxt'); ta.value=json;
+  $('#cpy').onclick = ()=>{ navigator.clipboard && navigator.clipboard.writeText(json).then(()=>toast({title:'Copié !',color:'var(--mint)'}), ()=>{ ta.select(); }); if(!navigator.clipboard) ta.select(); };
+}
+function doImport(){
+  const file = $('#impFile').files[0], txt = $('#impTxt').value.trim(), zone=$('#impZone');
+  const apply = raw=>{
+    let data; try{ data = JSON.parse(raw); }catch(e){ zone.innerHTML='<p class="mood">Ce fichier n’est pas une sauvegarde valide (format JSON attendu).</p>'; return; }
+    if (!data || !Array.isArray(data.goals)){ zone.innerHTML='<p class="mood">Sauvegarde invalide : aucun objectif trouvé.</p>'; return; }
+    zone.innerHTML = `<div class="confirm-box"><b>Remplacer tes données actuelles par cette sauvegarde (${data.goals.length} objectif${data.goals.length>1?'s':''}) ?</b><div class="sheet-actions"><button class="btn" type="button" id="impNo">Non</button><button class="btn danger" type="button" id="impYes">Oui, remplacer</button></div></div>`;
+    $('#impNo').onclick=()=>zone.innerHTML='';
+    $('#impYes').onclick=()=>{ state = migrate(data); state.started=true; ensureDay(); commit(); toast({title:'Sauvegarde importée',color:'var(--mint)'}); go('home'); };
+  };
+  if (file){ const r=new FileReader(); r.onload=()=>apply(r.result); r.readAsText(file); }
+  else if (txt) apply(txt);
+  else zone.innerHTML='<p class="tiny">Choisis un fichier ou colle le contenu d’une sauvegarde.</p>';
+}
+function doResetProgress(){
+  const z=$('#resetProgZone'); if(!z) return;
+  z.innerHTML = `<div class="confirm-box"><b>Remettre ta progression à zéro ?</b><span class="tiny">Tes objectifs, compétences, actions et étapes restent. Tout le reste repart de zéro, sur tous tes appareils. C'est définitif.</span><div class="sheet-actions"><button class="btn" type="button" id="rpNo">Annuler</button><button class="btn danger" type="button" id="rpYes">Oui, repartir de zéro</button></div></div>`;
+  $('#rpNo').onclick=()=>render();
+  $('#rpYes').onclick=()=>{
+    const f=freshState(), now=Date.now();
+    state.goals.forEach(g=>{
+      g.xp=0; g.legendary=false; g.sadNeed=0; g.lastActive=null; g.createdAt=now; g.acc={};
+      g.skills.forEach(k=>{ k.xp=0; });
+      g.actions.forEach(a=>{ delete a.today; delete a.week; });
+      g.milestones.forEach(m=>{ m.done=false; delete m.doneAt; delete m.gained; });
+    });
+    state.streak=f.streak; state.daily=null; state.achievements={}; state.stats=f.stats; state.log=[]; state.days={}; state.coins=f.coins; state.owned=[];
+    undoSnap=null; ensureDay(); commit(); go('home');
+    toast({icon:IC.egg, title:'Progression remise à zéro', sub:'Tes objectifs sont toujours là. À toi de jouer !', color:'var(--accent)'});
+  };
+}
+// Boutique : acheter des accessoires avec des éclats et habiller ses créatures
+function openShop(gid){
+  let sel = gid || ((state.goals.find(g=>stageOf(g)>0) || state.goals[0] || {}).id);
+  const body = ()=>{
+    const g=getGoal(sel), st=g?stageOf(g):0, coins=state.coins||0;
+    const who = state.goals.map(x=>`<button type="button" data-who="${x.id}" class="${x.id===sel?'on':''}"><div class="mini">${creatureSVG(x.species,x.color,stageOf(x),'happy',x.xp/100,x.acc)}</div>${esc(creatureName(x))}</button>`).join('');
+    const items = Object.keys(ACC).map(id=>{
+      const it=ACC[id], owned=(state.owned||[]).includes(id), on=!!(g && g.acc && g.acc[it.slot]===id);
+      const prev = g ? creatureSVG(g.species, g.color, Math.max(1,st), 'happy', 0, {[it.slot]:id}) : '';
+      const btn = owned ? `<span class="shop-btn ${on?'on':''}">${on?'Porté ✓':'Équiper'}</span>` : `<span class="shop-btn buy ${coins>=it.price?'':'poor'}">${IC.coin}${it.price}</span>`;
+      return `<button type="button" class="shop-item ${on?'on':''}" data-item="${id}"><div class="mini">${prev}</div><b>${it.name}</b>${btn}</button>`;
+    }).join('');
+    return `<div class="section-h"><h2>Boutique</h2><span class="pill">${IC.coin}${coins}</span></div>
+      <p class="tiny" style="margin:0">Tu gagnes des éclats avec les coffres, les étapes, les succès, tes objectifs de la semaine et tes niveaux. Un accessoire acheté peut être porté par toutes tes créatures.</p>
+      ${state.goals.length?`<div class="field"><span class="lbl">Pour qui ?</span><div class="who">${who}</div></div>`:'<p class="mood" style="margin:0">Crée d’abord un objectif pour avoir une créature à habiller.</p>'}
+      ${g&&st===0?'<p class="mood" style="margin:0">Cet œuf doit d’abord éclore pour porter un accessoire. Tu peux déjà acheter pour plus tard.</p>':''}
+      <div class="shop-grid">${items}</div>
+      <button class="btn block" data-x="close" type="button">Fermer</button>`;
+  };
+  openSheet(body(), sh=>{
+    sh.addEventListener('click', e=>{
+      const w=e.target.closest('[data-who]'); if (w){ sel=w.dataset.who; sh.innerHTML=body(); return; }
+      const el=e.target.closest('[data-item]'); if (!el) return;
+      const id=el.dataset.item, it=ACC[id], g=getGoal(sel);
+      state.owned = state.owned||[];
+      if (!state.owned.includes(id)){
+        if ((state.coins||0) < it.price){ toast({icon:IC.coin, title:'Pas assez d’éclats', sub:`Il t'en manque ${it.price-(state.coins||0)}.`, color:'var(--muted)'}); return; }
+        state.coins -= it.price; state.owned.push(id);
+        if (g && stageOf(g)>0){ g.acc=g.acc||{}; g.acc[it.slot]=id; }
+        const r=el.getBoundingClientRect(); sfx.chest(); confetti(r.left+r.width/2, r.top+r.height/2, 50, null, .9); stars(r.left+r.width/2, r.top+r.height/2, 12, null, 1.2);
+      } else {
+        if (!g) return;
+        if (stageOf(g)===0){ toast({icon:IC.egg, title:'Pas encore éclos', sub:'Cet œuf ne peut pas encore porter d’accessoire.', color:'var(--muted)'}); return; }
+        g.acc=g.acc||{};
+        if (g.acc[it.slot]===id) delete g.acc[it.slot]; else g.acc[it.slot]=id;
+        sfx.boop();
+      }
+      commit(); sh.innerHTML=body(); render();
+    });
+  });
+}
+function doReset(){
+  const z=$('#resetZone');
+  z.innerHTML = `<div class="confirm-box"><b>Tout effacer ?</b><span class="tiny">Objectifs, créatures, succès… tout disparaît, sur tous tes appareils. Écris EFFACER pour confirmer.</span><input id="rsTxt" autocomplete="off"><div class="sheet-actions"><button class="btn" type="button" id="rsNo">Annuler</button><button class="btn danger" type="button" id="rsYes">Effacer</button></div></div>`;
+  $('#rsNo').onclick=()=>render();
+  $('#rsYes').onclick=()=>{ if ($('#rsTxt').value.trim().toUpperCase()!=='EFFACER'){ $('#rsTxt').focus(); return; } const keep=state.settings; state=freshState(); state.settings=keep; commit(); view='home'; render(); };
+}
+
+document.addEventListener('visibilitychange', ()=>{
+  if (document.hidden){ if (music.on){ stopMusic(); music.resume=true; } if (silentEl) silentEl.pause(); }
+  else { if (audioUnlocked) unlockAudio(); if (music.resume){ music.resume=false; startMusic(); } }
+});
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden && state.started){ const before = state.daily && state.daily.day; ensureDay(); if (!state.daily || state.daily.day!==before) render(); } });
+
+/* ===================== Vie des créatures ===================== */
+// Les yeux suivent ton doigt ou ta souris
+let ptr=null, ptrT=0, lookRaf=0;
+function inView(w){ const r=w.getBoundingClientRect(); return r.bottom>0 && r.top<innerHeight && r.width>0; }
+function onPtr(e){ ptr={x:e.clientX,y:e.clientY}; ptrT=Date.now(); if(!lookRaf) lookRaf=requestAnimationFrame(updateLooks); }
+function updateLooks(){
+  lookRaf=0; if(!ptr) return;
+  document.querySelectorAll('.cr-wrap .cr-look').forEach(L=>{
+    const w=L.closest('.cr-wrap'); if(!inView(w)) return;
+    const r=w.getBoundingClientRect(), dx=ptr.x-(r.left+r.width/2), dy=ptr.y-(r.top+r.height*.5), d=Math.hypot(dx,dy)||1, m=Math.min(1,d/160)*3.6;
+    L.style.transform=`translate(${(dx/d*m).toFixed(2)}px,${(dy/d*m*.8).toFixed(2)}px)`;
+  });
+}
+addEventListener('pointermove', onPtr, {passive:true});
+addEventListener('pointerdown', onPtr, {passive:true});
+function lookAround(w){
+  if (Date.now()-ptrT < 2500) return;
+  const L=w.querySelector('.cr-look'); if(!L) return;
+  const s = Math.random()<.5?-1:1;
+  L.style.transform=`translate(${3.4*s}px,0)`;
+  setTimeout(()=>{ L.style.transform=`translate(${-3*s}px,-1px)`; }, 700);
+  setTimeout(()=>{ L.style.transform=''; }, 1500);
+}
+// Comportements au repos : regarder autour, sautiller, faire son petit numéro, émettre des particules
+setInterval(()=>{
+  if (document.hidden || reduceMotion || document.querySelector('.big')) return;
+  document.querySelectorAll('.cr-wrap[data-sp]').forEach(w=>{
+    if (!inView(w)) return;
+    const st=+w.dataset.st, mood=w.dataset.mood;
+    if (st===0 || mood==='sleep') return;
+    if (Math.random() < (w.classList.contains('lg')?.6:.25)) ambientFx(w);
+    if (Math.random() < .07){
+      const r=Math.random();
+      if (r<.45) lookAround(w);
+      else if (r<.75 && mood!=='sad'){ animCreature(w,'idle-hop',650); animCreature(w,'joy',700); }
+      else if (mood!=='sad'){ animCreature(w,'tap-'+w.dataset.sp,900); const rr=w.getBoundingClientRect(); speciesFx(w.dataset.sp, rr.left+rr.width/2, rr.top+rr.height/2, 4, w.dataset.col, mood); }
+    }
+  });
+}, 900);
+
+/* ===================== Démarrage ===================== */
+if (state.started) ensureDay();
+render();
+initSync();
+})();
+</script>
+
+<script>
+// Fonctionnement hors connexion + installation comme une vraie app
+if ('serviceWorker' in navigator) window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+// Demande au navigateur de ne jamais effacer la sauvegarde
+document.addEventListener('click', function once(){ document.removeEventListener('click', once); try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){} });
+// Bouton « Installer l'app » (Android et ordinateur)
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  if (document.getElementById('installBtn')) return;
+  var b = document.createElement('button'); b.id = 'installBtn'; b.type = 'button'; b.textContent = "Installer l'app";
+  b.onclick = function(){ b.remove(); e.prompt(); };
+  document.body.appendChild(b);
+});
+window.addEventListener('appinstalled', function(){ var b=document.getElementById('installBtn'); if (b) b.remove(); });
+</script>
+</body>
+</html>
