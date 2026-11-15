@@ -466,6 +466,13 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 .chips-s button.on{border-color:var(--accent);background:var(--accent-soft)}
 .hint{font-size:12.5px;color:var(--muted);border-left:3px solid var(--line);padding-left:8px}
 .warn{font-size:13px;border-radius:12px;padding:8px 10px;background:color-mix(in srgb,var(--gold) 16%,var(--surface2));border:1.5px solid var(--gold)}
+/* Objectif en pause (hibernation) */
+.gcard.paused{flex-direction:row;align-items:center;gap:12px;padding:10px 14px;opacity:.92}
+.gcard.paused::before{display:none}
+.gcard.paused .cr-wrap{width:64px;height:64px}
+.pause-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;border-radius:99px;padding:2px 9px;background:color-mix(in srgb,var(--sky) 16%,transparent);color:color-mix(in srgb,var(--sky) 55%,var(--ink))}
+.pause-banner{display:flex;align-items:center;gap:10px;border:2px dashed var(--sky);background:color-mix(in srgb,var(--sky) 8%,var(--surface))}
+.pause-banner>div{flex:1;min-width:0}
 /* Niveau de joueur */
 .player{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
 .player .plvl{background:var(--ink);color:var(--bg);border-radius:10px;padding:2px 9px;font-family:var(--font-display);flex:none}
@@ -614,7 +621,7 @@ const QUESTS = [
   {id:'xp150',text:'Gagner 150 XP', target:150, key:'xp'},
   {id:'xp300',text:'Gagner 300 XP', target:300, key:'xp'},
   {id:'hard', text:'Réussir une action difficile ou épique', target:1, key:'hard'},
-  {id:'multi',text:'Progresser sur 2 objectifs', target:2, key:'goals', need:s=>s.goals.length>=2},
+  {id:'multi',text:'Progresser sur 2 objectifs', target:2, key:'goals', need:s=>s.goals.filter(g=>!g.paused).length>=2},
   {id:'promise', text:'Tenir 2 promesses du plan du jour', target:2, key:'promises', need:s=>s.goals.some(g=>g.actions.length)},
   {id:'ms',   text:'Valider une étape', target:1, key:'milestones', need:s=>s.goals.some(g=>g.milestones.some(m=>!m.done))},
   {id:'crit', text:'Obtenir un coup critique', target:1, key:'crits'},
@@ -839,6 +846,7 @@ function migrate(s){
     G.sadNeed = 0; // l'ancien malus de tristesse n'existe plus
     if (!G.comeback || typeof G.comeback!=='object') G.comeback = null;
     if (!G.campaign || typeof G.campaign!=='object') G.campaign = null;
+    if (!G.paused || typeof G.paused!=='object') G.paused = null;
     G.pastCampaigns = Array.isArray(G.pastCampaigns) ? G.pastCampaigns : [];
     G.metrics = (Array.isArray(G.metrics)?G.metrics:[]).map(m=>Object.assign({id:uid(),name:'Mesure',unit:'',dir:'up',entries:[],rewardWeek:null},m));
     G.skills = (G.skills||[]).map(k=>Object.assign({id:uid(),name:'Compétence',xp:0,parentId:null,unlockLevel:1,perks:[]},k));
@@ -912,8 +920,9 @@ function getGoal(id){ return state.goals.find(g=>g.id===id); }
 function getSkill(g,id){ return id? g.skills.find(s=>s.id===id) : null; }
 function isLocked(g,sk){ if(!sk||!sk.parentId) return false; const p=getSkill(g,sk.parentId); if(!p) return false; return (sk.unlockLevel||1) > skillLevel(p.xp).lvl || isLocked(g,p); }
 function daysInactive(g){ const last = g.lastActive || dayKey(new Date(g.createdAt||Date.now())); return Math.max(0, daysBetween(last, dayKey())); }
-function moodOf(g){ if (stageOf(g)===0) return 'happy'; const d=daysInactive(g); if (d>=7) return 'sleep'; if (d>=3) return 'sad'; if (d===2) return 'ok'; return 'happy'; }
+function moodOf(g){ if (g.paused && stageOf(g)>0) return 'sleep'; if (stageOf(g)===0) return 'happy'; const d=daysInactive(g); if (d>=7) return 'sleep'; if (d>=3) return 'sad'; if (d===2) return 'ok'; return 'happy'; }
 function moodText(g){
+  if (g.paused) return '';
   const m = moodOf(g), ok = comebackReady(g);
   if (m==='sleep') return ok ? `S'est endormi·e en t'attendant. Ta prochaine action la réveille : bonus de retrouvailles +50 % sur 3 actions.` : `S'est endormi·e en t'attendant. Une action pour la réveiller !`;
   if (m==='sad') return ok ? `Je t'attendais… Reviens : bonus de retrouvailles +30 % sur 2 actions.` : `Je t'attendais… Une action pour me rendre le sourire !`;
@@ -1508,6 +1517,7 @@ function logIt(g, label, xp, crit){ state.log.unshift({t:Date.now(), g:g?g.name:
 function doAction(gid, aid, e, el){
   ensureDay();
   const g=getGoal(gid); if(!g) return; const a=g.actions.find(x=>x.id===aid); if(!a) return;
+  if (g.paused) wakeGoal(g, true);
   const sk = getSkill(g, a.skillId);
   if (sk && isLocked(g, sk)){ const p=getSkill(g,sk.parentId); toast({icon:IC.lock, title:'Compétence verrouillée', sub:`${sk.name} se débloque au niveau ${sk.unlockLevel} de ${p?p.name:'sa compétence parente'}.`, color:'var(--muted)'}); return; }
   const snap = JSON.stringify(state);
@@ -1695,7 +1705,7 @@ function repairCard(){
   return `<section class="card repair"><div class="ri">${IC.flame}</div><div style="min-width:0"><b>Rallume ta flamme</b><div class="tiny">Ta série de ${state.streak.count} jours est en braise. Encore ${left} action${left>1?'s':''} (une action difficile compte double) ${last?'aujourd’hui':'aujourd’hui ou demain'} pour la sauver.</div></div></section>`;
 }
 function planCard(){
-  if (!state.goals.some(g=>g.actions.length)) return '';
+  if (!state.goals.some(g=>!g.paused && g.actions.length)) return '';
   const p = todayPlan();
   if (p && p.skipped) return '';
   if (!p) return `<section class="card plan"><div class="section-h"><h2>Mes coups du jour</h2></div><p class="tiny" style="margin:0 0 10px">20 secondes : choisis 1 à 3 actions pour aujourd’hui, et quand tu les feras. Chaque promesse tenue rapporte +25 % d’XP.</p><div class="sheet-actions"><button type="button" class="btn" data-act="planSkip">Pas aujourd’hui</button><button type="button" class="btn primary" data-act="planOpen">Faire mon plan</button></div></section>`;
@@ -1710,7 +1720,7 @@ function openPlanEditor(){
   const CUES = ['mon café','le petit-déjeuner','le déjeuner','le travail','la salle','le dîner'];
   const body = ()=>{
     const cwk = curWeek(), inWk = (gid,aid)=> !!(cwk && cwk.items.some(it=>it.g===gid && it.actionId===aid));
-    const groups = state.goals.filter(g=>g.actions.length).map(g=>`<div class="pick-goal"><span>${esc(g.name)}</span><div class="chips">${g.actions.map(a=>{ const on=sel.some(x=>x.g===g.id&&x.a===a.id); return `<button type="button" class="chip d-${a.diff} ${on?'':'off'}" data-pick="${g.id}|${a.id}"><span>${esc(a.name)}</span>${inWk(g.id,a.id)?'<b title="Engagement de la semaine">semaine</b>':''}${on?'<b>✓</b>':''}</button>`; }).join('')}</div></div>`).join('');
+    const groups = state.goals.filter(g=>!g.paused && g.actions.length).map(g=>`<div class="pick-goal"><span>${esc(g.name)}</span><div class="chips">${g.actions.map(a=>{ const on=sel.some(x=>x.g===g.id&&x.a===a.id); return `<button type="button" class="chip d-${a.diff} ${on?'':'off'}" data-pick="${g.id}|${a.id}"><span>${esc(a.name)}</span>${inWk(g.id,a.id)?'<b title="Engagement de la semaine">semaine</b>':''}${on?'<b>✓</b>':''}</button>`; }).join('')}</div></div>`).join('');
     const cues = sel.map((it,i)=>{ const g=getGoal(it.g), a=g&&g.actions.find(x=>x.id===it.a); if(!a) return '';
       return `<div class="cue-row"><b>${esc(a.name)}</b><label class="tiny" for="cue${i}">Après… (facultatif)</label><input id="cue${i}" data-cue="${i}" maxlength="40" placeholder="Ex. mon café" value="${esc(it.cue||'')}"><div class="cue-sugg">${CUES.map(c=>`<button type="button" data-sugg="${i}" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div></div>`; }).join('');
     return `<h2>Mes coups du jour</h2><p class="tiny" style="margin:0">Choisis 1 à 3 actions. Préciser <b>après quoi</b> tu les feras augmente nettement tes chances de passer à l’acte.</p>
@@ -1821,7 +1831,7 @@ function curWeek(){ const w=state.week; return w && w.k===weekKey() ? w : null; 
 function wkTarget(w, it){ return w.minimalMode ? 1 : Math.max(1, it.min||1); }
 function weekRate(w){ if (!w || !w.items.length) return null; return w.items.reduce((a,it)=>a+Math.min(1,(it.count||0)/wkTarget(w,it)),0)/w.items.length; }
 function weekHit(gid, aid){ const w=curWeek(); if (!w) return null; let reached=null; w.items.forEach(it=>{ if (it.g===gid && it.actionId===aid){ const before=it.count||0; it.count=before+1; const eff=wkTarget(w,it); if (before<eff && it.count>=eff) reached=it; } }); return reached; }
-function reviewDue(){ return state.goals.some(g=>g.actions.length||g.campaign) && !curWeek(); }
+function reviewDue(){ return state.goals.some(g=>!g.paused && (g.actions.length||g.campaign)) && !curWeek(); }
 
 function weekCard(){
   if (reviewDue()){
@@ -1852,7 +1862,7 @@ function openReview(){
   const hist = state.weeks.slice(-4).map(x=>x.rate).filter(x=>x!==null);
   if (prevRate!==null) hist.push(prevRate);
   const recent = hist.slice(-4), avg = recent.length ? recent.reduce((a,b)=>a+b,0)/recent.length : null;
-  const goals = state.goals.filter(g=>g.actions.length||g.campaign);
+  const goals = state.goals.filter(g=>!g.paused && (g.actions.length||g.campaign));
   let step = prev ? 1 : 3, note = '', vedette = (prev && prev.vedette && getGoal(prev.vedette)) ? prev.vedette : (goals[0]||{}).id, si='', alors='';
   // Candidats : les actions de chaque objectif, pré-réglées d'après la semaine passée
   const sel = [];
@@ -2122,6 +2132,27 @@ function openCampaignReview(g){
   });
 }
 
+/* ===================== Pause (hibernation) ===================== */
+function pauseGoal(g){
+  g.paused = {since: dayKey()};
+  const w=curWeek(); let removed=0;
+  if (w){ const n=w.items.length; w.items = w.items.filter(it=>it.g!==g.id); removed=n-w.items.length; }
+  const pl=todayPlan(); if (pl) pl.items = pl.items.filter(it=>it.g!==g.id);
+  commit(); render();
+  voice(g.species, Math.max(1,stageOf(g)), 'sleep');
+  toast({icon:IC.egg, title:`${creatureName(g)} hiberne`, sub:`Rien n'est perdu : réveille-la quand tu veux.${removed?` ${removed} engagement${removed>1?'s':''} retiré${removed>1?'s':''} de ta semaine.`:''}`, color:'var(--sky)', ms:4500});
+}
+function wakeGoal(g, silent){
+  g.paused = null; g.lastActive = dayKey(); g.comeback = null;
+  if (silent) return;
+  commit(); render();
+  setTimeout(()=>{
+    const st=stageOf(g), d = st>0 ? voice(g.species, st, 'happy') : 0;
+    document.querySelectorAll(`.cr-wrap[data-g="${g.id}"]`).forEach(w=>{ animCreature(w, st>0?'tap-'+g.species:'tap', 900); if (st>0){ animCreature(w,'joy',900); if (d) animCreature(w,'talk',d*1000+120); const r=w.getBoundingClientRect(); speciesFx(g.species, r.left+r.width/2, r.top+r.height/2, 8, g.color, 'happy'); } });
+  }, 120);
+  toast({icon:IC.heart.replace('currentColor','#FF5D86'), title:`${creatureName(g)} se réveille !`, sub:'Pense à l’ajouter à ton prochain bilan du lundi.', color:'var(--accent)'});
+}
+
 /* ===================== Feuilles modales ===================== */
 // Une fenêtre où l'on remplit quelque chose ne se ferme qu'avec ses boutons (Annuler, Plus tard, Fermer)
 function sheetIsSticky(bg){ return !!bg && (bg.dataset.sticky==='1' || !!bg.querySelector('.sheet input, .sheet textarea, .sheet select')); }
@@ -2168,6 +2199,7 @@ function openGoalEditor(g){
     <div class="field"><span class="lbl">Couleur</span><div class="swatches" id="swBox">${COLORS.map(c=>`<button type="button" aria-label="Couleur ${c}" data-c="${c}" style="--sw:${c}" class="${c===col?'on':''}"></button>`).join('')}</div></div>
     <div class="field"><label for="gCre">Nom de la créature (facultatif)</label><input id="gCre" maxlength="24" placeholder="${SPECIES[sp].name}" value="${esc(d.creature)}"></div>
     <div class="sheet-actions"><button class="btn" type="button" data-x="close">Annuler</button><button class="btn primary" type="button" id="gSave">${isNew?'Faire naître l’œuf':'Enregistrer'}</button></div>
+    ${isNew?'':`<button class="btn block" type="button" id="gPause">${g.paused?'Réveiller cette créature':'Mettre en pause (hibernation)'}</button><span class="tiny">${g.paused?'':'La créature dort paisiblement le temps d’une campagne : pas de tristesse, rien de perdu. Elle sort de tes bilans et de tes plans.'}</span>`}
     ${isNew?'':'<div class="del-zone"><button class="btn block" type="button" data-del style="color:#E5484D">Supprimer cet objectif</button></div>'}`, sh=>{
     const refresh=()=>{ sh.querySelector('#spBox').innerHTML=speciesHtml(); sh.querySelector('#spDesc').textContent=`${SPECIES[sp].name} : ${SPECIES[sp].desc}`; sh.querySelector('#gCre').placeholder=SPECIES[sp].name; sh.querySelectorAll('#swBox button').forEach(b=>b.classList.toggle('on', b.dataset.c===col)); };
     sh.querySelector('#spBox').onclick = e=>{ const b=e.target.closest('[data-sp]'); if(b){ sp=b.dataset.sp; refresh(); sfx.boop(); } };
@@ -2178,6 +2210,7 @@ function openGoalEditor(g){
       if (isNew){ const ng = migrate({goals:[{id:uid(),name,creature:cre,species:sp,color:col,createdAt:Date.now()}]}).goals[0]; state.goals.push(ng); state.started=true; commit(); closeSheet(); go('goal:'+ng.id); toast({icon:IC.egg, title:'Un nouvel œuf !', sub:'Ajoute des actions pour le faire éclore.', color:'var(--accent)'}); }
       else { g.name=name; g.creature=cre; g.species=sp; g.color=col; commit(); closeSheet(); render(); }
     };
+    const gp = sh.querySelector('#gPause'); if (gp) gp.onclick = ()=>{ closeSheet(); if (g.paused) wakeGoal(g); else pauseGoal(g); };
     const del = sh.querySelector('[data-del]');
     if (del) del.onclick = ()=>deleteConfirm(sh, 'cet objectif et sa créature', ()=>{ state.goals = state.goals.filter(x=>x.id!==g.id); commit(); closeSheet(); go('home'); });
   });
@@ -2340,6 +2373,10 @@ function heatmap(){
 }
 function goalCard(g){
   const st=stageOf(g), pr=stageProgress(g), mt=moodText(g);
+  if (g.paused) return `<article class="gcard paused" style="--gc:${g.color}">
+    <div class="cr-wrap" data-act="open" data-g="${g.id}" role="button" tabindex="0" aria-label="Ouvrir ${esc(g.name)}">${creatureSVG(g.species,g.color,st,'sleep',g.xp/100,g.acc)}</div>
+    <div class="ginfo" data-act="open" data-g="${g.id}" role="button" tabindex="0"><h3 style="font-size:16px">${esc(g.name)}</h3><span><span class="pause-badge">En pause</span> <span class="tiny">depuis le ${fmtDay(g.paused.since)}</span></span></div>
+    <button type="button" class="btn" style="padding:8px 14px;border-radius:99px" data-act="wake" data-g="${g.id}">Réveiller</button></article>`;
   return `<article class="gcard" style="--gc:${g.color}">
     <div class="gtop">
       <div class="cr-wrap sm" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>
@@ -2368,7 +2405,7 @@ function viewHome(){
     ${weekCard()}
     ${planCard()}
     ${questBox()}
-    ${state.goals.map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
+    ${[...state.goals.filter(g=>!g.paused), ...state.goals.filter(g=>g.paused)].map(goalCard).join('') || '<div class="card empty">Aucun objectif pour l’instant. Crée ton premier œuf !</div>'}
     <button type="button" class="add-goal" data-act="newGoal">${IC.plus} Nouvel objectif</button>`;
 }
 function skillTree(g, parentId){
@@ -2391,6 +2428,7 @@ function viewGoal(id){
   const path = STAGES.map((s,i)=>`<div class="evo-step ${i>st?'locked':''} ${i===st?'current':''}"><div class="mini">${creatureSVG(g.species,g.color,i,'happy',0)}</div>${i>st?'???':s.name}</div>`).join('');
   const msSorted = [...g.milestones].sort((a,b)=>(a.size==='finale')-(b.size==='finale'));
   return `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="Retour">${IC.back}</button><h1>${esc(g.name)}</h1><button type="button" class="icon-btn" data-act="editGoal" data-g="${g.id}" aria-label="Modifier l'objectif">${IC.pen}</button></header>
+    ${g.paused?`<section class="card pause-banner"><div><b>${esc(creatureName(g))} hiberne</b><div class="tiny">En pause depuis le ${fmtDay(g.paused.since)}. Rien n'est perdu, et elle ne sera pas triste. Valider une de ses actions la réveille aussi.</div></div><button type="button" class="btn primary" style="padding:8px 14px;border-radius:99px" data-act="wake" data-g="${g.id}">Réveiller</button></section>`:''}
     <section class="card hero" style="--gc:${g.color}">
       <div class="cr-wrap lg" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Câliner ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),g.xp/100,g.acc)}</div>
       <h2>${esc(creatureName(g))}</h2>
@@ -2461,6 +2499,7 @@ function viewSettings(){
       <p><b>Retrouvailles</b> : après 3 jours sans t'occuper d'un objectif, sa créature t'attend, un peu triste, et après 7 jours elle s'endort. Aucune punition : quand tu reviens, elle saute de joie et tes premières actions rapportent un bonus (+30 % sur 2 actions, ou +50 % sur 3 après 7 jours). Au plus une fois tous les 14 jours par objectif.</p>
       <p><b>Plan du jour</b> : chaque matin, choisis 1 à 3 actions et, si tu veux, le moment où tu les feras (« Après mon café… »). Chaque promesse tenue rapporte +25 % d'XP. Rien ne se passe si tu n'y arrives pas.</p>
       <p><b>Campagne de 12 semaines</b> : dans chaque objectif, fixe ton objectif final (avec ta date et ton pourquoi), l'obstacle qui risque de t'arrêter et 2 à 3 résultats clés en plage (« 3 à 5 »). Au moins un doit dépendre de toi (processus). Le bouton « Ajuster » change une plage sans aucune perte.</p>
+      <p><b>Mettre en pause</b> : sur un objectif (bouton crayon), « Mettre en pause » fait hiberner sa créature le temps d'une campagne. Elle dort paisiblement, sans tristesse ni perte, et sort de tes bilans et de tes plans. « Réveiller » la ramène.</p>
       <p><b>Bilan du lundi</b> : 2 minutes pour regarder ta semaine, choisir 1 à 3 engagements par objectif (avec une version minimale) et ta créature vedette (+15 % d'XP). Semaine tenue à 70 % : coffre de 20 éclats. Si la semaine s'annonce dure, active la « semaine minimale ».</p>
       <p><b>Mesures</b> : dans chaque objectif, note tes vrais chiffres (candidatures, charges, aisance…). Chaque record battu rapporte 75 XP et 10 éclats (une fois par semaine et par mesure).</p>
       <p><b>Niveau de joueur</b> : toute l'XP que tu gagnes, tous objectifs confondus, fait monter ton niveau et ton titre (Novice, Apprenti, Aventurier… jusqu'à Légende).</p>
@@ -2516,6 +2555,7 @@ document.addEventListener('click', e=>{
     case 'settings': go('settings'); break;
     case 'chest': openChest(); break;
     case 'planOpen': openPlanEditor(); break;
+    case 'wake': if (g) wakeGoal(g); break;
     case 'reviewOpen': openReview(); break;
     case 'reviewLater': state.reviewSnooze=dayKey(); commit(); render(); break;
     case 'wkInc': { const w=curWeek(), it=w&&w.items.find(x=>x.id===el.dataset.i); if (it){ const before=it.count||0; it.count=before+1; const eff=wkTarget(w,it); if (before<eff && it.count>=eff){ sfx.achv(); toast({icon:IC.check.replace('currentColor','#3F8CFF'), title:'Engagement de la semaine tenu', sub:it.text, color:'var(--sky)'}); } else sfx.pop(); const r=el.getBoundingClientRect(); stars(r.left+r.width/2, r.top+r.height/2, 6, null, .8); commit(); render(); } break; }

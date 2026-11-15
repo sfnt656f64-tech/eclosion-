@@ -93,6 +93,7 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
     lastComebackAt,              // jour du dernier bonus de retrouvailles
     metrics: [{ id, name, unit, dir, entries:[{t, v}], rewardWeek }],
     campaign: { start, weeks, final, woop, own, krs:[...] } | null, pastCampaigns: [...],
+    paused: { since } | null,
     createdAt, lastActive,       // lastActive = jour de la dernière action (AAAA-MM-JJ)
     acc: { head, face, neck },   // accessoires portés
     skills: [{ id, name, xp, parentId, unlockLevel, perks:[{level, name}] }],
@@ -207,6 +208,13 @@ La cascade relie le quotidien à un résultat daté : **objectif final → campa
 - **Semaine minimale** : un bouton fait compter chaque engagement dès sa version minimale (objectif 1 fois).
 - **Ajuster** (jamais « abandonner ») : change la plage d'un engagement ou d'un résultat clé, avec une raison en un tap, sans aucune perte. Après 3 ajustements à la baisse en 30 jours, l'app suggère simplement de prendre moins d'engagements.
 - Données : `state.week = {k, items:[{id, g, actionId, text, min, max, minimal, count}], vedette, ifthen:{si, alors}, minimalMode}`, `state.weeks` (historique des taux, 52 semaines), `state.adjustLog`.
+
+### Mettre en pause (hibernation)
+
+- Sur un objectif (bouton crayon) : « Mettre en pause ». La créature dort paisiblement, sans tristesse ni bonus de retrouvailles, et rien n'est perdu.
+- Un objectif en pause s'affiche en carte compacte à la fin de l'accueil, avec un bandeau sur sa fiche. Il sort du bilan du lundi, du plan du jour et de la quête « Progresser sur 2 objectifs ». Ses engagements de la semaine en cours et du plan du jour sont retirés.
+- « Réveiller » (ou valider une de ses actions) le réactive ; son compteur d'inactivité repart d'aujourd'hui.
+- Donnée : `goal.paused = {since} | null`.
 
 ### Plan du jour (« Mes coups du jour »)
 
@@ -337,7 +345,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v11` ; passer à `eclosion-v12`, etc.), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v12` ; passer à `eclosion-v13`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 
