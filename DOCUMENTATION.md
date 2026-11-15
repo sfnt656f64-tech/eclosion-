@@ -88,7 +88,10 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
   goals: [{
     id, name, creature,          // creature = nom donné à la créature (facultatif)
     species, color,              // espèce et couleur de la créature
-    xp, legendary, sadNeed,      // sadNeed = actions restantes pour consoler la créature
+    xp, legendary,
+    comeback: { n, pct } | null, // bonus de retrouvailles restant
+    lastComebackAt,              // jour du dernier bonus de retrouvailles
+    metrics: [{ id, name, unit, dir, entries:[{t, v}], rewardWeek }],
     createdAt, lastActive,       // lastActive = jour de la dernière action (AAAA-MM-JJ)
     acc: { head, face, neck },   // accessoires portés
     skills: [{ id, name, xp, parentId, unlockLevel, perks:[{level, name}] }],
@@ -96,10 +99,11 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
                 today:{d, n}, week:{k, n, done} }],   // compteurs du jour et de la semaine
     milestones: [{ id, name, size, skillId, done, doneAt, gained }]
   }],
-  streak: { count, best, lastDay, jokers, jokerWeek },
+  streak: { count, best, lastDay, jokers, jokerWeek, repair:{need, got, until}|null, lastRepair, carry },
+  plan: { date, items:[{ g, a, cue, done }], skipped } | null,
   daily: { day, quests:[{id, text, target, key}], c:{actions, xp, hard, goals:[], pets, milestones, crits}, claimed },
   achievements: { idDuSucces: dateDeDeblocage },
-  stats: { actions, crits, megas, milestones, evolutions, chests, pets, perks, xp, night, early, chorusBest, duets },
+  stats: { actions, crits, megas, milestones, evolutions, chests, pets, perks, xp, night, early, chorusBest, duets, comebacks, repairs, promises, records },
   log: [{ t, g, label, xp, crit }],   // journal, 150 entrées maximum
   days: { 'AAAA-MM-JJ': { n, xp } },  // activité par jour, 130 jours maximum
   coins: 40,                          // éclats (monnaie de la boutique)
@@ -127,7 +131,7 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
 - Valider = **1 touche**. Un bouton « Annuler » apparaît 5 secondes.
 - **Coup critique** : 12 % de chance, XP ×2. **Méga critique** : 3 % de chance, XP ×5.
 - **Bonus de série** : +2 % d'XP par jour consécutif, maximum +30 %.
-- **Objectif par semaine** (facultatif) : quand il est atteint, bonus de 60 XP et 10 éclats. Le compteur repart chaque lundi. Le bouton affiche « 2/3 », puis « ✓ 3/3 ». Sans objectif, il affiche « ×2 » (nombre de fois aujourd'hui).
+- **Objectif par semaine** (facultatif) : quand il est atteint, bonus d'environ 60 XP (la base est 60, multipliée par les bonus de série en cours) et 10 éclats. Le compteur repart chaque lundi. Le bouton affiche « 2/3 », puis « ✓ 3/3 ». Sans objectif, il affiche « ×2 » (nombre de fois aujourd'hui).
 - Une action liée à une sous-compétence **verrouillée** ne peut pas être validée.
 
 ### Étapes (résultats concrets, validés une seule fois)
@@ -159,22 +163,44 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
 - **Sous-compétences** : se débloquent quand la compétence parente atteint un niveau choisi.
 - **Capacités** : des paliers nommés qui se débloquent à certains niveaux.
 
-### Humeur et pénalité
+### Humeur et retrouvailles (plus aucune pénalité)
 
 - 2 jours sans action sur un objectif : la créature s'inquiète.
-- 3 jours : elle est **triste** (larmes, couleurs ternes). Gains −20 % sur cet objectif pendant 3 actions.
-- 7 jours : elle **s'endort** (« Zzz »). Gains −20 % pendant 5 actions.
-- On ne perd jamais d'XP.
+- 3 jours : elle **t'attend**, un peu triste (larmes, couleurs ternes).
+- 7 jours : elle **s'endort** (« Zzz »).
+- **Au retour, bonus de retrouvailles** : +30 % d'XP sur les 2 premières actions (après 3 à 6 jours), ou +50 % sur les 3 premières (après 7 jours ou plus). La créature saute de joie dès la première action.
+- Le bonus est limité à **une fois tous les 14 jours par objectif** (champ `lastComebackAt`), pour qu'on n'ait pas intérêt à s'absenter exprès.
+- On ne perd jamais d'XP, et aucun texte ne culpabilise (« je t'attendais », jamais « tu m'as abandonné »).
+- L'ancien malus de −20 % (champ `sadNeed`) est supprimé ; `migrate()` remet `sadNeed` à 0.
 
-### Série et jokers
+### Série, jokers et réparation
 
 - Une série compte les jours consécutifs avec au moins une action.
-- **1 joker gratuit par semaine** (2 maximum en réserve). Un joker protège automatiquement la série si on rate un jour.
+- **Bonus de série** : +2 % par jour, maximum +30 %. Il se calcule sur `max(count, carry)` (voir plus bas).
+- **1 joker gratuit par semaine** (2 maximum par ce biais ; le coffre du jour peut en ajouter jusqu'à 3). Un joker protège automatiquement la série si on rate un jour.
+- **Réparation sous 48 h** (« Rallume ta flamme ») : s'il ne reste pas assez de jokers et qu'il ne manque qu'un jour non couvert, la flamme devient une **braise** (pastille qui clignote et carte orange sur l'accueil). Il faut **2 actions, ou 1 action difficile ou épique** (une étape compte aussi double), le jour même ou le lendemain. La série est alors sauvée, avec animation de flamme. Au plus **une réparation tous les 7 jours** (`streak.lastRepair`).
+- **Rupture douce** : si la série casse quand même, on garde la moitié du bonus : `carry = floor(min(série, 15) / 2)`. Une série de 20 jours (+30 %) repart donc à +14 %. `carry` disparaît dès que la nouvelle série le dépasse.
+- Jamais de message « Tu as perdu ta série » : le texte affiché est « Nouvelle série, nouveau départ ».
+
+### Plan du jour (« Mes coups du jour »)
+
+- Carte sur l'accueil : chaque jour, on choisit **1 à 3 actions**, et si on veut le moment déclencheur, sous la forme « Après ___ » (suggestions : mon café, le déjeuner, la salle…). C'est une intention de mise en œuvre « si… alors… ».
+- Une action du plan validée (depuis la carte ou ailleurs) est une **promesse tenue** : **+25 % d'XP** et un tampon « Tenue ». Les 3 promesses tenues : +10 éclats.
+- Aucune pénalité si une promesse n'est pas tenue : le plan disparaît le lendemain. Bouton « Pas aujourd'hui » pour ne pas en faire.
+- Donnée : `state.plan = {date, items:[{g, a, cue, done}], skipped}`.
+
+### Mesures (records réels)
+
+- Dans chaque objectif, section **Mesures** : on crée ses indicateurs (nom, unité, sens « plus haut = mieux » ou « plus bas = mieux ») et on note une valeur de temps en temps. Les virgules sont acceptées (« 62,5 »).
+- Chaque mesure affiche sa dernière valeur, son record, une mini-courbe et l'historique (avec suppression d'une saisie en cas d'erreur).
+- La première saisie est le point de départ. **Battre son record** : animation « RECORD ! », la créature danse, **75 XP et 10 éclats**, au plus une fois par semaine et par mesure (`rewardWeek`) ; les records suivants de la semaine sont fêtés sans XP.
+- Les objectifs d'exemple ont des mesures toutes prêtes (candidatures, entretiens, charge, tour de bras, aisance à l'oral, prises de parole).
+- Donnée : `goal.metrics = [{id, name, unit, dir, entries:[{t, v}], rewardWeek}]`.
 
 ### Quête du jour
 
-- 3 quêtes tirées chaque jour parmi 9 : valider 3 ou 5 actions, gagner 150 ou 300 XP, une action difficile ou épique, progresser sur 2 objectifs, câliner une créature, valider une étape, obtenir un critique.
-- Les 3 réussies : un **coffre** s'ouvre. Il donne 50 à 200 XP à une créature au hasard, 10 à 25 éclats, et 35 % de chance d'un joker.
+- 3 quêtes tirées chaque jour parmi 9 : valider 3 ou 5 actions, gagner 150 ou 300 XP, une action difficile ou épique, progresser sur 2 objectifs, **tenir 2 promesses du plan du jour** (remplace l'ancienne quête « câliner une créature », qui récompensait le temps passé dans l'app), valider une étape, obtenir un critique.
+- Les 3 réussies : un **coffre** s'ouvre. Il donne 50 à 200 XP à une créature au hasard (hors légendaires), 10 à 25 éclats, et 35 % de chance d'un joker (seulement si on en a moins de 3).
 
 ### Niveau de joueur
 
@@ -202,9 +228,9 @@ Le script est dans une seule fonction anonyme `(function(){ ... })()`, découpé
 
 - Un accessoire acheté peut être porté par toutes les créatures. Les œufs ne peuvent rien porter.
 
-### Succès (29)
+### Succès (35)
 
-Premier pas, Sur la lancée (10 actions), Habitude en marche (50), Centurion (100), Inarrêtable (500), Coup de chance (1er critique), Main chanceuse (25 critiques), MÉGA ! (méga critique), Cap franchi (1re étape), Bâtisseur (10 étapes), Éclosion, Ça pousse ! (Jeune), Tout grandit (Adulte), Légende vivante (Légendaire), Ça chauffe (série de 3), Semaine parfaite (7), Volonté de fer (30), Trésor ! (1er coffre), Chasseur de trésors (10 coffres), Spécialiste (compétence niv. 5), Maître (niv. 10), Nouvelle branche (capacité ou sous-compétence), Câlin, Meilleurs amis (50 câlins), Oiseau de nuit (action après 23 h), Lève-tôt (avant 7 h), Cinq mille (5 000 XP), Duo ! (une créature répond à ta mélodie), Maestro (chorale de 12 notes).
+Premier pas, Sur la lancée (10 actions), Habitude en marche (50), Centurion (100), Inarrêtable (500), Coup de chance (1er critique), Main chanceuse (25 critiques), MÉGA ! (méga critique), Cap franchi (1re étape), Bâtisseur (10 étapes), Éclosion, Ça pousse ! (Jeune), Tout grandit (Adulte), Légende vivante (Légendaire), Ça chauffe (série de 3), Semaine parfaite (7), Volonté de fer (30), Trésor ! (1er coffre), Chasseur de trésors (10 coffres), Spécialiste (compétence niv. 5), Maître (niv. 10), Nouvelle branche (capacité ou sous-compétence), Câlin, Meilleurs amis (50 câlins), Oiseau de nuit (action après 23 h), Lève-tôt (avant 7 h), Cinq mille (5 000 XP), Duo ! (une créature répond à ta mélodie), Maestro (chorale de 12 notes), Retrouvailles (revenir après une absence), Flamme rallumée (réparer sa série), Parole donnée (1re promesse tenue), Parole d'or (25 promesses), Preuve du réel (1er record), En progrès (10 records).
 
 ---
 
@@ -285,7 +311,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (ex. `eclosion-v8` → `eclosion-v9`), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v9` ; passer à `eclosion-v10`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 
@@ -297,7 +323,16 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 
 ---
 
-## 11. Idées d'améliorations déjà évoquées
+## 11. Fondements et prochaines étapes
+
+Les évolutions de la version 9 suivent un rapport d'analyse fondé sur la recherche en motivation :
+- **Pack rattrapage** (retrouvailles et réparation de série) : la possibilité de réparer une série atténue la démotivation liée à sa rupture (Silverman & Barasch, 2023), et la bienveillance envers soi après un échec augmente la motivation à s'améliorer (Breines & Chen, 2012).
+- **Plan du jour** : les intentions de mise en œuvre « si… alors… » ont un effet moyen à fort sur l'atteinte des objectifs (Gollwitzer & Sheeran, 2006).
+- **Mesures** : suivre ses progrès améliore l'atteinte des objectifs, surtout quand ils sont notés (Harkin et al., 2016).
+
+Autres idées du rapport, pas encore faites : critiques proportionnels à la difficulté, rendements décroissants après 3 fois la même action dans la journée, coffre attribué à la créature de son choix, carte de chasse hebdomadaire, bilan du lundi avec créature vedette, jours de repos déclarés (utile pour la musculation), mues intermédiaires entre Jeune et Adulte, boss mensuel, partage du bilan, chroniques narratives, rappels par fichier agenda (.ics).
+
+## 12. Idées d'améliorations déjà évoquées
 
 - Bilan de la semaine (chaque lundi : résumé de la progression et récompense).
 - Nouvelles espèces de créatures.
@@ -307,7 +342,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 
 ---
 
-## 12. Message à copier dans un nouveau chat
+## 13. Message à copier dans un nouveau chat
 
 > Je développe une app personnelle appelée Éclosion, une app de progression inspirée des RPG où mes objectifs de vie deviennent des créatures qui évoluent. Je ne sais pas coder : explique-moi simplement ce que tu fais et comment tester.
 > Voici la documentation complète : https://github.com/sfnt656f64-tech/eclosion-/blob/main/DOCUMENTATION.md
