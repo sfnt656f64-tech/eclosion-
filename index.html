@@ -646,6 +646,7 @@ const ACH = [
   ['kr1','Résultat clé','Atteindre un résultat clé de campagne', s=>(s.stats.krs||0)>=1],
 ];
 
+const PLAN_ACH = new Set(["promise1", "promise25", "record1", "record10", "camp1", "review1", "review4", "week70", "kr1"]);
 const QUESTS = [
   {id:'act3', text:'Valider 3 actions', target:3, key:'actions'},
   {id:'act5', text:'Valider 5 actions', target:5, key:'actions'},
@@ -653,7 +654,7 @@ const QUESTS = [
   {id:'xp300',text:'Gagner 300 XP', target:300, key:'xp'},
   {id:'hard', text:'Réussir une action difficile ou épique', target:1, key:'hard'},
   {id:'multi',text:'Progresser sur 2 objectifs', target:2, key:'goals', need:s=>s.goals.filter(g=>!g.paused).length>=2},
-  {id:'promise', text:'Tenir 2 promesses du plan du jour', target:2, key:'promises', need:s=>s.goals.some(g=>g.actions.length)},
+  {id:'promise', text:'Tenir 2 promesses du plan du jour', target:2, key:'promises', need:s=>!!(s.settings&&s.settings.planTools) && s.goals.some(g=>g.actions.length)},
   {id:'ms',   text:'Valider une étape', target:1, key:'milestones', need:s=>s.goals.some(g=>g.milestones.some(m=>!m.done))},
   {id:'crit', text:'Obtenir un coup critique', target:1, key:'crits'},
 ];
@@ -852,7 +853,7 @@ const LS_KEY = 'eclosion.save.v1';
 function freshState(){
   return {v:1, started:false, goals:[], streak:{count:0,best:0,lastDay:null,jokers:1,jokerWeek:null,repair:null,lastRepair:null,carry:0},
     daily:null, achievements:{}, stats:{actions:0,crits:0,megas:0,milestones:0,evolutions:0,chests:0,pets:0,perks:0,xp:0,night:false,early:false},
-    log:[], days:{}, coins:40, owned:[], plan:null, week:null, weeks:[], adjustLog:[], reviewSnooze:null, settings:{sound:true, music:true, musicVol:50}, updatedAt:0};
+    log:[], days:{}, coins:40, owned:[], plan:null, week:null, weeks:[], adjustLog:[], reviewSnooze:null, settings:{sound:true, music:true, musicVol:50, planTools:false}, updatedAt:0};
 }
 function migrate(s){
   const f = freshState();
@@ -968,6 +969,7 @@ function stageProgress(g){
   return {pct: Math.min(100, (g.xp-a)/(b-a)*100), text:`${g.xp} / ${b} XP vers ${STAGES[s+1].name}`};
 }
 function creatureName(g){ return g.creature || SPECIES[g.species].name; }
+function planOn(){ return !!(state.settings && state.settings.planTools); }
 // Niveau de joueur : toute l'XP gagnée, tous objectifs confondus
 const TITLES = [[1,'Novice'],[3,'Apprenti'],[5,'Aventurier'],[8,'Éleveur'],[12,'Expert'],[16,'Champion'],[20,'Maître'],[30,'Légende']];
 function playerLevel(){ let xp=state.stats.xp||0, lvl=1, need=150; while(xp>=need){ xp-=need; lvl++; need=150+75*(lvl-1); } let title='Novice'; TITLES.forEach(([l,t])=>{ if(lvl>=l) title=t; }); return {lvl, cur:xp, need, title}; }
@@ -1012,7 +1014,22 @@ function ensureDay(){
     }
   }
   if (!state.daily || state.daily.day!==today){ state.daily = makeDaily(today); changed=true; }
+  if (fixDailyQuests()) changed=true;
   if (changed) commit();
+}
+// Remplace, dans les quêtes du jour déjà tirées, celles qui ne sont plus possibles (ex. outils de planification désactivés)
+function fixDailyQuests(){
+  const d=state.daily; if (!d || !d.quests) return false;
+  let changed=false;
+  d.quests = d.quests.map(q=>{
+    const def = QUESTS.find(x=>x.id===q.id);
+    if (!def || !def.need || def.need(state)) return q;
+    const used = new Set(d.quests.map(x=>x.key));
+    const alt = QUESTS.find(x=>!used.has(x.key) && (!x.need || x.need(state)));
+    if (!alt) return q;
+    changed=true; return {id:alt.id, text:alt.text, target:alt.target, key:alt.key};
+  });
+  return changed;
 }
 function makeDaily(day){
   const rnd = seeded(day+'q');
@@ -1075,7 +1092,7 @@ function grant(g, sk, base, opts){
   const cb = g.comeback && g.comeback.n>0 ? g.comeback.pct : 0;
   const planPct = opts.plan ? 25 : 0;
   const bonus = Math.min(0.3, streakBonusDays()*0.02);
-  const cw = curWeek(), vedPct = cw && cw.vedette===g.id ? 15 : 0;
+  const cw = planOn() ? curWeek() : null, vedPct = cw && cw.vedette===g.id ? 15 : 0;
   const xp = Math.max(1, Math.round(base*mult*(1+bonus+cb/100+planPct/100+vedPct/100)));
   if (cb){ g.comeback.n--; if (g.comeback.n<=0) g.comeback=null; }
   g.lastActive = dayKey();
@@ -1718,7 +1735,7 @@ function openChest(){
 
 /* ===================== Plan du jour, braise, mesures ===================== */
 function todayPlan(){ const p=state.plan; return p && p.date===dayKey() ? p : null; }
-function planItemFor(gid, aid){ const p=todayPlan(); return p ? p.items.find(it=>it.g===gid && it.a===aid && !it.done) : null; }
+function planItemFor(gid, aid){ if (!planOn()) return null; const p=todayPlan(); return p ? p.items.find(it=>it.g===gid && it.a===aid && !it.done) : null; }
 function streakFx(r){
   if (r==='repaired'){ setTimeout(()=>{ const el=document.querySelector('.pill.streak'); const rr=el?el.getBoundingClientRect():{left:innerWidth/2,top:40,width:0,height:0}; const x=rr.left+rr.width/2, y=rr.top+rr.height/2; sfx.level(); ring(x,y,'#FF8A3D',120,8); stars(x,y,20,['#FFC233','#FF8A3D','#FFF3B0'],1.4); for(let i=0;i<14;i++) spawn({k:'ember',x,y,vx:(Math.random()-.5)*3,vy:-(1.5+Math.random()*3),s:2+Math.random()*3,life:60,ph:Math.random()*6,c:pick(['#FF7A2F','#FFC233','#FFE07A'])}); toast({icon:IC.flame, title:`Flamme rallumée ! ${state.streak.count} jours`, sub:'Ta série est sauvée.', color:'var(--orange)', ms:4500}); }, 400); }
   else if (r==='repairing'){ const R=state.streak.repair; if (R) setTimeout(()=>toast({icon:IC.flame, title:'Ça chauffe…', sub:`Encore ${R.need-R.got} action pour rallumer ta flamme.`, color:'var(--orange)'}), 400); }
@@ -1861,11 +1878,17 @@ function rbar(v, min, max){ const top=Math.max(max, v, 1); return `<div class="r
 function curWeek(){ const w=state.week; return w && w.k===weekKey() ? w : null; }
 function wkTarget(w, it){ return w.minimalMode ? 1 : Math.max(1, it.min||1); }
 function weekRate(w){ if (!w || !w.items.length) return null; return w.items.reduce((a,it)=>a+Math.min(1,(it.count||0)/wkTarget(w,it)),0)/w.items.length; }
-function weekHit(gid, aid){ const w=curWeek(); if (!w) return null; let reached=null; w.items.forEach(it=>{ if (it.g===gid && it.actionId===aid){ const before=it.count||0; it.count=before+1; const eff=wkTarget(w,it); if (before<eff && it.count>=eff) reached=it; } }); return reached; }
+function weekHit(gid, aid){ if (!planOn()) return null; const w=curWeek(); if (!w) return null; let reached=null; w.items.forEach(it=>{ if (it.g===gid && it.actionId===aid){ const before=it.count||0; it.count=before+1; const eff=wkTarget(w,it); if (before<eff && it.count>=eff) reached=it; } }); return reached; }
 function reviewDue(){ return state.goals.some(g=>!g.paused && (g.actions.length||g.campaign)) && !curWeek(); }
 
 let weekOpen = (()=>{ try{ return localStorage.getItem('eclosion.weekOpen')==='1'; }catch(e){ return false; } })();
+function simpleTodayCard(){
+  const R = state.streak.repair;
+  const repair = R ? `<div class="tsec"><div class="trepair">${IC.flame}<span>Rallume ta flamme : encore ${Math.max(0,R.need-(R.got||0))} action${R.need-(R.got||0)>1?'s':''} ${R.until===dayKey()?'aujourd’hui':'aujourd’hui ou demain'} (une difficile compte double).</span></div></div>` : '';
+  return `<section class="card today">${repair}${questBox()}</section>`;
+}
 function todayCard(){
+  if (!planOn()) return simpleTodayCard();
   const secs = [];
   // Braise à rallumer
   const R = state.streak.repair;
@@ -2456,7 +2479,7 @@ function goalCard(g){
       </div>
       <button type="button" class="icon-btn flat" data-act="open" data-g="${g.id}" aria-label="Ouvrir">${IC.chev}</button>
     </div>
-    ${g.actions.length?`<div class="chips">${topActions(g).map(a=>chipFor(g,a)).join('')}${g.actions.length>3?`<button type="button" class="chip more" data-act="open" data-g="${g.id}"><span>+${g.actions.length-3} autre${g.actions.length-3>1?'s':''}</span></button>`:''}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
+    ${g.actions.length?`<div class="chips">${(planOn()?topActions(g):g.actions).map(a=>chipFor(g,a)).join('')}${planOn()&&g.actions.length>3?`<button type="button" class="chip more" data-act="open" data-g="${g.id}"><span>+${g.actions.length-3} autre${g.actions.length-3>1?'s':''}</span></button>`:''}</div>`:`<button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action à valider</button>`}
   </article>`;
 }
 function topPills(){
@@ -2490,6 +2513,7 @@ function viewGoal(id){
   const g=getGoal(id); if(!g){ view='home'; return viewHome(); }
   const st=stageOf(g), pr=stageProgress(g), mt=moodText(g);
   const path = STAGES.map((s,i)=>`<div class="evo-step ${i>st?'locked':''} ${i===st?'current':''}"><div class="mini">${creatureSVG(g.species,g.color,i,'happy',0)}</div>${i>st?'???':s.name}</div>`).join('');
+  const simple = !planOn(), tab = simple ? null : goalTab;
   const msSorted = [...g.milestones].sort((a,b)=>(a.size==='finale')-(b.size==='finale'));
   return `<header class="top"><button type="button" class="icon-btn" data-act="home" aria-label="Retour">${IC.back}</button><h1>${esc(g.name)}</h1><button type="button" class="icon-btn" data-act="editGoal" data-g="${g.id}" aria-label="Modifier l'objectif">${IC.pen}</button></header>
     ${g.paused?`<section class="card pause-banner"><div><b>${esc(creatureName(g))} hiberne</b><div class="tiny">En pause depuis le ${fmtDay(g.paused.since)}. Rien n'est perdu, et elle ne sera pas triste. Valider une de ses actions la réveille aussi.</div></div><button type="button" class="btn primary" style="padding:8px 14px;border-radius:99px" data-act="wake" data-g="${g.id}">Réveiller</button></section>`:''}
@@ -2501,25 +2525,27 @@ function viewGoal(id){
       <div class="tiny">${pr.text}</div>
       ${mt?`<div class="mood">${mt}</div>`:''}
       <div class="hero-actions"><button type="button" class="btn dress-btn" data-act="shop" data-g="${g.id}">${IC.coin} Habiller</button></div>
+      ${simple?`<div class="evo-path">${path}</div>`:''}
     </section>
-    <nav class="tabs" aria-label="Sections de l’objectif">${[['actions','Actions'],['progress','Progrès'],['skills','Compétences']].map(([k,l])=>`<button type="button" data-act="gtab" data-t="${k}" class="${goalTab===k?'on':''}" aria-pressed="${goalTab===k}">${l}</button>`).join('')}</nav>
-    ${goalTab==='progress' ? campaignSection(g) : ''}
-    ${goalTab==='actions' ? `<section class="card"><div class="section-h"><h2>Actions</h2></div><div class="rows">
+    ${simple?'':`<nav class="tabs" aria-label="Sections de l’objectif">${[['actions','Actions'],['progress','Progrès'],['skills','Compétences']].map(([k,l])=>`<button type="button" data-act="gtab" data-t="${k}" class="${goalTab===k?'on':''}" aria-pressed="${goalTab===k}">${l}</button>`).join('')}</nav>`}
+    ${tab==='progress' ? campaignSection(g) : ''}
+    ${(simple||tab==='actions') ? `<section class="card"><div class="section-h"><h2>Actions</h2></div><div class="rows">
       ${g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
       <button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action</button></div></section>
     <section class="card"><div class="section-h"><h2>Étapes</h2><span class="tiny">${g.milestones.filter(m=>m.done).length}/${g.milestones.length} franchies</span></div><div class="rows">
       ${msSorted.map(m=>`<div class="row"><button type="button" class="ms-btn ${m.done?'done':''} ${m.size==='finale'?'final':''}" data-act="ms" data-g="${g.id}" data-m="${m.id}"><span class="box">${m.done?IC.check:''}</span><span class="mtxt">${esc(m.name)}${m.done&&m.doneAt?`<br><span class="tiny">Fait le ${fmtDate(m.doneAt)}</span>`:''}</span><b>${m.size==='finale'?'FINALE':'+'+MSIZE[m.size].xp}</b></button><button type="button" class="icon-btn flat" data-act="editMs" data-g="${g.id}" data-m="${m.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}
       <button type="button" class="add-row" data-act="addMs" data-g="${g.id}">${IC.plus} Ajouter une étape</button></div></section>` : ''}
-    ${goalTab==='progress' ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Mesures</h2></div><div class="rows">
+    ${tab==='progress' ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Mesures</h2></div><div class="rows">
       ${g.metrics.map(m=>metricCard(g,m)).join('') || '<p class="tiny" style="margin:0">Note ce qui prouve que tu avances : candidatures envoyées, charge soulevée, aisance à l’oral sur 10… Chaque record battu rapporte 75 XP et 10 éclats.</p>'}
       <button type="button" class="add-row" data-act="addMetric" data-g="${g.id}">${IC.plus} Ajouter une mesure</button></div></section>
     <section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Évolution</h2></div><div class="evo-path">${path}</div></section>` : ''}
-    ${goalTab==='skills' ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Compétences</h2></div><p class="tiny" style="margin:0 0 8px">Une sous-compétence reçoit l’XP de ses actions, et sa compétence parente la moitié.</p><div class="rows">
+    ${(simple||tab==='skills') ? `<section class="card" style="--gc:${g.color}"><div class="section-h"><h2>Compétences</h2></div><p class="tiny" style="margin:0 0 8px">Une sous-compétence reçoit l’XP de ses actions, et sa compétence parente la moitié.</p><div class="rows">
       ${skillTree(g,null)}
       <button type="button" class="add-row" data-act="addSkill" data-g="${g.id}">${IC.plus} Ajouter une compétence</button></div></section>` : ''}`;
 }
 function viewTrophies(){
-  const got = ACH.filter(a=>state.achievements[a[0]]).length;
+  const achList = ACH.filter(a=>planOn() || !PLAN_ACH.has(a[0]));
+  const got = achList.filter(a=>state.achievements[a[0]]).length;
   const s = state.stats, hm = heatmap();
   return `<header class="top"><h1>Succès</h1>${topPills()}</header>
     ${playerRow()}
@@ -2528,8 +2554,8 @@ function viewTrophies(){
       <div class="stat"><b>${s.crits}</b><span>critiques</span></div><div class="stat"><b>${s.milestones}</b><span>étapes</span></div><div class="stat"><b>${s.chests}</b><span>coffres</span></div>
     </div></section>
     <section class="card"><div class="section-h"><h2>Ton activité</h2><span class="tiny">${hm.active} jour${hm.active>1?'s':''} actif${hm.active>1?'s':''} sur 12 semaines</span></div>${hm.html}</section>
-    <section class="card"><div class="section-h"><h2>Succès</h2><span class="tiny">${got} / ${ACH.length}</span></div><div class="ach-grid">
-      ${ACH.map(([id,n,d])=>`<div class="ach ${state.achievements[id]?'':'off'}"><div class="medal">${IC.medal}</div><div style="min-width:0"><b>${esc(n)}</b><span>${esc(d)}</span></div></div>`).join('')}
+    <section class="card"><div class="section-h"><h2>Succès</h2><span class="tiny">${got} / ${achList.length}</span></div><div class="ach-grid">
+      ${achList.map(([id,n,d])=>`<div class="ach ${state.achievements[id]?'':'off'}"><div class="medal">${IC.medal}</div><div style="min-width:0"><b>${esc(n)}</b><span>${esc(d)}</span></div></div>`).join('')}
     </div></section>
     <section class="card"><div class="section-h"><h2>Journal</h2></div><div class="log">
       ${state.log.slice(0,40).map(l=>`<div><span>${esc(l.label)} <span class="tiny">· ${esc(l.g)} · ${fmtDate(l.t)}</span></span><b>+${l.xp}${l.crit?(l.crit===2?' ×5':' ×2'):''}</b></div>`).join('') || '<span class="tiny">Rien encore. Valide ta première action !</span>'}
@@ -2543,6 +2569,7 @@ function viewSettings(){
   return `<header class="top"><h1>Réglages</h1></header>
     <section class="card"><div class="sync"><span class="dot ${S[0]}"></span><div><b>${S[1]}</b><div class="tiny">${S[2]}</div></div></div></section>
     <section class="card rows"><div class="switch">Effets sonores <button type="button" data-act="sound" class="${state.settings.sound?'on':''}" aria-label="Effets sonores" aria-pressed="${state.settings.sound}"></button></div>
+      <div class="switch"><span>Outils de planification<br><span class="tiny" style="font-weight:600">Campagne de 12 semaines, bilan du lundi, plan du jour et mesures. Désactivés, rien n'est effacé.</span></span> <button type="button" data-act="planTools" class="${planOn()?'on':''}" aria-label="Outils de planification" aria-pressed="${planOn()}"></button></div>
       <div class="switch">Musique d'ambiance <button type="button" data-act="music" class="${state.settings.music?'on':''}" aria-label="Musique" aria-pressed="${state.settings.music}"></button></div>
       <div class="field"><label for="musVol">Volume de la musique</label><input type="range" id="musVol" min="0" max="100" value="${state.settings.musicVol==null?50:state.settings.musicVol}"></div>
       <button type="button" class="btn" data-act="soundTest">Tester le son</button>
@@ -2562,11 +2589,11 @@ function viewSettings(){
       <p><b>Évolutions</b> : Bébé à 100 XP, Jeune à 800, Adulte à 3 000, Légendaire avec l'étape finale.</p>
       <p><b>Série</b> : +2 % d'XP par jour consécutif (max +30 %). Un joker gratuit par semaine (max 2) protège ta série si tu rates un jour. Plus de joker ? Ta flamme devient une braise : fais 2 actions (ou 1 difficile) dans les 48 h pour la rallumer (une fois par semaine). Si elle s'éteint quand même, tu gardes la moitié de ton bonus.</p>
       <p><b>Retrouvailles</b> : après 3 jours sans t'occuper d'un objectif, sa créature t'attend, un peu triste, et après 7 jours elle s'endort. Aucune punition : quand tu reviens, elle saute de joie et tes premières actions rapportent un bonus (+30 % sur 2 actions, ou +50 % sur 3 après 7 jours). Au plus une fois tous les 14 jours par objectif.</p>
-      <p><b>Plan du jour</b> : chaque matin, choisis 1 à 3 actions et, si tu veux, le moment où tu les feras (« Après mon café… »). Chaque promesse tenue rapporte +25 % d'XP. Rien ne se passe si tu n'y arrives pas.</p>
-      <p><b>Campagne de 12 semaines</b> : dans chaque objectif, fixe ton objectif final (avec ta date et ton pourquoi), l'obstacle qui risque de t'arrêter et 2 à 3 résultats clés en plage (« 3 à 5 »). Au moins un doit dépendre de toi (processus). Le bouton « Ajuster » change une plage sans aucune perte.</p>
+      ${planOn()?`<p><b>Plan du jour</b> : chaque matin, choisis 1 à 3 actions et, si tu veux, le moment où tu les feras (« Après mon café… »). Chaque promesse tenue rapporte +25 % d'XP. Rien ne se passe si tu n'y arrives pas.</p>`:''}
+      ${planOn()?`<p><b>Campagne de 12 semaines</b> : dans chaque objectif, fixe ton objectif final (avec ta date et ton pourquoi), l'obstacle qui risque de t'arrêter et 2 à 3 résultats clés en plage (« 3 à 5 »). Au moins un doit dépendre de toi (processus). Le bouton « Ajuster » change une plage sans aucune perte.</p>`:''}
       <p><b>Mettre en pause</b> : sur un objectif (bouton crayon), « Mettre en pause » fait hiberner sa créature le temps d'une campagne. Elle dort paisiblement, sans tristesse ni perte, et sort de tes bilans et de tes plans. « Réveiller » la ramène.</p>
-      <p><b>Bilan du lundi</b> : 2 minutes pour regarder ta semaine, choisir 1 à 3 engagements par objectif (avec une version minimale) et ta créature vedette (+15 % d'XP). Semaine tenue à 70 % : coffre de 20 éclats. Si la semaine s'annonce dure, active la « semaine minimale ».</p>
-      <p><b>Mesures</b> : dans chaque objectif, note tes vrais chiffres (candidatures, charges, aisance…). Chaque record battu rapporte 75 XP et 10 éclats (une fois par semaine et par mesure).</p>
+      ${planOn()?`<p><b>Bilan du lundi</b> : 2 minutes pour regarder ta semaine, choisir 1 à 3 engagements par objectif (avec une version minimale) et ta créature vedette (+15 % d'XP). Semaine tenue à 70 % : coffre de 20 éclats. Si la semaine s'annonce dure, active la « semaine minimale ».</p>`:''}
+      ${planOn()?`<p><b>Mesures</b> : dans chaque objectif, note tes vrais chiffres (candidatures, charges, aisance…). Chaque record battu rapporte 75 XP et 10 éclats (une fois par semaine et par mesure).</p>`:''}
       <p><b>Niveau de joueur</b> : toute l'XP que tu gagnes, tous objectifs confondus, fait monter ton niveau et ton titre (Novice, Apprenti, Aventurier… jusqu'à Légende).</p>
       <p><b>Objectif par semaine</b> : sur une action (bouton crayon), tu peux fixer un nombre de fois par semaine. Quand tu l'atteins, bonus de 60 XP. Le compteur repart chaque lundi.</p>
       <p><b>Boutique</b> : touche le compteur d'éclats en haut de l'accueil. Tu gagnes des éclats avec les coffres (10 à 25), les étapes (15 à 100), les succès (5), les objectifs de la semaine (10) et chaque niveau de joueur (20). Tu peux mettre à chaque créature un couvre-chef, des lunettes et un tour de cou.</p>
@@ -2621,6 +2648,7 @@ document.addEventListener('click', e=>{
     case 'chest': openChest(); break;
     case 'planOpen': openPlanEditor(); break;
     case 'gtab': goalTab = el.dataset.t; render(); break;
+    case 'planTools': state.settings.planTools=!state.settings.planTools; if (!state.settings.planTools) goalTab='actions'; fixDailyQuests(); commit(); render(); toast({title: state.settings.planTools?'Outils de planification activés':'Mode simple', sub: state.settings.planTools?'Campagne, bilan du lundi, plan du jour et mesures sont de retour.':'Juste tes créatures et tes actions. Tes plans sont gardés de côté.', color:'var(--sky)'}); break;
     case 'wkToggle': weekOpen=!weekOpen; try{ localStorage.setItem('eclosion.weekOpen', weekOpen?'1':'0'); }catch(e){} render(); break;
     case 'wake': if (g) wakeGoal(g); break;
     case 'reviewOpen': openReview(); break;

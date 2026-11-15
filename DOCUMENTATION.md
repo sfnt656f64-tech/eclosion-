@@ -313,7 +313,15 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 
 ## 8. Les écrans
 
-**Principe d'affichage (version 13)** : un écran épuré. L'accueil ne montre que l'essentiel du jour ; le détail est rangé dans des onglets ou des zones dépliables. Toute nouvelle fonction doit s'intégrer dans cette structure plutôt qu'ajouter un bloc de plus.
+**Règle n° 1 (version 14) : l'app doit rester simple.** Son cœur, c'est les créatures et les actions validées en une touche. L'utilisateur a trouvé que les couches de planification (versions 9 à 13) rendaient l'app compliquée et moins motivante. Elles sont donc rangées derrière un réglage, **« Outils de planification », désactivé par défaut** (Réglages). Toute nouvelle fonction issue d'un rapport ou d'une idée doit être **facultative et désactivée par défaut**, ne jamais ajouter de bloc sur l'accueil sans l'accord explicite de l'utilisateur, et être validée par lui **avant** d'être codée.
+
+**Mode simple (par défaut)** :
+- Accueil : en-tête (éclats et série), le jardin, une carte avec les quêtes du jour (et la braise à rallumer si besoin), puis les objectifs avec **toutes** leurs actions.
+- Fiche d'un objectif : la créature avec son chemin d'évolution, puis Actions, Étapes et Compétences, sans onglets.
+- Restent actifs car ils ne prennent pas de place : pas de pénalité, bonus de retrouvailles, réparation de série, mise en pause, objectifs par semaine sur les actions.
+- Cachés (données gardées, rien n'est effacé) : campagne, bilan du lundi et engagements, plan du jour, mesures, et les 9 succès qui en dépendent. La quête « Tenir 2 promesses » n'est jamais tirée, et elle est remplacée si elle avait déjà été tirée dans la journée (`fixDailyQuests`).
+
+**Avec les outils de planification** : l'affichage décrit ci-dessous (carte « Aujourd'hui », 3 actions par carte, onglets dans la fiche).
 
 - **Premier lancement** : trois œufs, et deux boutons : « Commencer avec mes 3 objectifs » (exemples modifiables) ou « Partir de zéro ».
 - **Accueil**, dans cet ordre :
@@ -350,7 +358,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v13` ; passer à `eclosion-v14`, etc.), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v14` ; passer à `eclosion-v15`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 
