@@ -531,7 +531,7 @@ h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:bala
 .fold svg{width:20px;height:20px;transition:transform .2s}
 .fold.closed svg{transform:rotate(-90deg)}
 .yest-link{display:block;margin:0 auto;font-weight:800;font-size:13px;color:var(--muted);text-decoration:underline;padding:6px}
-.garden .gname{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:#2B2350;background:rgba(255,255,255,.85);border-radius:99px;padding:0 6px;white-space:nowrap;pointer-events:none}
+.garden .gname{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:#2B2350;background:rgba(255,255,255,.85);border-radius:99px;padding:0 6px;white-space:nowrap;pointer-events:none}
 /* Niveau de joueur */
 .player{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
 .player .plvl{background:var(--ink);color:var(--bg);border-radius:10px;padding:2px 9px;font-family:var(--font-display);flex:none}
@@ -1026,7 +1026,7 @@ function moodText(g){
 function stageProgress(g){
   const s = stageOf(g);
   if (s===4) return {pct:100, text:'Forme légendaire atteinte'};
-  if (s===3) return {pct:100, text:`${g.xp} XP · valide l'étape finale pour la forme ultime`};
+  if (s===3) return {pct:100, text: extrasOn() ? `${g.xp} XP · valide l'étape finale pour la forme ultime` : `${g.xp} XP · touche « J’ai atteint mon objectif ! » quand c’est fait`};
   const t=stageTh(g), a=Math.min(t[s], g.xp), b=Math.max(t[s+1], a+1);
   return {pct: Math.max(0, Math.min(100, (g.xp-a)/(b-a)*100)), text:`${g.xp} / ${b} XP vers ${STAGES[s+1].name}`};
 }
@@ -1128,7 +1128,7 @@ function touchStreak(w){
     else {
       S.repair.got = (S.repair.got||0) + (w||1);
       if (S.repair.got < S.repair.need) return 'repairing';
-      S.count++; S.lastDay=today; S.best=Math.max(S.best,S.count); S.lastRepair=today; S.repair=null;
+      S.repairedDay = addDays(S.repair.until, -2); S.count++; S.lastDay=today; S.best=Math.max(S.best,S.count); S.lastRepair=today; S.repair=null;
       state.stats.repairs=(state.stats.repairs||0)+1;
       return 'repaired';
     }
@@ -2302,15 +2302,20 @@ function openCampaignReview(g){
 
 /* ===================== Cocher une action oubliée hier ===================== */
 function yesterdayStreak(){
-  const S=state.streak, today=dayKey(), y=addDays(today,-1);
-  if (S.lastDay && S.lastDay>=y && !(S.lastDay===today && S.count===1 && !S.broken)) { if (S.jokerUse && S.jokerUse.day===today){ S.jokers++; S.jokerUse=null; } return; }
-  if (S.repair){ S.repair=null; S.count++; S.lastDay=y; S.best=Math.max(S.best,S.count); return; }
+  const S=state.streak, today=dayKey(), y=addDays(today,-1), actedToday = S.lastDay===today;
+  // Série cassée ce matin parce qu'hier manquait : on la restaure (et on compte aujourd'hui si déjà actif)
   if (S.broken && S.broken.day===today && S.broken.lastDay===addDays(y,-1)){
-    const actedToday = S.lastDay===today;
     S.count = S.broken.prev + 1 + (actedToday?1:0); S.lastDay = actedToday?today:y; S.carry=0; S.broken=null; S.best=Math.max(S.best,S.count); return;
   }
-  if (S.lastDay===today && S.count===1){ S.count=2; S.best=Math.max(S.best,2); return; }
-  if (!S.lastDay || S.lastDay<y){ S.count = (S.lastDay===addDays(y,-1) && S.count>0) ? S.count+1 : 1; S.lastDay=y; S.best=Math.max(S.best,S.count); }
+  // Flamme en braise pour hier : hier est rempli, et aujourd'hui compte si une action a déjà été faite
+  if (S.repair){ const todayToo = (S.repair.got||0)>0 || actedToday; S.repair=null; S.count += 1 + (todayToo?1:0); S.lastDay = todayToo?today:y; S.best=Math.max(S.best,S.count); return; }
+  // Flamme déjà rallumée aujourd'hui pour le jour d'hier : hier compte en plus
+  if (S.repairedDay===y && actedToday){ S.count++; S.repairedDay=null; S.best=Math.max(S.best,S.count); return; }
+  // Joker dépensé ce matin pour hier : on le rend
+  if (S.jokerUse && S.jokerUse.day===today && S.lastDay && S.lastDay>=y){ S.jokers++; S.jokerUse=null; return; }
+  if (actedToday && S.count===1){ S.count=2; S.best=Math.max(S.best,2); return; }
+  if (S.lastDay && S.lastDay>=y) return;
+  S.count = (S.lastDay===addDays(y,-1) && S.count>0) ? S.count+1 : 1; S.lastDay=y; S.best=Math.max(S.best,S.count);
 }
 function doYesterday(gid, aid){
   const g=getGoal(gid); if(!g) return; const a=g.actions.find(x=>x.id===aid); if(!a || yesterdayCount(a)>0) return;
@@ -2641,7 +2646,7 @@ function garden(){
   sky += `<span class="cloud" style="top:26px;animation-duration:70s;animation-delay:-20s"></span><span class="cloud" style="top:58px;animation-duration:95s;animation-delay:-60s;opacity:.7;scale:.8"></span>`;
   const label = {dawn:'Le jardin au petit matin', day:'Le jardin', dusk:'Le jardin au coucher du soleil', night:'Le jardin, la nuit'}[tod];
   const crs = state.goals.map((g,i)=>{ const st=stageOf(g);
-    return `<div class="cr-wrap" style="left:${((i+.5)/n*100).toFixed(1)}%;bottom:${6+(i%2)*14}px;width:${s}px;height:${s}px;margin-left:-${s/2}px" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Faire chanter ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),eggP(g),g.acc)}<span class="gname">${esc(creatureName(g))}</span></div>`; }).join('');
+    return `<div class="cr-wrap" style="left:${((i+.5)/n*100).toFixed(1)}%;bottom:${20+(i%2)*12}px;width:${s}px;height:${s}px;margin-left:-${s/2}px" data-act="pet" data-g="${g.id}" data-sp="${g.species}" data-st="${st}" data-mood="${moodOf(g)}" data-col="${g.color}" role="button" tabindex="0" aria-label="Faire chanter ${esc(creatureName(g))}">${creatureSVG(g.species,g.color,st,moodOf(g),eggP(g),g.acc)}<span class="gname">${esc(creatureName(g))}</span></div>`; }).join('');
   return `<section class="garden t-${tod}" aria-label="Jardin des créatures"><span class="orb"></span>${sky}
     <svg class="hills" viewBox="0 0 400 112" preserveAspectRatio="none" aria-hidden="true"><path d="M0 46 Q 90 8 200 42 T 400 30 V112 H0Z" style="fill:var(--hill1)"/><path d="M0 76 Q 120 44 250 70 T 400 60 V112 H0Z" style="fill:var(--hill2)"/></svg>
     <span class="gtag">${label}</span>${crs}</section>`;
@@ -2732,7 +2737,7 @@ function viewGoal(id){
     ${simple?'':`<nav class="tabs" aria-label="Sections de l’objectif">${[['actions','Actions'],['progress','Progrès'],['skills','Compétences']].filter(([k])=>k!=='skills'||extrasOn()).map(([k,l])=>`<button type="button" data-act="gtab" data-t="${k}" class="${goalTab===k?'on':''}" aria-pressed="${goalTab===k}">${l}</button>`).join('')}</nav>`}
     ${tab==='progress' ? campaignSection(g) : ''}
     ${(simple||tab==='actions') ? `<section class="card"><div class="section-h"><h2>Actions</h2></div><div class="rows">
-      ${simple ? `${dayLine(g)}${g.actions.map(a=>`<div class="ck-row">${a.target>0?ckWeek(g,a):ckFor(g,a)}<button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}` : g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
+      ${simple ? `${(()=>{ const pen=a=>`<button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button>`; const daily=g.actions.filter(a=>!(a.target>0)), weekly=g.actions.filter(a=>a.target>0); return `${daily.length?`${dayLine(g)}${daily.map(a=>`<div class="ck-row">${ckFor(g,a)}${pen(a)}</div>`).join('')}`:''}${weekly.length?`<div class="blk-h"><span>Cette semaine</span><span>${weekly.filter(a=>weekCount(a)>=a.target).length}/${weekly.length}</span></div>${weekly.map(a=>`<div class="ck-row">${ckWeek(g,a)}${pen(a)}</div>`).join('')}`:''}`; })()}` : g.actions.map(a=>{ const sk=getSkill(g,a.skillId), locked=sk&&isLocked(g,sk); return `<div class="row"><button type="button" class="do-btn d-${a.diff} ${locked?'locked':''}" data-act="do" data-g="${g.id}" data-a="${a.id}"><span>${esc(a.name)}<small>${DIFF[a.diff].label}${sk?' · '+esc(sk.name):''}${locked?' · verrouillée':''}${a.target>0?` · objectif ${a.target}/semaine`:''}</small></span>${countBadge(a)}<b>+${DIFF[a.diff].xp}</b></button><button type="button" class="icon-btn flat" data-act="editAction" data-g="${g.id}" data-a="${a.id}" aria-label="Modifier">${IC.pen}</button></div>`; }).join('')}
       <button type="button" class="add-row" data-act="addAction" data-g="${g.id}">${IC.plus} Ajouter une action</button></div></section>
     ${extrasOn()?`<section class="card"><div class="section-h"><h2>Étapes</h2><span class="tiny">${g.milestones.filter(m=>m.done).length}/${g.milestones.length} franchies</span></div><div class="rows">
       ${msSorted.map(m=>`<div class="row"><button type="button" class="ms-btn ${m.done?'done':''} ${m.size==='finale'?'final':''}" data-act="ms" data-g="${g.id}" data-m="${m.id}"><span class="box">${m.done?IC.check:''}</span><span class="mtxt">${esc(m.name)}${m.done&&m.doneAt?`<br><span class="tiny">Fait le ${fmtDate(m.doneAt)}</span>`:''}</span><b>${m.size==='finale'?'FINALE':'+'+MSIZE[m.size].xp}</b></button><button type="button" class="icon-btn flat" data-act="editMs" data-g="${g.id}" data-m="${m.id}" aria-label="Modifier">${IC.pen}</button></div>`).join('')}

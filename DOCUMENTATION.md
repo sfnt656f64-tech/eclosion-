@@ -12,7 +12,7 @@ Ce document décrit toute l'application, pour qu'une autre personne ou un autre 
 
 Application personnelle de progression inspirée des RPG, pour atteindre des objectifs de vie réels.
 
-- Chaque **objectif** (ex. « Trouver un CDI en France ») est représenté par une **créature** mignonne et originale qui naît d'un œuf et évolue.
+- Chaque **objectif** (ex. « Décrocher un nouvel emploi ») est représenté par une **créature** mignonne et originale qui naît d'un œuf et évolue.
 - Chaque objectif contient des **compétences** qui montent en niveau, des **actions** récurrentes rapides à valider (XP) et des **étapes** concrètes (beaucoup d'XP).
 - L'**étape finale** fait passer la créature à sa forme **légendaire**.
 - L'utilisateur crée, modifie et supprime lui-même objectifs, compétences, actions et étapes.
@@ -377,7 +377,7 @@ Si l'appareil demande moins d'animations (`prefers-reduced-motion`), les effets 
 ## 10. Comment mettre à jour l'app
 
 1. Modifier `index.html` (et les autres fichiers si besoin).
-2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v20` ; passer à `eclosion-v21`, etc.), sinon les téléphones gardent l'ancienne version.
+2. Dans `sw.js`, **changer le numéro de version de `CACHE`** (actuellement `eclosion-v21` ; passer à `eclosion-v22`, etc.), sinon les téléphones gardent l'ancienne version.
 3. Envoyer les fichiers sur GitHub (branche `main`). Le site se met à jour en 1 à 2 minutes.
 4. Sur le téléphone, fermer puis rouvrir l'app (parfois deux fois). Les données sont conservées.
 
